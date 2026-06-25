@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import tradieGagsLogo from "@assets/ChatGPT_Image_Jun_22,_2026,_11_20_52_PM_1782370414661.png";
-import homeHeaderLogo from "@assets/Home_-_Header_Logo_(PNG)_1782370414661.png";
+import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
+import homeHeaderLogo from "@assets/Home_-_Header_Logo_(PNG)_1782377476438.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
 
 const BRANDS = [
-  { id: 1, name: "Tradie Gags",   angle: 0,   radius: 290, delay: 0,   logo: tradieGagsLogo,   live: true,  url: "#" },
-  { id: 2, name: "Home Base",     angle: 72,  radius: 280, delay: 0.5, logo: homeHeaderLogo,   live: true,  url: "#" },
-  { id: 3, name: "Trailer Brain", angle: 144, radius: 275, delay: 1.2, logo: trailerBrainLogo, live: true,  url: "#" },
-  { id: 4, name: "Coming Soon",   angle: 216, radius: 285, delay: 0.8, logo: null,             live: false, url: null },
-  { id: 5, name: "Coming Soon",   angle: 288, radius: 278, delay: 1.5, logo: null,             live: false, url: null },
+  { id: 1, name: "Tradie Gags",   angle: 0,   radius: 290, delay: 0,   logo: tradieGagsLogo,   live: true,  dark: false },
+  { id: 2, name: "Home Base",     angle: 72,  radius: 280, delay: 0.5, logo: homeHeaderLogo,   live: true,  dark: true  },
+  { id: 3, name: "Trailer Brain", angle: 144, radius: 275, delay: 1.2, logo: trailerBrainLogo, live: true,  dark: false },
+  { id: 4, name: "Coming Soon",   angle: 216, radius: 285, delay: 0.8, logo: null,             live: false, dark: false },
+  { id: 5, name: "Coming Soon",   angle: 288, radius: 278, delay: 1.5, logo: null,             live: false, dark: false },
 ];
 
-// Base logo edge ellipse at full scale
 const BASE_LOGO_RX = 138;
 const BASE_LOGO_RY = 90;
 
@@ -23,25 +22,18 @@ function hash(seed: number, i: number): number {
 }
 
 function lightningPath(
-  x1: number, y1: number,
-  x2: number, y2: number,
-  segments: number,
-  jitter: number,
-  seed: number
+  x1: number, y1: number, x2: number, y2: number,
+  segments: number, jitter: number, seed: number
 ): string {
   const pts: [number, number][] = [[x1, y1]];
-  const dx = x2 - x1;
-  const dy = y2 - y1;
+  const dx = x2 - x1, dy = y2 - y1;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  const nx = -dy / len;
-  const ny =  dx / len;
+  const nx = -dy / len, ny = dx / len;
   for (let i = 1; i < segments; i++) {
     const t = i / segments;
-    const bx = x1 + dx * t;
-    const by = y1 + dy * t;
     const taper = Math.sin(t * Math.PI);
     const offset = hash(seed, i) * jitter * taper;
-    pts.push([bx + nx * offset, by + ny * offset]);
+    pts.push([x1 + dx * t + nx * offset, y1 + dy * t + ny * offset]);
   }
   pts.push([x2, y2]);
   return pts.map(([px, py], idx) => `${idx === 0 ? "M" : "L"} ${px.toFixed(1)} ${py.toFixed(1)}`).join(" ");
@@ -61,20 +53,15 @@ export function BrandOrbs() {
 
   const cx = size.w / 2;
   const cy = size.h / 2;
-
-  // Scale everything down on mobile — 900px+ = full, 375px ≈ 38%
-  const scale = Math.min(1, Math.max(0.35, (size.w - 48) / 900));
-
-  // Orb size scales too — 110px at full, min 62px on mobile
+  const scale   = Math.min(1, Math.max(0.35, (size.w - 48) / 900));
   const orbSize = Math.round(62 + (110 - 62) * scale);
-  const imgSize  = Math.round(orbSize * 0.82);
-
-  const logoRX = BASE_LOGO_RX * scale;
-  const logoRY = BASE_LOGO_RY * scale;
+  const imgSize = Math.round(orbSize * 0.84);
+  const logoRX  = BASE_LOGO_RX * scale;
+  const logoRY  = BASE_LOGO_RY * scale;
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* ── Electricity SVG ── */}
+      {/* Electricity SVG */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
         <defs>
           <filter id="elec-glow" x="-80%" y="-80%" width="260%" height="260%">
@@ -82,31 +69,26 @@ export function BrandOrbs() {
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
-
-        {BRANDS.map((brand) => {
-          const rad   = (brand.angle * Math.PI) / 180;
-          const r     = brand.radius * scale;
-          const orbEdge = (orbSize / 2) + 4;
-
-          const sx = cx + Math.cos(rad) * logoRX;
-          const sy = cy + Math.sin(rad) * logoRY;
-          const ex = cx + Math.cos(rad) * (r - orbEdge);
-          const ey = cy + Math.sin(rad) * (r - orbEdge);
-
-          const seed1 = tick + brand.id * 11;
-          const seed2 = tick + brand.id * 11 + 6;
-          const bolt1 = lightningPath(sx, sy, ex, ey, 18, 16 * scale, seed1);
-          const bolt2 = lightningPath(sx, sy, ex, ey, 13,  9 * scale, seed2);
-          const flicker = 0.55 + Math.abs(hash(tick, brand.id)) * 0.35;
-
+        {BRANDS.map(brand => {
+          const rad = (brand.angle * Math.PI) / 180;
+          const r   = brand.radius * scale;
+          const sx  = cx + Math.cos(rad) * logoRX;
+          const sy  = cy + Math.sin(rad) * logoRY;
+          const ex  = cx + Math.cos(rad) * (r - orbSize / 2 - 4);
+          const ey  = cy + Math.sin(rad) * (r - orbSize / 2 - 4);
+          const s1  = tick + brand.id * 11;
+          const s2  = tick + brand.id * 11 + 6;
+          const b1  = lightningPath(sx, sy, ex, ey, 18, 16 * scale, s1);
+          const b2  = lightningPath(sx, sy, ex, ey, 13,  9 * scale, s2);
+          const flk = 0.55 + Math.abs(hash(tick, brand.id)) * 0.35;
           return (
             <g key={brand.id}>
-              <path d={bolt1} fill="none" stroke="#1a9de0" strokeWidth="8"
-                    strokeLinecap="round" opacity={flicker * 0.1} filter="url(#elec-glow)" />
-              <path d={bolt2} fill="none" stroke="#60c8ff" strokeWidth="2"
-                    strokeLinecap="round" opacity={flicker * 0.4} />
-              <path d={bolt1} fill="none" stroke="#b8e4ff" strokeWidth="1.2"
-                    strokeLinecap="round" opacity={flicker * 0.85} />
+              <path d={b1} fill="none" stroke="#1a9de0" strokeWidth="8"
+                    strokeLinecap="round" opacity={flk * 0.1} filter="url(#elec-glow)" />
+              <path d={b2} fill="none" stroke="#60c8ff" strokeWidth="2"
+                    strokeLinecap="round" opacity={flk * 0.4} />
+              <path d={b1} fill="none" stroke="#b8e4ff" strokeWidth="1.2"
+                    strokeLinecap="round" opacity={flk * 0.85} />
               <circle cx={sx} cy={sy} r={2.5} fill="#ffffff"
                       opacity={0.3 + Math.abs(hash(tick * 2, brand.id)) * 0.7} />
             </g>
@@ -114,8 +96,8 @@ export function BrandOrbs() {
         })}
       </svg>
 
-      {/* ── Brand orbs ── */}
-      {BRANDS.map((brand) => {
+      {/* Brand orbs — no circle border, just halo glow */}
+      {BRANDS.map(brand => {
         const rad = (brand.angle * Math.PI) / 180;
         const r   = brand.radius * scale;
         const x   = Math.cos(rad) * r;
@@ -152,33 +134,50 @@ export function BrandOrbs() {
               }}
             >
               <motion.div
-                whileHover={{ scale: 1.22, boxShadow: "0 0 42px rgba(26, 157, 224, 0.9)" }}
+                whileHover={{ scale: 1.22 }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
-                className="relative rounded-full bg-[#0a0f1a]/95 border border-primary/35 backdrop-blur-sm flex flex-col items-center justify-center shadow-[0_0_20px_rgba(26,157,224,0.3)] overflow-hidden"
                 style={{ width: orbSize, height: orbSize }}
+                className="relative flex flex-col items-center justify-center"
               >
                 {brand.logo ? (
                   <img
                     src={brand.logo}
                     alt={brand.name}
-                    style={{ width: imgSize, height: imgSize, objectFit: "contain", mixBlendMode: "screen" }}
+                    style={{
+                      width: imgSize,
+                      height: imgSize,
+                      objectFit: "contain",
+                      // Invert dark logos so they read on the dark background
+                      filter: brand.dark
+                        ? "invert(1) brightness(0.95) drop-shadow(0 0 10px rgba(255,255,255,0.6)) drop-shadow(0 0 22px rgba(26,157,224,0.5))"
+                        : "drop-shadow(0 0 10px rgba(255,255,255,0.55)) drop-shadow(0 0 22px rgba(26,157,224,0.55)) drop-shadow(0 0 4px rgba(255,255,255,0.8))",
+                    }}
                   />
                 ) : (
-                  <>
-                    <span className="font-mono text-primary/50 font-bold tracking-widest uppercase text-center leading-tight px-2 mb-3"
-                          style={{ fontSize: Math.max(7, 9 * scale) }}>
-                      {brand.name}
-                    </span>
-                    <div
-                      className="absolute bottom-0 left-0 right-0 text-center py-[3px]"
-                      style={{ background: "rgba(26,157,224,0.15)", borderTop: "1px solid rgba(26,157,224,0.25)" }}
+                  // Coming soon placeholder — subtle glow ring
+                  <div
+                    className="flex flex-col items-center justify-center rounded-full"
+                    style={{
+                      width: orbSize,
+                      height: orbSize,
+                      border: "1px dashed rgba(26,157,224,0.3)",
+                      boxShadow: "0 0 18px rgba(26,157,224,0.2)",
+                      background: "rgba(13,20,32,0.7)",
+                    }}
+                  >
+                    <span
+                      className="font-mono text-primary/50 font-bold tracking-widest uppercase text-center leading-tight px-2"
+                      style={{ fontSize: Math.max(7, 9 * scale) }}
                     >
-                      <span className="font-mono text-primary tracking-[0.15em] uppercase"
-                            style={{ fontSize: Math.max(6, 7 * scale) }}>
-                        Coming Soon
-                      </span>
-                    </div>
-                  </>
+                      Coming
+                    </span>
+                    <span
+                      className="font-mono text-primary/50 font-bold tracking-widest uppercase"
+                      style={{ fontSize: Math.max(7, 9 * scale) }}
+                    >
+                      Soon
+                    </span>
+                  </div>
                 )}
               </motion.div>
             </motion.div>
