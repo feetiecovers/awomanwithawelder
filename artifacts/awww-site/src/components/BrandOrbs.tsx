@@ -13,11 +13,10 @@ const BRANDS = [
   { id: 5, name: "Coming Soon",   angle: 288, radius: 278, delay: 1.5, logo: null,             live: false, url: null },
 ];
 
-// Electricity line start — just outside the logo edges
-const LOGO_RX = 138;  // logo half-width + small gap
-const LOGO_RY = 90;   // logo half-height + small gap
+// Base logo edge ellipse at full scale
+const BASE_LOGO_RX = 138;
+const BASE_LOGO_RY = 90;
 
-/** Hash pseudo-random in [-1, 1] — deterministic so it's stable per tick */
 function hash(seed: number, i: number): number {
   const x = Math.sin(seed * 13.7 + i * 37.3 + seed * i * 0.07) * 43758.5453;
   return (x - Math.floor(x)) * 2 - 1;
@@ -36,12 +35,11 @@ function lightningPath(
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   const nx = -dy / len;
   const ny =  dx / len;
-
   for (let i = 1; i < segments; i++) {
     const t = i / segments;
     const bx = x1 + dx * t;
     const by = y1 + dy * t;
-    const taper = Math.sin(t * Math.PI); // zero at endpoints, max at midpoint
+    const taper = Math.sin(t * Math.PI);
     const offset = hash(seed, i) * jitter * taper;
     pts.push([bx + nx * offset, by + ny * offset]);
   }
@@ -57,13 +55,22 @@ export function BrandOrbs() {
   useEffect(() => {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
     window.addEventListener("resize", onResize);
-    // Re-randomise bolt shape every ~130ms — makes electricity "move"
     const iv = setInterval(() => setTick(t => t + 1), 130);
     return () => { window.removeEventListener("resize", onResize); clearInterval(iv); };
   }, []);
 
   const cx = size.w / 2;
   const cy = size.h / 2;
+
+  // Scale everything down on mobile — 900px+ = full, 375px ≈ 38%
+  const scale = Math.min(1, Math.max(0.35, (size.w - 48) / 900));
+
+  // Orb size scales too — 110px at full, min 62px on mobile
+  const orbSize = Math.round(62 + (110 - 62) * scale);
+  const imgSize  = Math.round(orbSize * 0.82);
+
+  const logoRX = BASE_LOGO_RX * scale;
+  const logoRY = BASE_LOGO_RY * scale;
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -77,37 +84,29 @@ export function BrandOrbs() {
         </defs>
 
         {BRANDS.map((brand) => {
-          const rad = (brand.angle * Math.PI) / 180;
+          const rad   = (brand.angle * Math.PI) / 180;
+          const r     = brand.radius * scale;
+          const orbEdge = (orbSize / 2) + 4;
 
-          // Start on the logo perimeter ellipse — so lines come off the logo EDGES
-          const sx = cx + Math.cos(rad) * LOGO_RX;
-          const sy = cy + Math.sin(rad) * LOGO_RY;
-
-          // End just before the orb face (orb half-size ≈ 55px)
-          const ex = cx + Math.cos(rad) * (brand.radius - 58);
-          const ey = cy + Math.sin(rad) * (brand.radius - 58);
+          const sx = cx + Math.cos(rad) * logoRX;
+          const sy = cy + Math.sin(rad) * logoRY;
+          const ex = cx + Math.cos(rad) * (r - orbEdge);
+          const ey = cy + Math.sin(rad) * (r - orbEdge);
 
           const seed1 = tick + brand.id * 11;
           const seed2 = tick + brand.id * 11 + 6;
-
-          const bolt1 = lightningPath(sx, sy, ex, ey, 18, 16, seed1);
-          const bolt2 = lightningPath(sx, sy, ex, ey, 13,  9, seed2);
-
+          const bolt1 = lightningPath(sx, sy, ex, ey, 18, 16 * scale, seed1);
+          const bolt2 = lightningPath(sx, sy, ex, ey, 13,  9 * scale, seed2);
           const flicker = 0.55 + Math.abs(hash(tick, brand.id)) * 0.35;
 
           return (
             <g key={brand.id}>
-              {/* Wide ambient halo */}
               <path d={bolt1} fill="none" stroke="#1a9de0" strokeWidth="8"
-                    strokeLinecap="round" opacity={flicker * 0.1}
-                    filter="url(#elec-glow)" />
-              {/* Secondary bolt */}
+                    strokeLinecap="round" opacity={flicker * 0.1} filter="url(#elec-glow)" />
               <path d={bolt2} fill="none" stroke="#60c8ff" strokeWidth="2"
                     strokeLinecap="round" opacity={flicker * 0.4} />
-              {/* Primary bolt bright core */}
               <path d={bolt1} fill="none" stroke="#b8e4ff" strokeWidth="1.2"
                     strokeLinecap="round" opacity={flicker * 0.85} />
-              {/* Anchor spark at logo edge */}
               <circle cx={sx} cy={sy} r={2.5} fill="#ffffff"
                       opacity={0.3 + Math.abs(hash(tick * 2, brand.id)) * 0.7} />
             </g>
@@ -115,11 +114,12 @@ export function BrandOrbs() {
         })}
       </svg>
 
-      {/* ── Brand orbs — correct positioning: CSS left/top + translateX/Y for centering, animate for bob ── */}
+      {/* ── Brand orbs ── */}
       {BRANDS.map((brand) => {
         const rad = (brand.angle * Math.PI) / 180;
-        const x = Math.cos(rad) * brand.radius;
-        const y = Math.sin(rad) * brand.radius;
+        const r   = brand.radius * scale;
+        const x   = Math.cos(rad) * r;
+        const y   = Math.sin(rad) * r;
 
         return (
           <motion.div
@@ -144,12 +144,8 @@ export function BrandOrbs() {
             }}
             data-testid={`orb-brand-${brand.id}`}
           >
-            {/* Inner bobbing wrapper */}
             <motion.div
-              animate={{
-                y: [-8, 8, -8],
-                x: [-4, 4, -4],
-              }}
+              animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
               transition={{
                 y: { duration: 4 + brand.id * 0.3, repeat: Infinity, ease: "easeInOut", delay: brand.delay },
                 x: { duration: 5 + brand.id * 0.4, repeat: Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },
@@ -158,25 +154,29 @@ export function BrandOrbs() {
               <motion.div
                 whileHover={{ scale: 1.22, boxShadow: "0 0 42px rgba(26, 157, 224, 0.9)" }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
-                className="relative w-[110px] h-[110px] rounded-full bg-[#0a0f1a]/95 border border-primary/35 backdrop-blur-sm flex flex-col items-center justify-center shadow-[0_0_20px_rgba(26,157,224,0.3)] overflow-hidden"
+                className="relative rounded-full bg-[#0a0f1a]/95 border border-primary/35 backdrop-blur-sm flex flex-col items-center justify-center shadow-[0_0_20px_rgba(26,157,224,0.3)] overflow-hidden"
+                style={{ width: orbSize, height: orbSize }}
               >
                 {brand.logo ? (
                   <img
                     src={brand.logo}
                     alt={brand.name}
-                    className="w-[90px] h-[90px] object-contain"
-                    style={{ mixBlendMode: "screen" }}
+                    style={{ width: imgSize, height: imgSize, objectFit: "contain", mixBlendMode: "screen" }}
                   />
                 ) : (
                   <>
-                    <span className="font-mono text-[9px] text-primary/50 font-bold tracking-widest uppercase text-center leading-tight px-2 mb-4">
+                    <span className="font-mono text-primary/50 font-bold tracking-widest uppercase text-center leading-tight px-2 mb-3"
+                          style={{ fontSize: Math.max(7, 9 * scale) }}>
                       {brand.name}
                     </span>
                     <div
-                      className="absolute bottom-0 left-0 right-0 text-center py-[4px]"
+                      className="absolute bottom-0 left-0 right-0 text-center py-[3px]"
                       style={{ background: "rgba(26,157,224,0.15)", borderTop: "1px solid rgba(26,157,224,0.25)" }}
                     >
-                      <span className="font-mono text-[7px] text-primary tracking-[0.18em] uppercase">Coming Soon</span>
+                      <span className="font-mono text-primary tracking-[0.15em] uppercase"
+                            style={{ fontSize: Math.max(6, 7 * scale) }}>
+                        Coming Soon
+                      </span>
                     </div>
                   </>
                 )}

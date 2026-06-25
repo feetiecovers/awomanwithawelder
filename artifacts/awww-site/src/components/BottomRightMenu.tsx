@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSubmitContact } from "@workspace/api-client-react";
-import { Send, Menu, MessageSquare, Briefcase, FileText } from "lucide-react";
+import { Send, Menu, MessageSquare, MousePointer2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface BottomRightMenuProps {
@@ -52,7 +52,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -60,8 +60,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="mb-4 w-80 sm:w-96 rounded-xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col"
-            style={{ maxHeight: "calc(100vh - 120px)" }}
+            className="mb-3 w-[calc(100vw-32px)] sm:w-80 md:w-96 rounded-xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col"
+            style={{ maxHeight: "calc(100dvh - 100px)" }}
           >
             <Tabs defaultValue="pages" className="w-full h-full flex flex-col">
               <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-border bg-transparent p-0">
@@ -176,7 +176,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
         onClick={() => setIsOpen(!isOpen)}
         className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(26,157,224,0.4)] text-primary-foreground border-2 border-primary-foreground/20 hover:shadow-[0_0_30px_rgba(26,157,224,0.6)] transition-all z-50"
       >
-        <Briefcase className="h-6 w-6" />
+        <MousePointer2 className="h-6 w-6" />
       </motion.button>
     </div>
   );
