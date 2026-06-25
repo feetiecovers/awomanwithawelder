@@ -88,18 +88,19 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Floating panel — anchored LEFT side, with gap from edges */}
+      {/* Centered floating popup */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
       <motion.div
-        initial={{ x: -40, opacity: 0, scale: 0.96 }}
-        animate={{ x: 0, opacity: 1, scale: 1 }}
-        exit={{ x: -40, opacity: 0, scale: 0.96 }}
+        initial={{ opacity: 0, scale: 0.92, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 16 }}
         transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        className="fixed left-4 sm:left-8 top-1/2 z-50 w-full max-w-xs sm:max-w-sm flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)]"
-        style={{ maxHeight: "min(620px, calc(100dvh - 48px))", translateY: "-50%" }}
+        className="w-full max-w-lg flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto"
+        style={{ maxHeight: "min(680px, calc(100dvh - 48px))" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
@@ -340,6 +341,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
           )}
         </div>
       </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
