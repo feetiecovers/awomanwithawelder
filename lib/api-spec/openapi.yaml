@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: A Woman With a Welder API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: products
+    description: Products and services
+  - name: cart
+    description: Shopping cart
+  - name: bookings
+    description: Service bookings
+  - name: members
+    description: Member authentication and profiles
+  - name: contact
+    description: Contact form
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,262 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products and services
+      responses:
+        "200":
+          description: List of products and services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a single product or service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      summary: Get current session cart
+      responses:
+        "200":
+          description: Current cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    post:
+      operationId: addToCart
+      tags: [cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemInput"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/{productId}:
+    delete:
+      operationId: removeFromCart
+      tags: [cart]
+      summary: Remove item from cart
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings for current member
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+
+  /members/register:
+    post:
+      operationId: registerMember
+      tags: [members]
+      summary: Register a new member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberRegisterInput"
+      responses:
+        "201":
+          description: Member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          description: Validation error or email already taken
+
+  /members/login:
+    post:
+      operationId: loginMember
+      tags: [members]
+      summary: Login as a member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          description: Invalid credentials
+
+  /members/logout:
+    post:
+      operationId: logoutMember
+      tags: [members]
+      summary: Logout current member
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+
+  /members/me:
+    get:
+      operationId: getCurrentMember
+      tags: [members]
+      summary: Get current logged-in member
+      responses:
+        "200":
+          description: Current member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          description: Not authenticated
+
+  /members/me/bookings:
+    get:
+      operationId: getMemberBookings
+      tags: [members]
+      summary: Get all bookings for the current member with product details
+      responses:
+        "200":
+          description: Member bookings with details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingWithProduct"
+
+  /contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit a contact form message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "200":
+          description: Message received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required:
+                  - success
+                  - message
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +299,189 @@ components:
       required:
         - status
 
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        type:
+          type: string
+          enum: [product, service]
+        available:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - price
+        - type
+        - available
+        - createdAt
+
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        product:
+          $ref: "#/components/schemas/Product"
+        quantity:
+          type: integer
+      required:
+        - productId
+        - product
+        - quantity
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        total:
+          type: number
+      required:
+        - items
+        - total
+
+    CartItemInput:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+      required:
+        - productId
+        - quantity
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        memberId:
+          type: integer
+        serviceId:
+          type: integer
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        preferredDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - memberId
+        - serviceId
+        - status
+        - createdAt
+
+    BookingWithProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+        memberId:
+          type: integer
+        serviceId:
+          type: integer
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        preferredDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        service:
+          $ref: "#/components/schemas/Product"
+      required:
+        - id
+        - memberId
+        - serviceId
+        - status
+        - createdAt
+        - service
+
+    BookingInput:
+      type: object
+      properties:
+        serviceId:
+          type: integer
+        preferredDate:
+          type: string
+        notes:
+          type: string
+      required:
+        - serviceId
+
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - email
+        - name
+        - createdAt
+
+    MemberRegisterInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+      required:
+        - email
+        - password
+        - name
+
+    MemberLoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    ContactInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        message:
+          type: string
+        phone:
+          type: string
+      required:
+        - name
+        - email
+        - message
