@@ -147,10 +147,12 @@ export function BrandOrbs() {
                       width: imgSize,
                       height: imgSize,
                       objectFit: "contain",
-                      // Invert dark logos so they read on the dark background
+                      // "screen" blend removes any black background in the PNG
+                      mixBlendMode: "screen",
+                      // Invert purely-black logos so they become white on dark background
                       filter: brand.dark
-                        ? "invert(1) brightness(0.95) drop-shadow(0 0 10px rgba(255,255,255,0.6)) drop-shadow(0 0 22px rgba(26,157,224,0.5))"
-                        : "drop-shadow(0 0 10px rgba(255,255,255,0.55)) drop-shadow(0 0 22px rgba(26,157,224,0.55)) drop-shadow(0 0 4px rgba(255,255,255,0.8))",
+                        ? "invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.7)) drop-shadow(0 0 24px rgba(26,157,224,0.6))"
+                        : "drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 20px rgba(26,157,224,0.6))",
                     }}
                   />
                 ) : (

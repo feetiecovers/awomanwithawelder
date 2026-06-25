@@ -92,14 +92,14 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
         onClick={onClose}
       />
 
-      {/* Side panel — anchored LEFT */}
+      {/* Floating panel — anchored LEFT side, with gap from edges */}
       <motion.div
-        initial={{ x: "-100%", opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: "-100%", opacity: 0 }}
+        initial={{ x: -40, opacity: 0, scale: 0.96 }}
+        animate={{ x: 0, opacity: 1, scale: 1 }}
+        exit={{ x: -40, opacity: 0, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        className="fixed left-0 top-0 bottom-0 z-50 w-full max-w-sm sm:max-w-md flex flex-col bg-[#080d14] border-r border-primary/20 shadow-[4px_0_40px_rgba(26,157,224,0.15)]"
-        style={{ maxHeight: "100dvh" }}
+        className="fixed left-4 sm:left-8 top-1/2 z-50 w-full max-w-xs sm:max-w-sm flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)]"
+        style={{ maxHeight: "min(620px, calc(100dvh - 48px))", translateY: "-50%" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
