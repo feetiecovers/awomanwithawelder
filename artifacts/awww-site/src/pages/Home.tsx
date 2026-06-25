@@ -18,15 +18,15 @@ export default function Home() {
       <BrandOrbs />
       <SmokeEffect />
 
-      {/* Center logo */}
+      {/* Center logo — no border */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={{
             scale: [1, 1.02, 1],
             filter: [
-              "drop-shadow(0 0 8px rgba(255,255,255,0.25)) drop-shadow(0 0 12px rgba(26, 157, 224, 0.2))",
-              "drop-shadow(0 0 16px rgba(255,255,255,0.55)) drop-shadow(0 0 28px rgba(26, 157, 224, 0.5))",
-              "drop-shadow(0 0 8px rgba(255,255,255,0.25)) drop-shadow(0 0 12px rgba(26, 157, 224, 0.2))",
+              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
+              "drop-shadow(0 0 22px rgba(26, 157, 224, 0.55))",
+              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
             ],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -34,24 +34,14 @@ export default function Home() {
           onClick={() => setIsProductsOpen(true)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          data-testid="button-center-logo"
         >
-          {/* Thin white border ring around the logo */}
-          <div
-            className="relative rounded-2xl"
-            style={{
-              padding: "6px",
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.22)",
-              boxShadow: "0 0 0 1px rgba(26,157,224,0.15), inset 0 0 20px rgba(255,255,255,0.04)",
-            }}
-          >
-            <img
-              src={mainLogo}
-              alt="A Woman With a Welder"
-              className="w-[280px] h-auto max-w-[80vw] block"
-              data-testid="img-main-logo"
-            />
-          </div>
+          <img
+            src={mainLogo}
+            alt="A Woman With a Welder"
+            className="w-[280px] h-auto max-w-[80vw] block"
+            data-testid="img-main-logo"
+          />
         </motion.div>
       </div>
 
