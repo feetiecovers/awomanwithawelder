@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import mainLogo from "@assets/Logo_-_Main_Logo_1782352742134.png";
@@ -7,14 +7,58 @@ import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
 import { BottomRightMenu } from "@/components/BottomRightMenu";
 import { ProductsPopup } from "@/components/ProductsPopup";
+import { CartPopup } from "@/components/CartPopup";
 import { MembersModal } from "@/components/MembersModal";
-import { useGetCart } from "@workspace/api-client-react";
+import { OrderSuccessModal } from "@/components/OrderSuccessModal";
+import { BookingSuccessModal } from "@/components/BookingSuccessModal";
+import { useGetCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+  const [isBookingSuccessOpen, setIsBookingSuccessOpen] = useState(false);
+  const [bookingSuccessService, setBookingSuccessService] = useState<string | undefined>();
+
   const { data: cart } = useGetCart();
+  const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
+
+  // Detect Stripe redirect back with ?payment=success or ?payment=cancel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (payment === "success") {
+      // Clear cart server-side then show success
+      fetch("/api/cart/all", { method: "DELETE", credentials: "include" })
+        .catch(() => {})
+        .finally(() => {
+          queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        });
+      setIsOrderSuccessOpen(true);
+      // Clean URL without reloading
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (payment === "cancel") {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [queryClient]);
+
+  const handleBookingSuccess = (serviceName: string) => {
+    setBookingSuccessService(serviceName);
+    setIsBookingSuccessOpen(true);
+  };
+
+  const handleOpenCart = () => {
+    setIsProductsOpen(false);
+    setIsCartOpen(true);
+  };
+
+  const handleContinueShopping = () => {
+    setIsCartOpen(false);
+    setIsProductsOpen(true);
+  };
 
   return (
     <div className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
@@ -74,7 +118,7 @@ export default function Home() {
             transition={{ type: "spring", stiffness: 380, damping: 26 }}
             whileHover={{ scale: 1.1, boxShadow: "0 0 28px rgba(26,157,224,0.7)" }}
             whileTap={{ scale: 0.92 }}
-            onClick={() => setIsProductsOpen(true)}
+            onClick={handleOpenCart}
             className="fixed bottom-24 right-4 sm:bottom-28 sm:right-6 z-50 w-11 h-11 rounded-full bg-[#080d14] border border-primary/50 flex items-center justify-center shadow-[0_0_18px_rgba(26,157,224,0.45)] cursor-pointer"
             aria-label="Open cart"
           >
@@ -94,11 +138,31 @@ export default function Home() {
       <ProductsPopup
         isOpen={isProductsOpen}
         onClose={() => setIsProductsOpen(false)}
+        onOpenCart={handleOpenCart}
+        onBookingSuccess={handleBookingSuccess}
+      />
+
+      <CartPopup
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onContinueShopping={handleContinueShopping}
+        onOrderSuccess={() => setIsOrderSuccessOpen(true)}
       />
 
       <MembersModal
         isOpen={isMembersOpen}
         onClose={() => setIsMembersOpen(false)}
+      />
+
+      <OrderSuccessModal
+        isOpen={isOrderSuccessOpen}
+        onClose={() => setIsOrderSuccessOpen(false)}
+      />
+
+      <BookingSuccessModal
+        isOpen={isBookingSuccessOpen}
+        onClose={() => setIsBookingSuccessOpen(false)}
+        serviceName={bookingSuccessService}
       />
     </div>
   );

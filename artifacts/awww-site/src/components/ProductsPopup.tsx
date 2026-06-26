@@ -18,6 +18,8 @@ import { useQueryClient } from "@tanstack/react-query";
 interface ProductsPopupProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenCart?: () => void;
+  onBookingSuccess?: (serviceName: string) => void;
 }
 
 const ITEMS_PER_PAGE = 2;
@@ -31,7 +33,7 @@ const PRODUCT_GRADIENTS = [
   "linear-gradient(135deg, #0d1420 0%, #1e3040 50%, #081020 100%)",
 ];
 
-export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
+export function ProductsPopup({ isOpen, onClose, onOpenCart, onBookingSuccess }: ProductsPopupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -67,14 +69,19 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
     });
   };
 
-  const handleBookService = (serviceId: number) => {
+  const handleBookService = (serviceId: number, serviceName: string) => {
     createBooking.mutate({ data: { serviceId, preferredDate: bookingDate, notes: bookingNotes } }, {
       onSuccess: () => {
-        toast({ title: "Booking requested", description: "We will confirm your date soon." });
         setBookingFormId(null);
         setBookingDate("");
         setBookingNotes("");
         queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+        if (onBookingSuccess) {
+          onClose();
+          onBookingSuccess(serviceName);
+        } else {
+          toast({ title: "Booking requested", description: "We will confirm your date soon." });
+        }
       },
     });
   };
@@ -108,10 +115,13 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
             Offerings
           </h2>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground bg-primary/8 px-2.5 py-1 rounded-full border border-primary/20">
+            <button
+              onClick={onOpenCart}
+              className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground bg-primary/8 px-2.5 py-1 rounded-full border border-primary/20 hover:border-primary/40 hover:text-primary transition-colors"
+            >
               <ShoppingCart className="h-3.5 w-3.5 text-primary" />
               <span>NZ${cart?.total?.toFixed(2) || "0.00"}</span>
-            </div>
+            </button>
             <Button
               variant="ghost"
               size="icon"
@@ -310,7 +320,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
                         />
                         <div className="flex gap-2">
                           <Button
-                            onClick={() => handleBookService(item.id)}
+                            onClick={() => handleBookService(item.id, item.name)}
                             className="flex-1 font-mono uppercase tracking-widest text-xs h-8"
                             disabled={createBooking.isPending}
                             data-testid={`button-confirm-booking-${item.id}`}
