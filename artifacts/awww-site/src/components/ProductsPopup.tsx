@@ -99,8 +99,8 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 16 }}
         transition={{ type: "spring", stiffness: 320, damping: 34 }}
-        className="w-full max-w-lg flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto"
-        style={{ maxHeight: "min(680px, calc(100dvh - 48px))" }}
+        className="w-full max-w-md flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto"
+        style={{ height: "560px" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
@@ -157,8 +157,8 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
                 </div>
               ) : (
                 <>
-                  {/* Sliding product cards */}
-                  <div className="flex-1 overflow-hidden relative px-5 py-4">
+                  {/* Sliding product cards — compact, 2 fit without scrolling */}
+                  <div className="overflow-hidden relative px-5 pt-4 pb-2" style={{ flex: "1 1 0" }}>
                     <AnimatePresence mode="wait" custom={slideDir}>
                       <motion.div
                         key={shopPage}
@@ -172,40 +172,42 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
                         animate="center"
                         exit="exit"
                         transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                        className="space-y-4 h-full"
+                        className="flex flex-col gap-3 h-full"
                       >
                         {currentShopItems.map((item, idx) => (
                           <div
                             key={item.id}
-                            className="rounded-xl border border-primary/15 bg-[#0d1520]/80 overflow-hidden hover:border-primary/35 transition-colors"
+                            className="flex rounded-xl border border-primary/15 bg-[#0d1520]/80 overflow-hidden hover:border-primary/35 transition-colors"
+                            style={{ flex: "1 1 0", minHeight: 0 }}
                             data-testid={`card-product-${item.id}`}
                           >
-                            {/* Product image placeholder */}
+                            {/* Image strip on the left */}
                             <div
-                              className="w-full h-28 flex items-center justify-center relative overflow-hidden"
+                              className="w-24 shrink-0 flex items-center justify-center relative overflow-hidden"
                               style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
                             >
-                              <div className="absolute inset-0 opacity-20"
+                              <div className="absolute inset-0"
                                 style={{
-                                  backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.07) 4px, rgba(26,157,224,0.07) 5px)",
+                                  backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
                                 }}
                               />
-                              <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-primary/30 z-10">
-                                Product Image
+                              <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
+                                Image
                               </span>
                             </div>
 
-                            <div className="p-4">
-                              <div className="flex justify-between items-start mb-1.5">
-                                <h3 className="font-bold text-sm text-foreground">{item.name}</h3>
-                                <span className="font-mono text-primary font-bold text-sm ml-2 shrink-0">
-                                  £{item.price.toFixed(2)}
-                                </span>
+                            {/* Right content */}
+                            <div className="flex flex-col justify-between p-3 flex-1 min-w-0">
+                              <div>
+                                <div className="flex justify-between items-start gap-2 mb-1">
+                                  <h3 className="font-bold text-sm text-foreground leading-tight truncate">{item.name}</h3>
+                                  <span className="font-mono text-primary font-bold text-sm shrink-0">£{item.price.toFixed(2)}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{item.description}</p>
                               </div>
-                              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{item.description}</p>
                               <Button
                                 onClick={() => handleAddToCart(item.id)}
-                                className="w-full font-mono uppercase tracking-widest text-xs h-8"
+                                className="w-full font-mono uppercase tracking-widest text-[10px] h-7 mt-2"
                                 disabled={addToCart.isPending}
                                 data-testid={`button-add-to-cart-${item.id}`}
                               >
@@ -266,7 +268,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
 
           {/* ── SERVICES TAB ── */}
           {activeTab === "services" && (
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <div className="flex-1 scroll-industrial px-5 py-4 space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8 font-mono text-muted-foreground text-sm">
                   Loading services...

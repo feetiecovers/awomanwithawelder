@@ -140,42 +140,57 @@ export function BrandOrbs() {
                 className="relative flex flex-col items-center justify-center"
               >
                 {brand.logo ? (
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    style={{
-                      width: imgSize,
-                      height: imgSize,
-                      objectFit: "contain",
-                      // "screen" blend removes any black background in the PNG
-                      mixBlendMode: "screen",
-                      // Invert purely-black logos so they become white on dark background
-                      filter: brand.dark
-                        ? "invert(1) drop-shadow(0 0 10px rgba(255,255,255,0.7)) drop-shadow(0 0 24px rgba(26,157,224,0.6))"
-                        : "drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 20px rgba(26,157,224,0.6))",
-                    }}
-                  />
+                  brand.dark ? (
+                    // Dark/black logo: light badge background so the black reads clearly
+                    <div
+                      className="relative flex items-center justify-center rounded-xl overflow-hidden"
+                      style={{
+                        width: imgSize,
+                        height: imgSize * 0.6,
+                        background: "radial-gradient(ellipse at center, rgba(230,240,255,0.92) 30%, rgba(180,210,240,0.6) 70%, transparent 100%)",
+                        filter: "drop-shadow(0 0 12px rgba(26,157,224,0.7)) drop-shadow(0 0 4px rgba(255,255,255,0.5))",
+                      }}
+                    >
+                      <img
+                        src={brand.logo}
+                        alt={brand.name}
+                        style={{ width: "90%", height: "90%", objectFit: "contain" }}
+                      />
+                    </div>
+                  ) : (
+                    // Colour logo: screen blend erases dark background, glow halo
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      style={{
+                        width: imgSize,
+                        height: imgSize,
+                        objectFit: "contain",
+                        mixBlendMode: "screen",
+                        filter: "drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 20px rgba(26,157,224,0.6))",
+                      }}
+                    />
+                  )
                 ) : (
-                  // Coming soon placeholder — subtle glow ring
-                  <div
-                    className="flex flex-col items-center justify-center rounded-full"
-                    style={{
-                      width: orbSize,
-                      height: orbSize,
-                      border: "1px dashed rgba(26,157,224,0.3)",
-                      boxShadow: "0 0 18px rgba(26,157,224,0.2)",
-                      background: "rgba(13,20,32,0.7)",
-                    }}
-                  >
+                  // Coming soon — just glowing text, no border or circle
+                  <div className="flex flex-col items-center justify-center">
                     <span
-                      className="font-mono text-primary/50 font-bold tracking-widest uppercase text-center leading-tight px-2"
-                      style={{ fontSize: Math.max(7, 9 * scale) }}
+                      className="font-mono font-bold tracking-widest uppercase text-center leading-tight"
+                      style={{
+                        fontSize: Math.max(7, 9 * scale),
+                        color: "rgba(26,157,224,0.55)",
+                        textShadow: "0 0 8px rgba(26,157,224,0.4)",
+                      }}
                     >
                       Coming
                     </span>
                     <span
-                      className="font-mono text-primary/50 font-bold tracking-widest uppercase"
-                      style={{ fontSize: Math.max(7, 9 * scale) }}
+                      className="font-mono font-bold tracking-widest uppercase"
+                      style={{
+                        fontSize: Math.max(7, 9 * scale),
+                        color: "rgba(26,157,224,0.55)",
+                        textShadow: "0 0 8px rgba(26,157,224,0.4)",
+                      }}
                     >
                       Soon
                     </span>

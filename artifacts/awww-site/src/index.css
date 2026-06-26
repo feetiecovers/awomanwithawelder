@@ -132,3 +132,22 @@
     @apply font-sans antialiased bg-background text-foreground overflow-hidden;
   }
 }
+
+/* Industrial scrollbar — thin blue track */
+.scroll-industrial {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26,157,224,0.5) rgba(10,15,26,0.8);
+}
+.scroll-industrial::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-industrial::-webkit-scrollbar-track {
+  background: rgba(10,15,26,0.8);
+  border-radius: 2px;
+}
+.scroll-industrial::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1a9de0 0%, #1e6fa8 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(26,157,224,0.6);
+}
