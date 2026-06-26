@@ -140,37 +140,21 @@ export function BrandOrbs() {
                 className="relative flex flex-col items-center justify-center"
               >
                 {brand.logo ? (
-                  brand.dark ? (
-                    // Dark/black logo: light badge background so the black reads clearly
-                    <div
-                      className="relative flex items-center justify-center rounded-xl overflow-hidden"
-                      style={{
-                        width: imgSize,
-                        height: imgSize * 0.6,
-                        background: "radial-gradient(ellipse at center, rgba(230,240,255,0.92) 30%, rgba(180,210,240,0.6) 70%, transparent 100%)",
-                        filter: "drop-shadow(0 0 12px rgba(26,157,224,0.7)) drop-shadow(0 0 4px rgba(255,255,255,0.5))",
-                      }}
-                    >
-                      <img
-                        src={brand.logo}
-                        alt={brand.name}
-                        style={{ width: "90%", height: "90%", objectFit: "contain" }}
-                      />
-                    </div>
-                  ) : (
-                    // Colour logo: screen blend erases dark background, glow halo
-                    <img
-                      src={brand.logo}
-                      alt={brand.name}
-                      style={{
-                        width: imgSize,
-                        height: imgSize,
-                        objectFit: "contain",
-                        mixBlendMode: "screen",
-                        filter: "drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 20px rgba(26,157,224,0.6))",
-                      }}
-                    />
-                  )
+                  // All logos: screen blend erases dark/black backgrounds, halo glow floats the artwork
+                  // Dark (black) logos get invert(1) first so they read as white through screen blend
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    style={{
+                      width: imgSize,
+                      height: imgSize,
+                      objectFit: "contain",
+                      mixBlendMode: "screen",
+                      filter: brand.dark
+                        ? "invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.65)) drop-shadow(0 0 20px rgba(26,157,224,0.65))"
+                        : "drop-shadow(0 0 8px rgba(255,255,255,0.6))  drop-shadow(0 0 20px rgba(26,157,224,0.6))",
+                    }}
+                  />
                 ) : (
                   // Coming soon — just glowing text, no border or circle
                   <div className="flex flex-col items-center justify-center">

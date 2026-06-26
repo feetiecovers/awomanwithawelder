@@ -110,7 +110,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground bg-primary/8 px-2.5 py-1 rounded-full border border-primary/20">
               <ShoppingCart className="h-3.5 w-3.5 text-primary" />
-              <span>£{cart?.total?.toFixed(2) || "0.00"}</span>
+              <span>NZ${cart?.total?.toFixed(2) || "0.00"}</span>
             </div>
             <Button
               variant="ghost"
@@ -201,7 +201,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
                               <div>
                                 <div className="flex justify-between items-start gap-2 mb-1">
                                   <h3 className="font-bold text-sm text-foreground leading-tight truncate">{item.name}</h3>
-                                  <span className="font-mono text-primary font-bold text-sm shrink-0">£{item.price.toFixed(2)}</span>
+                                  <span className="font-mono text-primary font-bold text-sm shrink-0">NZ${item.price.toFixed(2)}</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{item.description}</p>
                               </div>
@@ -287,7 +287,7 @@ export function ProductsPopup({ isOpen, onClose }: ProductsPopupProps) {
                     <div className="flex justify-between items-start mb-1.5">
                       <h3 className="font-bold text-sm text-foreground">{item.name}</h3>
                       <span className="font-mono text-primary font-bold text-sm ml-2 shrink-0">
-                        From £{item.price.toFixed(2)}
+                        From NZ${item.price.toFixed(2)}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{item.description}</p>
