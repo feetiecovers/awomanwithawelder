@@ -47,3 +47,13 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+.env
+*.log
+*.err.log
+*.bak
+*.bak-*
+*.bak-security
+artifacts/api-server/.env
+artifacts/awww-site/.env
+
+*.bak.tsx

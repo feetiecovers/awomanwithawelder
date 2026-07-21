@@ -136,7 +136,7 @@ paths:
     post:
       operationId: createBooking
       tags: [bookings]
-      summary: Create a new booking
+      summary: Create a new booking for the current member or a guest
       requestBody:
         required: true
         content:
@@ -369,7 +369,7 @@ components:
         id:
           type: integer
         memberId:
-          type: integer
+          type: ["integer", "null"]
         serviceId:
           type: integer
         status:
@@ -383,7 +383,6 @@ components:
           type: string
       required:
         - id
-        - memberId
         - serviceId
         - status
         - createdAt
@@ -394,7 +393,7 @@ components:
         id:
           type: integer
         memberId:
-          type: integer
+          type: ["integer", "null"]
         serviceId:
           type: integer
         status:
@@ -410,7 +409,6 @@ components:
           $ref: "#/components/schemas/Product"
       required:
         - id
-        - memberId
         - serviceId
         - status
         - createdAt
@@ -425,6 +423,24 @@ components:
           type: string
         notes:
           type: string
+        fullName:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        serviceName:
+          type: string
+        servicePrice:
+          type: number
+        subtotal:
+          type: number
+        gst:
+          type: number
+        total:
+          type: number
       required:
         - serviceId
 

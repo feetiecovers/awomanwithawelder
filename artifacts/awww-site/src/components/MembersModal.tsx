@@ -14,7 +14,7 @@ import {
   useGetMemberBookings,
   useLogoutMember,
   getGetCurrentMemberQueryKey,
-  getGetMemberBookingsQueryKey
+  getGetMemberBookingsQueryKey,
 } from "@workspace/api-client-react";
 
 interface MembersModalProps {
@@ -28,7 +28,7 @@ export function MembersModal({ isOpen, onClose }: MembersModalProps) {
   
   const { data: member, isLoading: isLoadingMember } = useGetCurrentMember();
   const { data: bookings = [], isLoading: isLoadingBookings } = useGetMemberBookings({
-    query: { enabled: !!member }
+    query: { enabled: !!member, queryKey: getGetMemberBookingsQueryKey() }
   });
   
   const login = useLoginMember();
@@ -83,7 +83,7 @@ export function MembersModal({ isOpen, onClose }: MembersModalProps) {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-md flex flex-col bg-card border border-primary/30 rounded-xl shadow-2xl overflow-hidden"
+          className="w-full max-w-md flex flex-col bg-card border border-primary/30 rounded-xl shadow-2xl overflow-y-auto max-h-[calc(100dvh-32px)]"
         >
           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
             <h2 className="text-xl font-mono font-bold text-primary tracking-widest uppercase">Members Area</h2>

@@ -32,6 +32,8 @@ export interface CartItem {
   productId: number;
   product: Product;
   quantity: number;
+  shippingLabel?: string;
+  shippingPrice?: number;
 }
 
 export interface Cart {
@@ -42,6 +44,8 @@ export interface Cart {
 export interface CartItemInput {
   productId: number;
   quantity: number;
+  shippingLabel?: string;
+  shippingPrice?: number;
 }
 
 export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];
@@ -56,7 +60,8 @@ export const BookingStatus = {
 
 export interface Booking {
   id: number;
-  memberId: number;
+  /** @nullable */
+  memberId?: number | null;
   serviceId: number;
   status: BookingStatus;
   /** @nullable */
@@ -78,7 +83,8 @@ export const BookingWithProductStatus = {
 
 export interface BookingWithProduct {
   id: number;
-  memberId: number;
+  /** @nullable */
+  memberId?: number | null;
   serviceId: number;
   status: BookingWithProductStatus;
   /** @nullable */
@@ -93,6 +99,15 @@ export interface BookingInput {
   serviceId: number;
   preferredDate?: string;
   notes?: string;
+  fullName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  serviceName?: string;
+  servicePrice?: number;
+  subtotal?: number;
+  gst?: number;
+  total?: number;
 }
 
 export interface Member {
@@ -128,4 +143,3 @@ export type SubmitContact200 = {
   success: boolean;
   message: string;
 };
-

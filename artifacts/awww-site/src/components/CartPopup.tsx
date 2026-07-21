@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { buildApiUrl } from "@/lib/api-base";
 import {
   useGetCart,
   useRemoveFromCart,
@@ -33,7 +34,7 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
   const { data: cart, isLoading } = useGetCart();
   const removeFromCart = useRemoveFromCart();
 
-  const items = (cart?.items as Array<{ productId: number; quantity: number; product: { name: string; price: number; description?: string | null } }>) ?? [];
+  const items = (cart?.items as Array<{ productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; product: { name: string; price: number; description?: string | null } }>) ?? [];
   const total = cart?.total ?? 0;
 
   const handleRemove = (productId: number) => {
@@ -51,7 +52,7 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
     if (items.length === 0) return;
     setIsCheckingOut(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch(buildApiUrl("/api/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -92,8 +93,7 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 16 }}
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
-          className="w-full max-w-md flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto"
-          style={{ height: "560px" }}
+          className="w-full max-w-md flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
@@ -175,9 +175,16 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
                       {/* Content */}
                       <div className="flex-1 flex flex-col justify-between p-3 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-bold text-sm text-foreground leading-tight truncate">
-                            {item.product.name}
-                          </h3>
+                          <div>
+                            <h3 className="font-bold text-sm text-foreground leading-tight truncate">
+                              {item.product.name}
+                            </h3>
+                            {item.shippingLabel && (
+                              <p className="text-[10px] text-primary/80 font-mono mt-0.5 leading-none">
+                                + {item.shippingLabel}
+                              </p>
+                            )}
+                          </div>
                           <button
                             onClick={() => handleRemove(item.productId)}
                             className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-0.5 rounded"
@@ -191,7 +198,7 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
                             Qty: {item.quantity}
                           </span>
                           <span className="font-mono text-primary font-bold text-sm">
-                            NZ${(item.product.price * item.quantity).toFixed(2)}
+                            NZ${((item.product.price + (item.shippingPrice ?? 0)) * item.quantity).toFixed(2)}
                           </span>
                         </div>
                       </div>

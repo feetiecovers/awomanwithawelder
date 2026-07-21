@@ -73,5 +73,9 @@
     "vite": "catalog:",
     "wouter": "^3.3.5",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "stream-chat": "^9.48.0",
+    "stream-chat-react": "^14.6.0"
   }
 }

@@ -8,8 +8,8 @@ export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed
 
 export const bookingsTable = pgTable("bookings", {
   id: serial("id").primaryKey(),
-  memberId: integer("member_id").notNull().references(() => membersTable.id),
-  serviceId: integer("service_id").notNull().references(() => productsTable.id),
+  memberId: integer("member_id").references(() => membersTable.id),
+  serviceId: integer("service_id").notNull(),
   status: bookingStatusEnum("status").notNull().default("pending"),
   preferredDate: text("preferred_date"),
   notes: text("notes"),

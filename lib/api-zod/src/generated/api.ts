@@ -64,7 +64,9 @@ export const GetCartResponse = zod.object({
   "available": zod.boolean(),
   "createdAt": zod.string()
 }),
-  "quantity": zod.number()
+  "quantity": zod.number(),
+  "shippingLabel": zod.string().optional(),
+  "shippingPrice": zod.number().optional()
 })),
   "total": zod.number()
 })
@@ -75,7 +77,9 @@ export const GetCartResponse = zod.object({
  */
 export const AddToCartBody = zod.object({
   "productId": zod.number(),
-  "quantity": zod.number()
+  "quantity": zod.number(),
+  "shippingLabel": zod.string().optional(),
+  "shippingPrice": zod.number().optional()
 })
 
 export const AddToCartResponse = zod.object({
@@ -90,7 +94,9 @@ export const AddToCartResponse = zod.object({
   "available": zod.boolean(),
   "createdAt": zod.string()
 }),
-  "quantity": zod.number()
+  "quantity": zod.number(),
+  "shippingLabel": zod.string().optional(),
+  "shippingPrice": zod.number().optional()
 })),
   "total": zod.number()
 })
@@ -115,7 +121,9 @@ export const RemoveFromCartResponse = zod.object({
   "available": zod.boolean(),
   "createdAt": zod.string()
 }),
-  "quantity": zod.number()
+  "quantity": zod.number(),
+  "shippingLabel": zod.string().optional(),
+  "shippingPrice": zod.number().optional()
 })),
   "total": zod.number()
 })
@@ -142,7 +150,16 @@ export const ListBookingsResponse = zod.array(ListBookingsResponseItem)
 export const CreateBookingBody = zod.object({
   "serviceId": zod.number(),
   "preferredDate": zod.string().optional(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "fullName": zod.string().optional(),
+  "address": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional(),
+  "serviceName": zod.string().optional(),
+  "servicePrice": zod.number().optional(),
+  "subtotal": zod.number().optional(),
+  "gst": zod.number().optional(),
+  "total": zod.number().optional()
 })
 
 
@@ -247,5 +264,4 @@ export const SubmitContactResponse = zod.object({
   "success": zod.boolean(),
   "message": zod.string()
 })
-
 

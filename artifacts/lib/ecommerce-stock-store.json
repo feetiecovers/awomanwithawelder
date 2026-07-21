@@ -1,0 +1,1035 @@
+[
+  {
+    "id": 1,
+    "name": "Ride-On Lawnmower Trailer",
+    "price": 1199,
+    "sellPrice": 1199,
+    "unitPrice": 1199,
+    "displayPrice": 1199,
+    "comingSoon": false,
+    "showComingSoonBanner": false,
+    "comingSoonLabel": "Coming Soon",
+    "priceLabel": "",
+    "pricePrefix": "",
+    "gstIncluded": true,
+    "taxIncluded": true,
+    "vatIncluded": true,
+    "shipping": {
+      "type": "preset",
+      "presetId": "ship-preset-1782989695110",
+      "label": "Shipping",
+      "name": "Ride On Mower Trailer (to Nelson)",
+      "price": 65,
+      "carrier": "Mainfreight",
+      "service": "Standard",
+      "displayTiming": "checkout",
+      "isProductCost": false,
+      "cartLine": {
+        "description": "Shipping",
+        "quantity": 1,
+        "unitPrice": 65,
+        "total": 65
+      }
+    },
+    "category": "Trailers",
+    "categoryId": "cat-prod-001",
+    "subcategory": "Ride-On Mower Tower",
+    "subcategoryId": "sub-prod-1780216143858-657",
+    "subcategories": [
+      "Ride-On Mower Tower"
+    ],
+    "stock": 3,
+    "code": "MINITOW-01",
+    "sku": "MINITOW-01",
+    "image": null,
+    "description": "Design and create a Trailer for a Ride-On Lawnmower. \n- We have an example, we have all that we should need in-stock with the exception of wheels and an axle.",
+    "businessId": "biz-default",
+    "websiteIds": [
+      "web-1782561404289"
+    ],
+    "websiteId": "web-1782561404289",
+    "showOnWebsite": true,
+    "images": [],
+    "variantMode": "none",
+    "variantLabel": "Option",
+    "hasVariants": false,
+    "variants": [],
+    "externalId": "sp-1780139922566",
+    "_sourceType": "product",
+    "_syncKey": "product:sp-1780139922566",
+    "createdAt": "2026-07-11T10:12:21.706Z",
+    "updatedAt": "2026-07-20T09:00:58.644Z",
+    "shippingRatePresetId": "ship-preset-1782989695110",
+    "shippingRatePresetIds": [
+      "ship-preset-1782989695110",
+      "ship-preset-1782989695235",
+      "ship-preset-1782989997802",
+      "ship-preset-1782989997895"
+    ],
+    "allowMultipleShippingPresets": true,
+    "shippingFee": 65,
+    "shippingPrice": 65,
+    "freightPrice": 65,
+    "shippingMethod": "Mainfreight - Standard",
+    "shippingOptions": [
+      {
+        "id": "ship-preset-1782989695110",
+        "name": "Ride On Mower Trailer (to Nelson)",
+        "carrier": "Mainfreight",
+        "service": "Standard",
+        "fixedPrice": 65,
+        "shippingFee": 65,
+        "shippingPrice": 65,
+        "freightPrice": 65
+      },
+      {
+        "id": "ship-preset-1782989695235",
+        "name": "Ride On Mower Trailer (to Christchurch)",
+        "carrier": "Mainfreight",
+        "service": "Standard",
+        "fixedPrice": 185,
+        "shippingFee": 185,
+        "shippingPrice": 185,
+        "freightPrice": 185
+      },
+      {
+        "id": "ship-preset-1782989997802",
+        "name": "Ride On Mower Trailer (to Tauranga)",
+        "carrier": "Mainfreight",
+        "service": "Standard",
+        "fixedPrice": 322.5,
+        "shippingFee": 322.5,
+        "shippingPrice": 322.5,
+        "freightPrice": 322.5
+      },
+      {
+        "id": "ship-preset-1782989997895",
+        "name": "Ride On Mower Trailer (to Wellington)",
+        "carrier": "Mainfreight",
+        "service": "Standard",
+        "fixedPrice": 260,
+        "shippingFee": 260,
+        "shippingPrice": 260,
+        "freightPrice": 260
+      }
+    ],
+    "quantity": 3,
+    "in_stock": true,
+    "inStock": true,
+    "brandId": "brand-1779790408266",
+    "bom": [
+      {
+        "stockItemId": "si-1780141191945",
+        "quantity": 2,
+        "unit": "ea"
+      },
+      {
+        "stockItemId": "si-1780140736297",
+        "quantity": 1,
+        "unit": "l"
+      },
+      {
+        "stockItemId": "si-1780140513795",
+        "quantity": 3,
+        "unit": "ea"
+      },
+      {
+        "stockItemId": "si-1780141045207",
+        "quantity": 1,
+        "unit": "m"
+      },
+      {
+        "stockItemId": "si-1779704362935-34",
+        "quantity": 24,
+        "unit": "m"
+      },
+      {
+        "stockItemId": "si-1779704362935-26",
+        "quantity": 12.6,
+        "unit": "m"
+      },
+      {
+        "stockItemId": "si-1779704362935-36",
+        "quantity": 2.97,
+        "unit": "m2"
+      }
+    ],
+    "labourMinutes": 0,
+    "labourTypeId": "lab-1780141269799",
+    "costPrice": 448.3416,
+    "markupPercent": 40,
+    "websiteImageMap": {},
+    "bomEditable": true,
+    "unit": "ea",
+    "excludeJobLabour": false,
+    "sellPriceManual": false,
+    "lowStockThreshold": 5,
+    "websiteIdsExplicitlyCleared": false,
+    "subcategoryIds": [
+      "sub-prod-1780216143858-657"
+    ],
+    "allowMultipleSubcategories": false,
+    "bomHistory": []
+  },
+  {
+    "id": 2,
+    "code": "SERV-ELEC",
+    "sku": "SERV-ELEC",
+    "name": "Electrical Diagnosis & Repairs (7-Pin)",
+    "price": 65,
+    "sellPrice": 65,
+    "unitPrice": 65,
+    "displayPrice": 65,
+    "gstIncluded": false,
+    "taxIncluded": false,
+    "vatIncluded": false,
+    "category": "Trailers",
+    "categoryId": "cat-prod-001",
+    "subcategory": "Trailer Services & Repairs",
+    "subcategoryId": "sub-prod-1782557150594-127",
+    "subcategories": [
+      "Trailer Services & Repairs"
+    ],
+    "stock": 0,
+    "quantity": 0,
+    "in_stock": true,
+    "inStock": true,
+    "skuCode": "SERV-ELEC",
+    "image": null,
+    "description": "",
+    "businessId": "biz-default",
+    "websiteIds": [
+      "web-1782561404289"
+    ],
+    "websiteId": "web-1782561404289",
+    "showOnWebsite": true,
+    "images": [],
+    "bookingRequired": true,
+    "fulfillmentType": "job",
+    "serviceType": "stock_service",
+    "inventoryTracked": false,
+    "variantMode": "variants",
+    "variantLabel": "Option",
+    "hasVariants": true,
+    "variants": [
+      {
+        "id": "variant-svc-1783166810182-0",
+        "stockProductId": "svc-1783166910050",
+        "name": "Electrical Re-Wiring (7-Pin)",
+        "code": "SERV-ELECWIRE01",
+        "unit": "",
+        "costPrice": 129.27,
+        "sellPrice": 149.99,
+        "quantity": 0,
+        "isDefault": true
+      },
+      {
+        "id": "variant-svc-1783166810182-1783241005986-6pfr",
+        "stockProductId": "svc-1783166841859",
+        "name": "Electrical Diagnosis (7-Pin)",
+        "code": "SERV-ELECDIAG01",
+        "unit": "",
+        "costPrice": 12.5,
+        "sellPrice": 65,
+        "quantity": 0,
+        "isDefault": false
+      }
+    ],
+    "externalId": "svc-1783166810182",
+    "_sourceType": "service",
+    "_syncKey": "service:svc-1783166810182",
+    "createdAt": "2026-07-11T10:12:21.706Z",
+    "updatedAt": "2026-07-20T09:00:58.644Z",
+    "bookingFields": [
+      {
+        "id": "booking-field-rego-number",
+        "label": "Rego Number",
+        "type": "text",
+        "placeholder": "Enter rego number",
+        "required": false,
+        "options": []
+      },
+      {
+        "id": "booking-field-trailer-homemade",
+        "label": "Trailer Brand",
+        "type": "select",
+        "placeholder": "It helps with parts...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-field-trailer-homemade-yes",
+            "label": "Tuff Trailer",
+            "value": "Titan Trailer"
+          },
+          {
+            "id": "booking-field-trailer-homemade-no",
+            "label": "Safari Trailer",
+            "value": "Elite Trailer"
+          },
+          {
+            "id": "booking-option-1782906122640",
+            "label": "Ifor Williams Trailer",
+            "value": "Brian James Trailer"
+          },
+          {
+            "id": "booking-option-1782906122781",
+            "label": "Activ Trailer",
+            "value": "Action Sports Trailer"
+          },
+          {
+            "id": "booking-option-1782906122913",
+            "label": "Kea Trailer",
+            "value": "Prescott Trailer"
+          },
+          {
+            "id": "booking-option-1782906123038",
+            "label": "Pinto Trailer",
+            "value": "Tui Trailer"
+          },
+          {
+            "id": "booking-option-1782906123173",
+            "label": "KT Trailer",
+            "value": "Lucca Trailer"
+          },
+          {
+            "id": "booking-option-1782906123322",
+            "label": "Homebuilt (No Brand)",
+            "value": "GFab Trailer"
+          },
+          {
+            "id": "booking-option-1782906123460",
+            "label": "Hosking Trailer",
+            "value": "Trailer World Trailer"
+          },
+          {
+            "id": "booking-option-1782906256441",
+            "label": "X-Trailers Trailer",
+            "value": "Gorilla Trailers"
+          },
+          {
+            "id": "booking-option-1782906256582",
+            "label": "Muscle Trailer",
+            "value": "Top Gear Trailer"
+          },
+          {
+            "id": "booking-option-1782906256718",
+            "label": "Trayla Trailer",
+            "value": "Trailor Trailer"
+          },
+          {
+            "id": "booking-option-1782906256862",
+            "label": "Best Trailer",
+            "value": "Futura Trailer"
+          },
+          {
+            "id": "booking-option-1782906257009",
+            "label": "NZ Foods Trailer",
+            "value": "Prime Trailer"
+          },
+          {
+            "id": "booking-option-1782906257150",
+            "label": "MegaStrong Trailer",
+            "value": "JobMate Trailer"
+          },
+          {
+            "id": "booking-option-1782906257306",
+            "label": "Bunnings Trailer (Retro)",
+            "value": "Boeckmann Trailer"
+          },
+          {
+            "id": "booking-option-1782906257435",
+            "label": "Brent Smith Trailer",
+            "value": "Other Brand"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906761148",
+        "label": "Is your trailer from America?",
+        "type": "select",
+        "placeholder": "They use different lighting streams...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906838056",
+            "label": "Yes",
+            "value": "No"
+          },
+          {
+            "id": "booking-option-1782906841860",
+            "label": "Not Sure",
+            "value": "Yes, but it has a 7-Pin System (Not Adapted)"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906793530",
+        "label": "Can you transport the trailer to my workshop?",
+        "type": "checkbox",
+        "placeholder": "",
+        "required": true,
+        "options": []
+      },
+      {
+        "id": "booking-field-1782906734487",
+        "label": "Does your trailer have a Current Warrant of Fitness?",
+        "type": "checkbox",
+        "placeholder": "We may not touch it, just so you know...",
+        "required": true,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "code": "SERV-FULL",
+    "sku": "SERV-FULL",
+    "name": "Complete Trailer Service (Single Axle)",
+    "price": 299.99,
+    "sellPrice": 299.99,
+    "unitPrice": 299.99,
+    "displayPrice": 299.99,
+    "gstIncluded": false,
+    "taxIncluded": false,
+    "vatIncluded": false,
+    "category": "Trailers",
+    "categoryId": "cat-prod-001",
+    "subcategory": "Trailer Services & Repairs",
+    "subcategoryId": "sub-prod-1782557150594-127",
+    "subcategories": [
+      "Trailer Services & Repairs"
+    ],
+    "stock": 0,
+    "quantity": 0,
+    "in_stock": true,
+    "inStock": true,
+    "skuCode": "SERV-FULL",
+    "image": null,
+    "description": "",
+    "businessId": "biz-default",
+    "websiteIds": [
+      "web-1782561404289"
+    ],
+    "websiteId": "web-1782561404289",
+    "showOnWebsite": true,
+    "images": [],
+    "bookingRequired": true,
+    "fulfillmentType": "job",
+    "serviceType": "stock_service",
+    "inventoryTracked": false,
+    "variantMode": "variants",
+    "variantLabel": "Option",
+    "hasVariants": true,
+    "variants": [
+      {
+        "id": "variant-svc-1783166554908-0",
+        "stockProductId": "svc-1783166590623",
+        "name": "Complete Trailer Service (Single Axle) - Caged Trailer",
+        "code": "SERV-FULL-SA01",
+        "unit": "",
+        "costPrice": 190.91,
+        "sellPrice": 299.99,
+        "quantity": 0,
+        "isDefault": true
+      }
+    ],
+    "externalId": "svc-1783166554908",
+    "_sourceType": "service",
+    "_syncKey": "service:svc-1783166554908",
+    "createdAt": "2026-07-11T10:12:21.706Z",
+    "updatedAt": "2026-07-20T09:00:58.644Z",
+    "bookingFields": [
+      {
+        "id": "booking-field-rego-number",
+        "label": "Rego Number",
+        "type": "text",
+        "placeholder": "Enter rego number",
+        "required": false,
+        "options": []
+      },
+      {
+        "id": "booking-field-trailer-homemade",
+        "label": "Trailer Brand",
+        "type": "select",
+        "placeholder": "It helps with parts...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-field-trailer-homemade-yes",
+            "label": "Tuff Trailer",
+            "value": "Titan Trailer"
+          },
+          {
+            "id": "booking-field-trailer-homemade-no",
+            "label": "Safari Trailer",
+            "value": "Elite Trailer"
+          },
+          {
+            "id": "booking-option-1782906122640",
+            "label": "Ifor Williams Trailer",
+            "value": "Brian James Trailer"
+          },
+          {
+            "id": "booking-option-1782906122781",
+            "label": "Activ Trailer",
+            "value": "Action Sports Trailer"
+          },
+          {
+            "id": "booking-option-1782906122913",
+            "label": "Kea Trailer",
+            "value": "Prescott Trailer"
+          },
+          {
+            "id": "booking-option-1782906123038",
+            "label": "Pinto Trailer",
+            "value": "Tui Trailer"
+          },
+          {
+            "id": "booking-option-1782906123173",
+            "label": "KT Trailer",
+            "value": "Lucca Trailer"
+          },
+          {
+            "id": "booking-option-1782906123322",
+            "label": "Homebuilt (No Brand)",
+            "value": "GFab Trailer"
+          },
+          {
+            "id": "booking-option-1782906123460",
+            "label": "Hosking Trailer",
+            "value": "Trailer World Trailer"
+          },
+          {
+            "id": "booking-option-1782906256441",
+            "label": "X-Trailers Trailer",
+            "value": "Gorilla Trailers"
+          },
+          {
+            "id": "booking-option-1782906256582",
+            "label": "Muscle Trailer",
+            "value": "Top Gear Trailer"
+          },
+          {
+            "id": "booking-option-1782906256718",
+            "label": "Trayla Trailer",
+            "value": "Trailor Trailer"
+          },
+          {
+            "id": "booking-option-1782906256862",
+            "label": "Best Trailer",
+            "value": "Futura Trailer"
+          },
+          {
+            "id": "booking-option-1782906257009",
+            "label": "NZ Foods Trailer",
+            "value": "Prime Trailer"
+          },
+          {
+            "id": "booking-option-1782906257150",
+            "label": "MegaStrong Trailer",
+            "value": "JobMate Trailer"
+          },
+          {
+            "id": "booking-option-1782906257306",
+            "label": "Bunnings Trailer (Retro)",
+            "value": "Boeckmann Trailer"
+          },
+          {
+            "id": "booking-option-1782906257435",
+            "label": "Brent Smith Trailer",
+            "value": "Other Brand"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906513606",
+        "label": "Does your trailer have brakes?",
+        "type": "select",
+        "placeholder": "It helps not lose money...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906564464",
+            "label": "Yes, but I don't know what kind",
+            "value": "Yes, they're drum brakes"
+          },
+          {
+            "id": "booking-option-1782906582404",
+            "label": "Maybe?",
+            "value": "Yes, they're mechanical or hydraulic override brakess"
+          },
+          {
+            "id": "booking-option-1782906603516",
+            "label": "Yes, they're electric brakes",
+            "value": "I don't know, it has a parking puller"
+          },
+          {
+            "id": "booking-option-1782906641375",
+            "label": "Does it cost more if it does?",
+            "value": "No"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906734487",
+        "label": "Does your trailer have a Current Warrant of Fitness?",
+        "type": "checkbox",
+        "placeholder": "We may not touch it, just so you know...",
+        "required": true,
+        "options": []
+      },
+      {
+        "id": "booking-field-1782906761148",
+        "label": "Is your trailer from America?",
+        "type": "select",
+        "placeholder": "They use different lighting streams...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906838056",
+            "label": "Yes",
+            "value": "No"
+          },
+          {
+            "id": "booking-option-1782906841860",
+            "label": "Not Sure",
+            "value": "Yes, but it has a 7-Pin System (Not Adapted)"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906793530",
+        "label": "Can you transport the trailer to my workshop?",
+        "type": "checkbox",
+        "placeholder": "",
+        "required": true,
+        "options": []
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "code": "SERV-BJ",
+    "sku": "SERV-BJ",
+    "name": "Brake Pad/Shoe Replacement",
+    "price": 140,
+    "sellPrice": 140,
+    "unitPrice": 140,
+    "displayPrice": 140,
+    "gstIncluded": false,
+    "taxIncluded": false,
+    "vatIncluded": false,
+    "category": "Trailers",
+    "categoryId": "cat-prod-001",
+    "subcategory": "Trailer Services & Repairs",
+    "subcategoryId": "sub-prod-1782557150594-127",
+    "subcategories": [
+      "Trailer Services & Repairs"
+    ],
+    "stock": 0,
+    "quantity": 0,
+    "in_stock": true,
+    "inStock": true,
+    "skuCode": "SERV-BJ",
+    "image": null,
+    "description": "",
+    "businessId": "biz-default",
+    "websiteIds": [
+      "web-1782561404289"
+    ],
+    "websiteId": "web-1782561404289",
+    "showOnWebsite": true,
+    "images": [],
+    "bookingRequired": true,
+    "fulfillmentType": "job",
+    "serviceType": "stock_service",
+    "inventoryTracked": false,
+    "variantMode": "variants",
+    "variantLabel": "Option",
+    "hasVariants": true,
+    "variants": [
+      {
+        "id": "variant-svc-1783166188316-0",
+        "stockProductId": "svc-1783166229927",
+        "name": "Mechanical Disc Brake Service (1 Set)",
+        "code": "SERV-BJ-01",
+        "unit": "",
+        "costPrice": 98,
+        "sellPrice": 140,
+        "quantity": 0,
+        "isDefault": true
+      }
+    ],
+    "externalId": "svc-1783166188316",
+    "_sourceType": "service",
+    "_syncKey": "service:svc-1783166188316",
+    "createdAt": "2026-07-11T10:12:21.706Z",
+    "updatedAt": "2026-07-20T09:00:58.644Z",
+    "bookingFields": [
+      {
+        "id": "booking-field-rego-number",
+        "label": "Rego Number",
+        "type": "text",
+        "placeholder": "Enter rego number",
+        "required": false,
+        "options": []
+      },
+      {
+        "id": "booking-field-trailer-homemade",
+        "label": "Trailer Brand",
+        "type": "select",
+        "placeholder": "It helps with parts...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-field-trailer-homemade-yes",
+            "label": "Tuff Trailer",
+            "value": "Titan Trailer"
+          },
+          {
+            "id": "booking-field-trailer-homemade-no",
+            "label": "Safari Trailer",
+            "value": "Elite Trailer"
+          },
+          {
+            "id": "booking-option-1782906122640",
+            "label": "Ifor Williams Trailer",
+            "value": "Brian James Trailer"
+          },
+          {
+            "id": "booking-option-1782906122781",
+            "label": "Activ Trailer",
+            "value": "Action Sports Trailer"
+          },
+          {
+            "id": "booking-option-1782906122913",
+            "label": "Kea Trailer",
+            "value": "Prescott Trailer"
+          },
+          {
+            "id": "booking-option-1782906123038",
+            "label": "Pinto Trailer",
+            "value": "Tui Trailer"
+          },
+          {
+            "id": "booking-option-1782906123173",
+            "label": "KT Trailer",
+            "value": "Lucca Trailer"
+          },
+          {
+            "id": "booking-option-1782906123322",
+            "label": "Homebuilt (No Brand)",
+            "value": "GFab Trailer"
+          },
+          {
+            "id": "booking-option-1782906123460",
+            "label": "Hosking Trailer",
+            "value": "Trailer World Trailer"
+          },
+          {
+            "id": "booking-option-1782906256441",
+            "label": "X-Trailers Trailer",
+            "value": "Gorilla Trailers"
+          },
+          {
+            "id": "booking-option-1782906256582",
+            "label": "Muscle Trailer",
+            "value": "Top Gear Trailer"
+          },
+          {
+            "id": "booking-option-1782906256718",
+            "label": "Trayla Trailer",
+            "value": "Trailor Trailer"
+          },
+          {
+            "id": "booking-option-1782906256862",
+            "label": "Best Trailer",
+            "value": "Futura Trailer"
+          },
+          {
+            "id": "booking-option-1782906257009",
+            "label": "NZ Foods Trailer",
+            "value": "Prime Trailer"
+          },
+          {
+            "id": "booking-option-1782906257150",
+            "label": "MegaStrong Trailer",
+            "value": "JobMate Trailer"
+          },
+          {
+            "id": "booking-option-1782906257306",
+            "label": "Bunnings Trailer (Retro)",
+            "value": "Boeckmann Trailer"
+          },
+          {
+            "id": "booking-option-1782906257435",
+            "label": "Brent Smith Trailer",
+            "value": "Other Brand"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906793530",
+        "label": "Can you transport the trailer to my workshop?",
+        "type": "checkbox",
+        "placeholder": "",
+        "required": true,
+        "options": []
+      },
+      {
+        "id": "booking-field-1782906734487",
+        "label": "Does your trailer have a Current Warrant of Fitness?",
+        "type": "checkbox",
+        "placeholder": "We may not touch it, just so you know...",
+        "required": true,
+        "options": []
+      },
+      {
+        "id": "booking-field-1782906761148",
+        "label": "Is your trailer from America?",
+        "type": "select",
+        "placeholder": "They use different lighting streams...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906838056",
+            "label": "Yes",
+            "value": "No"
+          },
+          {
+            "id": "booking-option-1782906841860",
+            "label": "Not Sure",
+            "value": "Yes, but it has a 7-Pin System (Not Adapted)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "code": "SERV-WB",
+    "sku": "SERV-WB",
+    "name": "Wheel Bearing Replacement (Single Axle)",
+    "price": 189.99,
+    "sellPrice": 189.99,
+    "unitPrice": 189.99,
+    "displayPrice": 189.99,
+    "gstIncluded": false,
+    "taxIncluded": false,
+    "vatIncluded": false,
+    "category": "Trailers",
+    "categoryId": "cat-prod-001",
+    "subcategory": "Trailer Services & Repairs",
+    "subcategoryId": "sub-prod-1782557150594-127",
+    "subcategories": [
+      "Trailer Services & Repairs"
+    ],
+    "stock": 0,
+    "quantity": 0,
+    "in_stock": true,
+    "inStock": true,
+    "skuCode": "SERV-WB",
+    "image": null,
+    "description": "Wheel Bearing Replacements for your trailer of any make or model, domestic or imported.\nRest easy knowing you'll know the numbers before you get the bill.",
+    "businessId": "biz-default",
+    "websiteIds": [
+      "web-1782561404289"
+    ],
+    "websiteId": "web-1782561404289",
+    "showOnWebsite": true,
+    "images": [],
+    "bookingRequired": true,
+    "fulfillmentType": "job",
+    "serviceType": "stock_service",
+    "inventoryTracked": false,
+    "variantMode": "variants",
+    "variantLabel": "Option",
+    "hasVariants": true,
+    "variants": [
+      {
+        "id": "variant-svc-1783165606392-0",
+        "stockProductId": "svc-1782559697845",
+        "name": "Wheel Bearing Replacement (1,000kg)",
+        "code": "SERV-WBSA-01",
+        "unit": "",
+        "costPrice": 150.23,
+        "sellPrice": 189.99,
+        "quantity": 0,
+        "isDefault": true
+      }
+    ],
+    "externalId": "svc-1783165606392",
+    "_sourceType": "service",
+    "_syncKey": "service:svc-1783165606392",
+    "createdAt": "2026-07-11T10:12:21.706Z",
+    "updatedAt": "2026-07-20T09:00:58.644Z",
+    "bookingFields": [
+      {
+        "id": "booking-field-rego-number",
+        "label": "Rego Number",
+        "type": "text",
+        "placeholder": "Enter rego number",
+        "required": false,
+        "options": []
+      },
+      {
+        "id": "booking-field-trailer-homemade",
+        "label": "Trailer Brand",
+        "type": "select",
+        "placeholder": "It helps with parts...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-field-trailer-homemade-yes",
+            "label": "Tuff Trailer",
+            "value": "Titan Trailer"
+          },
+          {
+            "id": "booking-field-trailer-homemade-no",
+            "label": "Safari Trailer",
+            "value": "Elite Trailer"
+          },
+          {
+            "id": "booking-option-1782906122640",
+            "label": "Ifor Williams Trailer",
+            "value": "Brian James Trailer"
+          },
+          {
+            "id": "booking-option-1782906122781",
+            "label": "Activ Trailer",
+            "value": "Action Sports Trailer"
+          },
+          {
+            "id": "booking-option-1782906122913",
+            "label": "Kea Trailer",
+            "value": "Prescott Trailer"
+          },
+          {
+            "id": "booking-option-1782906123038",
+            "label": "Pinto Trailer",
+            "value": "Tui Trailer"
+          },
+          {
+            "id": "booking-option-1782906123173",
+            "label": "KT Trailer",
+            "value": "Lucca Trailer"
+          },
+          {
+            "id": "booking-option-1782906123322",
+            "label": "Homebuilt (No Brand)",
+            "value": "GFab Trailer"
+          },
+          {
+            "id": "booking-option-1782906123460",
+            "label": "Hosking Trailer",
+            "value": "Trailer World Trailer"
+          },
+          {
+            "id": "booking-option-1782906256441",
+            "label": "X-Trailers Trailer",
+            "value": "Gorilla Trailers"
+          },
+          {
+            "id": "booking-option-1782906256582",
+            "label": "Muscle Trailer",
+            "value": "Top Gear Trailer"
+          },
+          {
+            "id": "booking-option-1782906256718",
+            "label": "Trayla Trailer",
+            "value": "Trailor Trailer"
+          },
+          {
+            "id": "booking-option-1782906256862",
+            "label": "Best Trailer",
+            "value": "Futura Trailer"
+          },
+          {
+            "id": "booking-option-1782906257009",
+            "label": "NZ Foods Trailer",
+            "value": "Prime Trailer"
+          },
+          {
+            "id": "booking-option-1782906257150",
+            "label": "MegaStrong Trailer",
+            "value": "JobMate Trailer"
+          },
+          {
+            "id": "booking-option-1782906257306",
+            "label": "Bunnings Trailer (Retro)",
+            "value": "Boeckmann Trailer"
+          },
+          {
+            "id": "booking-option-1782906257435",
+            "label": "Brent Smith Trailer",
+            "value": "Other Brand"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906513606",
+        "label": "Does your trailer have brakes?",
+        "type": "select",
+        "placeholder": "It helps not lose money...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906564464",
+            "label": "Yes, but I don't know what kind",
+            "value": "Yes, they're drum brakes"
+          },
+          {
+            "id": "booking-option-1782906582404",
+            "label": "Maybe?",
+            "value": "Yes, they're mechanical or hydraulic override brakess"
+          },
+          {
+            "id": "booking-option-1782906603516",
+            "label": "Yes, they're electric brakes",
+            "value": "I don't know, it has a parking puller"
+          },
+          {
+            "id": "booking-option-1782906641375",
+            "label": "Does it cost more if it does?",
+            "value": "No"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906761148",
+        "label": "Is your trailer from America?",
+        "type": "select",
+        "placeholder": "They use different lighting streams...",
+        "required": true,
+        "options": [
+          {
+            "id": "booking-option-1782906838056",
+            "label": "Yes",
+            "value": "No"
+          },
+          {
+            "id": "booking-option-1782906841860",
+            "label": "Not Sure",
+            "value": "Yes, but it has a 7-Pin System (Not Adapted)"
+          }
+        ]
+      },
+      {
+        "id": "booking-field-1782906793530",
+        "label": "Can you transport the trailer to my workshop?",
+        "type": "checkbox",
+        "placeholder": "",
+        "required": true,
+        "options": []
+      },
+      {
+        "id": "booking-field-1782906734487",
+        "label": "Does your trailer have a Current Warrant of Fitness?",
+        "type": "checkbox",
+        "placeholder": "We may not touch it, just so you know...",
+        "required": true,
+        "options": []
+      }
+    ]
+  }
+]

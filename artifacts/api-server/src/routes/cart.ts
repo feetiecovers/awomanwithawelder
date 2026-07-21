@@ -1,23 +1,39 @@
 import { Router } from "express";
 import { db, productsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import { AddToCartBody, RemoveFromCartParams } from "@workspace/api-zod";
+import { mapEntryToCatalogProduct, readStockStore, type CatalogProduct } from "../lib/syncedStock";
 
 declare module "express-session" {
   interface SessionData {
-    cart: { productId: number; quantity: number }[];
+    cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[];
     memberId?: number;
   }
 }
 
 const router = Router();
 
-async function buildCartResponse(cartItems: { productId: number; quantity: number }[]) {
+async function buildCartResponse(cartItems: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[]) {
   if (cartItems.length === 0) return { items: [], total: 0 };
 
-  const productIds = cartItems.map(i => i.productId);
-  const products = await db.select().from(productsTable);
-  const productMap = new Map(products.map(p => [p.id, p]));
+  const syncedProducts = (await readStockStore())
+    .filter((entry) => entry.showOnWebsite !== false)
+    .map(mapEntryToCatalogProduct);
+  const syncedMap = new Map(syncedProducts.map((product) => [product.id, product]));
+
+  const dbProducts = syncedProducts.length === 0
+    ? await db.select().from(productsTable)
+    : [];
+  const productMap = new Map<number, CatalogProduct>();
+  for (const product of dbProducts) {
+    productMap.set(product.id, {
+      ...product,
+      price: parseFloat(product.price),
+      createdAt: product.createdAt.toISOString(),
+    });
+  }
+  for (const [id, product] of syncedMap) {
+    productMap.set(id, product);
+  }
 
   const items = cartItems
     .map(item => {
@@ -26,18 +42,18 @@ async function buildCartResponse(cartItems: { productId: number; quantity: numbe
       return {
         productId: item.productId,
         quantity: item.quantity,
-        product: {
-          ...product,
-          price: parseFloat(product.price),
-          createdAt: product.createdAt.toISOString(),
-        },
+        shippingLabel: item.shippingLabel,
+        shippingPrice: item.shippingPrice,
+        product,
       };
     })
-    .filter(Boolean);
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   const total = items.reduce((sum, item) => {
     if (!item) return sum;
-    return sum + (item.product.price * item.quantity);
+    const basePrice = item.product.price;
+    const shipping = item.shippingPrice ?? 0;
+    return sum + ((basePrice + shipping) * item.quantity);
   }, 0);
 
   return { items, total };
@@ -61,11 +77,16 @@ router.post("/cart", async (req, res) => {
 
     if (!req.session.cart) req.session.cart = [];
 
-    const existing = req.session.cart.find(i => i.productId === parsed.data.productId);
+    const existing = req.session.cart.find(i => i.productId === parsed.data.productId && i.shippingLabel === parsed.data.shippingLabel);
     if (existing) {
       existing.quantity += parsed.data.quantity;
     } else {
-      req.session.cart.push({ productId: parsed.data.productId, quantity: parsed.data.quantity });
+      req.session.cart.push({
+        productId: parsed.data.productId,
+        quantity: parsed.data.quantity,
+        shippingLabel: parsed.data.shippingLabel,
+        shippingPrice: parsed.data.shippingPrice
+      });
     }
 
     const response = await buildCartResponse(req.session.cart);

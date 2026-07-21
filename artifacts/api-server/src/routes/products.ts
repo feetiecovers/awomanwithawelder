@@ -2,11 +2,19 @@ import { Router } from "express";
 import { db, productsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { ListProductsResponseItem, GetProductParams } from "@workspace/api-zod";
+import { mapEntryToCatalogProduct, mapEntryToStockResponse, readStockStore } from "../lib/syncedStock";
 
 const router = Router();
 
 router.get("/products", async (req, res) => {
   try {
+    const syncedProducts = (await readStockStore())
+      .filter((entry) => entry.showOnWebsite !== false)
+      .map(mapEntryToStockResponse);
+    if (syncedProducts.length > 0) {
+      return res.json(syncedProducts);
+    }
+
     const products = await db.select().from(productsTable).where(eq(productsTable.available, true));
     const result = products.map(p => ({
       ...p,
@@ -24,6 +32,14 @@ router.get("/products/:id", async (req, res) => {
   try {
     const parsed = GetProductParams.safeParse({ id: parseInt(req.params.id) });
     if (!parsed.success) return res.status(400).json({ error: "Invalid ID" });
+
+    const syncedProduct = (await readStockStore())
+      .filter((entry) => entry.showOnWebsite !== false)
+      .map(mapEntryToStockResponse)
+      .find((entry) => entry.id === parsed.data.id);
+    if (syncedProduct) {
+      return res.json(syncedProduct);
+    }
 
     const [product] = await db.select().from(productsTable).where(eq(productsTable.id, parsed.data.id));
     if (!product) return res.status(404).json({ error: "Not found" });

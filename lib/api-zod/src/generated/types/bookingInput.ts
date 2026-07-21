@@ -10,4 +10,13 @@ export interface BookingInput {
   serviceId: number;
   preferredDate?: string;
   notes?: string;
+  fullName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  serviceName?: string;
+  servicePrice?: number;
+  subtotal?: number;
+  gst?: number;
+  total?: number;
 }

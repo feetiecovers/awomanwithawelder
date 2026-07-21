@@ -3,8 +3,10 @@ import { db, membersTable, bookingsTable, productsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { RegisterMemberBody, LoginMemberBody } from "@workspace/api-zod";
+import { mapEntryToCatalogProduct, readStockStore, type CatalogProduct } from "../lib/syncedStock";
 
 const router = Router();
+const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.session?.memberId) {
@@ -82,10 +84,27 @@ router.get("/members/me", requireAuth, async (req, res) => {
 
 router.get("/members/me/bookings", requireAuth, async (req, res) => {
   try {
+    if (!hasDatabase) {
+      return res.json([]);
+    }
     const bookings = await db.select().from(bookingsTable).where(eq(bookingsTable.memberId, req.session.memberId!));
-    const productIds = [...new Set(bookings.map(b => b.serviceId))];
-    const products = await db.select().from(productsTable);
-    const productMap = new Map(products.map(p => [p.id, p]));
+    const syncedProducts = (await readStockStore())
+      .filter((entry) => entry.showOnWebsite !== false)
+      .map(mapEntryToCatalogProduct);
+    const products = syncedProducts.length > 0
+      ? []
+      : await db.select().from(productsTable);
+    const productMap = new Map<number, CatalogProduct>();
+    for (const product of products) {
+      productMap.set(product.id, {
+        ...product,
+        price: parseFloat(product.price),
+        createdAt: product.createdAt.toISOString(),
+      });
+    }
+    for (const product of syncedProducts) {
+      productMap.set(product.id, product);
+    }
 
     const result = bookings.map(b => ({
       ...b,
@@ -93,7 +112,7 @@ router.get("/members/me/bookings", requireAuth, async (req, res) => {
       service: (() => {
         const p = productMap.get(b.serviceId);
         if (!p) return null;
-        return { ...p, price: parseFloat(p.price), createdAt: p.createdAt.toISOString() };
+        return p;
       })(),
     })).filter(b => b.service !== null);
 

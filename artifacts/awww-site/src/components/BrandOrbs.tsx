@@ -2,16 +2,71 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
-import homeHeaderLogo from "@assets/Home_-_Header_Logo_(PNG)_1782377476438.png";
+import feetieCoversLogo from "@assets/Feetie_Covers_Logo_Black.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
+import buildATrailerLogo from "@assets/Build_a_Trailer_Logo.png";
+import denversDeskLogo from "@assets/Denvers_Desk_Logo.png";
+import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
-  { id: 1, name: "Tradie Gags",   angle: 0,   radius: 290, delay: 0,   logo: tradieGagsLogo,   live: true,  dark: false },
-  { id: 2, name: "Home Base",     angle: 72,  radius: 280, delay: 0.5, logo: homeHeaderLogo,   live: true,  dark: true  },
-  { id: 3, name: "Trailer Brain", angle: 144, radius: 275, delay: 1.2, logo: trailerBrainLogo, live: true,  dark: false },
-  { id: 4, name: "Coming Soon",   angle: 216, radius: 285, delay: 0.8, logo: null,             live: false, dark: false },
-  { id: 5, name: "Coming Soon",   angle: 288, radius: 278, delay: 1.5, logo: null,             live: false, dark: false },
+  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 290, delay: 0,   logo: tradieGagsLogo,     live: true,  dark: false, sizeMultiplier: 1.35 },
+  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  dark: false, sizeMultiplier: 1.35, glowOpacity: 0.55 },
+  { id: 4, name: "Build a Trailer", angle: 180, radius: 285, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.55, sizeMultiplier: 2.15, stripWhiteBg: true },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  dark: false, widthMultiplier: 1.5,  sizeMultiplier: 1.35 },
 ];
+
+/** Strip near-white backgrounds from a logo image using an off-screen canvas */
+function removeWhiteBg(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imageData.data;
+      const threshold = 240;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] >= threshold && d[i + 1] >= threshold && d[i + 2] >= threshold) {
+          d[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
+/** Only process logos that need white background removal */
+function useProcessedLogos() {
+  const [processed, setProcessed] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const brandsToProcess = BRANDS.filter((b) => b.stripWhiteBg);
+    Promise.all(
+      brandsToProcess.map(async (brand) => {
+        const cleaned = await removeWhiteBg(brand.logo);
+        return { id: brand.id, src: cleaned };
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      const map: Record<number, string> = {};
+      for (const r of results) map[r.id] = r.src;
+      setProcessed(map);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  return processed;
+}
 
 const BASE_LOGO_RX = 138;
 const BASE_LOGO_RY = 90;
@@ -41,6 +96,7 @@ function lightningPath(
 
 export function BrandOrbs() {
   const { toast } = useToast();
+  const processedLogos = useProcessedLogos();
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [tick, setTick] = useState(0);
 
@@ -53,11 +109,14 @@ export function BrandOrbs() {
 
   const cx = size.w / 2;
   const cy = size.h / 2;
-  const scale   = Math.min(1, Math.max(0.35, (size.w - 48) / 900));
+  const isMobile = size.w < 640;
+  const scale   = isMobile 
+    ? 0.5 
+    : Math.min(1, Math.max(0.35, (size.w - 48) / 900));
   const orbSize = Math.round(62 + (110 - 62) * scale);
   const imgSize = Math.round(orbSize * 0.84);
-  const logoRX  = BASE_LOGO_RX * scale;
-  const logoRY  = BASE_LOGO_RY * scale;
+  const logoRX  = isMobile ? 55 : BASE_LOGO_RX * scale;
+  const logoRY  = isMobile ? 75 : BASE_LOGO_RY * scale;
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -70,12 +129,20 @@ export function BrandOrbs() {
           </filter>
         </defs>
         {BRANDS.map(brand => {
-          const rad = (brand.angle * Math.PI) / 180;
-          const r   = brand.radius * scale;
+          const mobileAngleOffset = brand.id === 1 ? -35 : 0;
+          const angle = isMobile ? brand.angle + mobileAngleOffset : brand.angle;
+          const rad = (angle * Math.PI) / 180;
+          const rx  = isMobile ? 120 : brand.radius * scale;
+          const ry  = isMobile ? 175 : brand.radius * scale;
           const sx  = cx + Math.cos(rad) * logoRX;
           const sy  = cy + Math.sin(rad) * logoRY;
-          const ex  = cx + Math.cos(rad) * (r - orbSize / 2 - 4);
-          const ey  = cy + Math.sin(rad) * (r - orbSize / 2 - 4);
+          const ox  = Math.cos(rad) * rx;
+          const oy  = Math.sin(rad) * ry;
+          const odist = Math.sqrt(ox * ox + oy * oy);
+          const targetDist = odist - orbSize / 2 - 4;
+          const ratio = targetDist / odist;
+          const ex  = cx + ox * ratio;
+          const ey  = cy + oy * ratio;
           const s1  = tick + brand.id * 11;
           const s2  = tick + brand.id * 11 + 6;
           const b1  = lightningPath(sx, sy, ex, ey, 18, 16 * scale, s1);
@@ -98,10 +165,18 @@ export function BrandOrbs() {
 
       {/* Brand orbs — no circle border, just halo glow */}
       {BRANDS.map(brand => {
-        const rad = (brand.angle * Math.PI) / 180;
-        const r   = brand.radius * scale;
-        const x   = Math.cos(rad) * r;
-        const y   = Math.sin(rad) * r;
+        const mobileAngleOffset = brand.id === 1 ? -35 : 0;
+        const angle = isMobile ? brand.angle + mobileAngleOffset : brand.angle;
+        const rad = (angle * Math.PI) / 180;
+        const rx  = isMobile ? 120 : brand.radius * scale;
+        const ry  = isMobile ? 175 : brand.radius * scale;
+        const x   = Math.cos(rad) * rx;
+        const y   = Math.sin(rad) * ry;
+
+        // Determine logo source: use canvas-processed version for stripWhiteBg brands, original for others
+        const logoSrc = brand.stripWhiteBg
+          ? (processedLogos[brand.id] || brand.logo)
+          : brand.logo;
 
         return (
           <motion.div
@@ -136,25 +211,60 @@ export function BrandOrbs() {
               <motion.div
                 whileHover={{ scale: 1.22 }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
-                style={{ width: orbSize, height: orbSize }}
+                style={{ 
+                  width: brand.widthMultiplier 
+                    ? Math.round(orbSize * brand.widthMultiplier * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
+                    : Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))), 
+                  height: Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
+                }}
                 className="relative flex flex-col items-center justify-center"
               >
                 {brand.logo ? (
-                  // All logos: screen blend erases dark/black backgrounds, halo glow floats the artwork
-                  // Dark (black) logos get invert(1) first so they read as white through screen blend
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    style={{
-                      width: imgSize,
-                      height: imgSize,
-                      objectFit: "contain",
-                      mixBlendMode: "screen",
-                      filter: brand.dark
-                        ? "invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.65)) drop-shadow(0 0 20px rgba(26,157,224,0.65))"
-                        : "drop-shadow(0 0 8px rgba(255,255,255,0.6))  drop-shadow(0 0 20px rgba(26,157,224,0.6))",
-                    }}
-                  />
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <img
+                      src={logoSrc}
+                      alt={brand.name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        // Original screen blend for normal logos; plain display for canvas-processed ones
+                        ...(brand.stripWhiteBg
+                          ? {
+                              filter: `drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 25px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(26,157,224,0.35))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
+                            }
+                          : {
+                              mixBlendMode: "screen" as const,
+                              filter: `drop-shadow(0 0 8px rgba(255,255,255,${brand.glowOpacity ?? 0.6})) drop-shadow(0 0 20px rgba(26,157,224,0.6))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
+                            }
+                        ),
+                      }}
+                    />
+                    {!brand.live && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span
+                          className="font-mono font-bold tracking-widest uppercase text-center leading-tight whitespace-nowrap"
+                          style={{
+                            fontSize: Math.max(8, 10 * scale),
+                            color: "#60c8ff",
+                            textShadow: "0 0 8px rgba(96,200,255,0.8), 0 0 15px rgba(26,157,224,0.6)",
+                          }}
+                        >
+                          Coming
+                        </span>
+                        <span
+                          className="font-mono font-bold tracking-widest uppercase whitespace-nowrap"
+                          style={{
+                            fontSize: Math.max(8, 10 * scale),
+                            color: "#60c8ff",
+                            textShadow: "0 0 8px rgba(96,200,255,0.8), 0 0 15px rgba(26,157,224,0.6)",
+                          }}
+                        >
+                          Soon
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   // Coming soon — just glowing text, no border or circle
                   <div className="flex flex-col items-center justify-center">

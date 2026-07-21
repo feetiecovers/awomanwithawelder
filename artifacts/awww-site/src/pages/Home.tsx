@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import mainLogo from "@assets/Logo_-_Main_Logo_1782352742134.png";
@@ -10,17 +11,17 @@ import { ProductsPopup } from "@/components/ProductsPopup";
 import { CartPopup } from "@/components/CartPopup";
 import { MembersModal } from "@/components/MembersModal";
 import { OrderSuccessModal } from "@/components/OrderSuccessModal";
-import { BookingSuccessModal } from "@/components/BookingSuccessModal";
-import { useGetCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import { saveBookingConfirmation, type BookingConfirmationData } from "@/lib/bookingConfirmation";
+import { buildApiUrl } from "@/lib/api-base";
+import { useGetCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
+  const [, setLocation] = useLocation();
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
-  const [isBookingSuccessOpen, setIsBookingSuccessOpen] = useState(false);
-  const [bookingSuccessService, setBookingSuccessService] = useState<string | undefined>();
 
   const { data: cart } = useGetCart();
   const queryClient = useQueryClient();
@@ -32,10 +33,11 @@ export default function Home() {
     const payment = params.get("payment");
     if (payment === "success") {
       // Clear cart server-side then show success
-      fetch("/api/cart/all", { method: "DELETE", credentials: "include" })
-        .catch(() => {})
+      fetch(buildApiUrl("/api/cart/all"), { method: "DELETE", credentials: "include" })
+        .catch(() => { })
         .finally(() => {
           queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
         });
       setIsOrderSuccessOpen(true);
       // Clean URL without reloading
@@ -45,9 +47,9 @@ export default function Home() {
     }
   }, [queryClient]);
 
-  const handleBookingSuccess = (serviceName: string) => {
-    setBookingSuccessService(serviceName);
-    setIsBookingSuccessOpen(true);
+  const handleBookingSuccess = (bookingData: BookingConfirmationData) => {
+    saveBookingConfirmation(bookingData);
+    setLocation("/booking-confirmation");
   };
 
   const handleOpenCart = () => {
@@ -87,24 +89,24 @@ export default function Home() {
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[280px] h-auto max-w-[80vw] block"
+            className="w-[200px] sm:w-[280px] h-auto max-w-[70vw] sm:max-w-[80vw] block"
             data-testid="img-main-logo"
           />
         </motion.div>
       </div>
 
       {/* Top-left wordmark */}
-      <div className="absolute top-6 left-6 z-10 hidden md:block pointer-events-none opacity-50">
+      <div className="absolute top-6 left-6 right-6 z-10 text-center md:text-left md:right-auto pointer-events-none opacity-50">
         <h1 className="font-mono text-xs tracking-[0.3em] uppercase text-primary">A Woman With a Welder</h1>
-        <p className="font-mono text-[10px] text-muted-foreground mt-1 tracking-widest">Industrial Steel Fabrication</p>
+        <p className="font-mono text-[10px] text-muted-foreground mt-1 tracking-widest">Two cats, a baby and a husband too!</p>
       </div>
 
       {/* Bottom-center footer */}
-      <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
-        <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/20">
-          &copy; {new Date().getFullYear()} A Woman With a Welder. All rights reserved.
-          <span className="mx-2 text-white/10">|</span>
-          Built with <span className="text-primary/40">Replit</span>
+      <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-center text-center pointer-events-none">
+        <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/20 max-w-xs sm:max-w-none leading-relaxed">
+          &copy; {new Date().getFullYear()} A Woman With a Welder |<br className="sm:hidden" /> All Rights Reserved | Copyright of Feetie Covers Limited 2026
+          <span className="mx-2 text-white/10 hidden sm:inline">|</span>
+          <span className="block sm:inline mt-0.5 sm:mt-0">Built by<span className="text-primary/40"> The Husband</span></span>
         </p>
       </div>
 
@@ -139,6 +141,7 @@ export default function Home() {
         isOpen={isProductsOpen}
         onClose={() => setIsProductsOpen(false)}
         onOpenCart={handleOpenCart}
+        onRequireSignIn={() => setIsMembersOpen(true)}
         onBookingSuccess={handleBookingSuccess}
       />
 
@@ -157,12 +160,6 @@ export default function Home() {
       <OrderSuccessModal
         isOpen={isOrderSuccessOpen}
         onClose={() => setIsOrderSuccessOpen(false)}
-      />
-
-      <BookingSuccessModal
-        isOpen={isBookingSuccessOpen}
-        onClose={() => setIsBookingSuccessOpen(false)}
-        serviceName={bookingSuccessService}
       />
     </div>
   );

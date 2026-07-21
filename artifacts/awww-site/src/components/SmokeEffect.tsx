@@ -35,9 +35,10 @@ export function SmokeEffect() {
     resize();
     window.addEventListener("resize", resize);
 
-    // Spark tip: ~110px right and ~42px above screen centre (follows logo layout)
-    const sparkX = () => window.innerWidth  / 2 + 110;
-    const sparkY = () => window.innerHeight / 2 - 42;
+    // Spark tip: ~110px right and ~42px above screen centre (follows logo layout, scaled down on mobile)
+    const isMobile = () => window.innerWidth < 640;
+    const sparkX = () => window.innerWidth  / 2 + (isMobile() ? 78 : 110);
+    const sparkY = () => window.innerHeight / 2 - (isMobile() ? 30 : 42);
 
     // ── Welding arc flicker state ──
     let arcBrightness = 1;
