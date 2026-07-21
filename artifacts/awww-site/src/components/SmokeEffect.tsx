@@ -37,8 +37,8 @@ export function SmokeEffect() {
 
     // Spark tip: positioned at the center of the blue arc in the center logo image
     const isMobile = () => window.innerWidth < 640;
-    const sparkX = () => window.innerWidth  / 2 + (isMobile() ? 38.0 : 53.2);
-    const sparkY = () => window.innerHeight / 2 - (isMobile() ? 2.0  : 2.8);
+    const sparkX = () => window.innerWidth  / 2 + (isMobile() ? 45.0 : 87.0);
+    const sparkY = () => window.innerHeight / 2 - (isMobile() ? 2.5  : 4.5);
 
     // ── Welding arc flicker state ──
     let arcBrightness = 1;

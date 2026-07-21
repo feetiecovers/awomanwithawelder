@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Perfect.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_TightUninverted.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
@@ -81,15 +81,15 @@ export default function Home() {
       <BrandOrbs />
       <SmokeEffect />
 
-      {/* Center logo — restored */}
+      {/* Center logo — uninverted original colors, enlarged for desktop */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={{
             scale: [1, 1.02, 1],
             filter: [
-              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
-              "drop-shadow(0 0 22px rgba(26, 157, 224, 0.55))",
-              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
+              "drop-shadow(0 0 8px rgba(26, 157, 224, 0.25))",
+              "drop-shadow(0 0 28px rgba(26, 157, 224, 0.60))",
+              "drop-shadow(0 0 8px rgba(26, 157, 224, 0.25))",
             ],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -102,7 +102,7 @@ export default function Home() {
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[200px] sm:w-[280px] h-auto max-w-[70vw] sm:max-w-[80vw] block"
+            className="w-[240px] sm:w-[380px] md:w-[460px] h-auto max-w-[85vw] block"
             data-testid="img-main-logo"
           />
         </motion.div>

@@ -115,8 +115,8 @@ export function BrandOrbs() {
     : Math.min(1, Math.max(0.35, (size.w - 48) / 900));
   const orbSize = Math.round(62 + (110 - 62) * scale);
   const imgSize = Math.round(orbSize * 0.84);
-  const logoRX  = isMobile ? 55 : BASE_LOGO_RX * scale;
-  const logoRY  = isMobile ? 75 : BASE_LOGO_RY * scale;
+  const logoRX  = isMobile ? 65 : Math.round(BASE_LOGO_RX * scale * 1.55);
+  const logoRY  = isMobile ? 75 : Math.round(BASE_LOGO_RY * scale * 1.55);
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -134,8 +134,8 @@ export function BrandOrbs() {
           const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
           const rx  = isMobile 
             ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
-            : brand.radius * scale;
-          const ry  = isMobile ? 175 : brand.radius * scale;
+            : brand.radius * scale * 1.15;
+          const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(rad) * logoRX;
           const sy  = cy + Math.sin(rad) * logoRY;
           const ox  = Math.cos(rad) * rx;
@@ -172,8 +172,8 @@ export function BrandOrbs() {
         const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
         const rx  = isMobile 
           ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
-          : brand.radius * scale;
-        const ry  = isMobile ? 175 : brand.radius * scale;
+          : brand.radius * scale * 1.15;
+        const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
         const x   = Math.cos(rad) * rx;
         const y   = Math.sin(rad) * ry;
 
