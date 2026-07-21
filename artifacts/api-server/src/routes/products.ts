@@ -5,6 +5,7 @@ import { ListProductsResponseItem, GetProductParams } from "@workspace/api-zod";
 import { mapEntryToCatalogProduct, mapEntryToStockResponse, readStockStore } from "../lib/syncedStock";
 
 const router = Router();
+const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 router.get("/products", async (req, res) => {
   try {
@@ -13,6 +14,9 @@ router.get("/products", async (req, res) => {
       .map(mapEntryToStockResponse);
     if (syncedProducts.length > 0) {
       return res.json(syncedProducts);
+    }
+    if (!hasDatabase) {
+      return res.json([]);
     }
 
     const products = await db.select().from(productsTable).where(eq(productsTable.available, true));
@@ -39,6 +43,9 @@ router.get("/products/:id", async (req, res) => {
       .find((entry) => entry.id === parsed.data.id);
     if (syncedProduct) {
       return res.json(syncedProduct);
+    }
+    if (!hasDatabase) {
+      return res.status(404).json({ error: "Not found" });
     }
 
     const [product] = await db.select().from(productsTable).where(eq(productsTable.id, parsed.data.id));

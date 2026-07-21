@@ -6,6 +6,7 @@ import { mapEntryToCatalogProduct, readStockStore, type CatalogProduct } from ".
 import { getDesktopSyncConfig } from "../lib/desktopSync";
 
 const router = Router();
+const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
@@ -45,7 +46,9 @@ router.post("/checkout", async (req: any, res) => {
     const syncedProducts = syncedEntries.map(mapEntryToCatalogProduct);
     const productList = syncedProducts.length > 0
       ? syncedProducts.filter((product) => productIds.includes(product.id))
-      : await db.select().from(productsTable).where(inArray(productsTable.id, productIds));
+      : hasDatabase
+        ? await db.select().from(productsTable).where(inArray(productsTable.id, productIds))
+        : [];
     const productMap = new Map<number, CatalogProduct>(
       productList.map((product) => [
         product.id,
@@ -114,7 +117,7 @@ router.post("/checkout", async (req: any, res) => {
     const { websiteId, brandName } = getDesktopSyncConfig();
     const baseUrl = getFrontendBaseUrl(req);
 
-    const [member] = req.session.memberId
+    const [member] = hasDatabase && req.session.memberId
       ? await db.select().from(membersTable).where(inArray(membersTable.id, [req.session.memberId]))
       : [];
     const metadataItems = cart.map((item) => {

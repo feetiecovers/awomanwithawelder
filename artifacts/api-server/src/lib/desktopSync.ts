@@ -64,21 +64,35 @@ export type BookingForwardPayload = {
   source: "website-booking";
 };
 
+const DEFAULT_DESKTOP_APP_BASE_URL = "https://denver-s-desk.onrender.com";
+
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
 function resolveDesktopBaseUrl(): string {
-  const configuredBaseUrl = trimTrailingSlash(process.env.DESKTOP_APP_BASE_URL || "");
-  if (configuredBaseUrl) {
-    return configuredBaseUrl;
+  const candidates = [
+    process.env.DESKTOP_APP_BASE_URL,
+    process.env.NEXT_PUBLIC_DESKTOP_API_BASE_URL,
+    process.env.NEXT_PUBLIC_SHARED_BACKEND_URL,
+    process.env.VITE_DESKTOP_API_BASE_URL,
+    process.env.VITE_SHARED_BACKEND_URL,
+    process.env.DESKTOP_APP_ORDERS_URL,
+    process.env.DESKTOP_APP_BOOKINGS_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const raw = trimTrailingSlash(String(candidate || "").trim());
+    if (!raw) continue;
+
+    try {
+      return new URL(raw).origin;
+    } catch {
+      // Ignore malformed values and continue to the known production backend.
+    }
   }
 
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("DESKTOP_APP_BASE_URL environment variable is required in production");
-  }
-
-  return "http://localhost:4028";
+  return DEFAULT_DESKTOP_APP_BASE_URL;
 }
 
 export function getDesktopSyncConfig(): SyncConfig {

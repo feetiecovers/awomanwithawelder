@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_DarkMode.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_PoweredByCableCAD_Raw.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
@@ -81,41 +81,29 @@ export default function Home() {
       <BrandOrbs />
       <SmokeEffect />
 
-      {/* Center logo with thin light orb */}
+      {/* Center logo — restored */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={{
-            scale: [1, 1.015, 1],
+            scale: [1, 1.02, 1],
+            filter: [
+              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
+              "drop-shadow(0 0 22px rgba(26, 157, 224, 0.55))",
+              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
+            ],
           }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-auto cursor-pointer relative flex items-center justify-center p-6 sm:p-8"
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="pointer-events-auto cursor-pointer"
           onClick={() => setIsProductsOpen(true)}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           data-testid="button-center-logo"
         >
-          {/* Thin light orb around center logo — half as visible as outer brand orbs */}
-          <motion.div
-            animate={{
-              boxShadow: [
-                "0 0 22px rgba(26, 157, 224, 0.25), inset 0 0 15px rgba(26, 157, 224, 0.10)",
-                "0 0 42px rgba(26, 157, 224, 0.38), inset 0 0 25px rgba(26, 157, 224, 0.18)",
-                "0 0 22px rgba(26, 157, 224, 0.25), inset 0 0 15px rgba(26, 157, 224, 0.10)",
-              ],
-              borderColor: [
-                "rgba(26, 157, 224, 0.25)",
-                "rgba(96, 200, 255, 0.45)",
-                "rgba(26, 157, 224, 0.25)",
-              ],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-1 rounded-full border border-primary/30 pointer-events-none"
-          />
-
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[220px] sm:w-[310px] h-auto max-w-[70vw] sm:max-w-[80vw] block relative z-10 filter drop-shadow-[0_0_15px_rgba(26,157,224,0.3)]"
+            className="w-[200px] sm:w-[280px] h-auto max-w-[70vw] sm:max-w-[80vw] block"
+            style={{ mixBlendMode: "screen" }}
             data-testid="img-main-logo"
           />
         </motion.div>

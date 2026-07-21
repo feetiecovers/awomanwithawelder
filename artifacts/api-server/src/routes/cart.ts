@@ -11,6 +11,7 @@ declare module "express-session" {
 }
 
 const router = Router();
+const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 async function buildCartResponse(cartItems: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[]) {
   if (cartItems.length === 0) return { items: [], total: 0 };
@@ -20,7 +21,7 @@ async function buildCartResponse(cartItems: { productId: number; quantity: numbe
     .map(mapEntryToCatalogProduct);
   const syncedMap = new Map(syncedProducts.map((product) => [product.id, product]));
 
-  const dbProducts = syncedProducts.length === 0
+  const dbProducts = syncedProducts.length === 0 && hasDatabase
     ? await db.select().from(productsTable)
     : [];
   const productMap = new Map<number, CatalogProduct>();

@@ -15,6 +15,13 @@ function requireAuth(req: any, res: any, next: any) {
   return next();
 }
 
+function requireDatabase(_req: any, res: any, next: any) {
+  if (!hasDatabase) {
+    return res.status(503).json({ error: "Database is not configured" });
+  }
+  return next();
+}
+
 function formatMember(m: { id: number; email: string; name: string; createdAt: Date; passwordHash: string }) {
   return {
     id: m.id,
@@ -24,7 +31,7 @@ function formatMember(m: { id: number; email: string; name: string; createdAt: D
   };
 }
 
-router.post("/members/register", async (req, res) => {
+router.post("/members/register", requireDatabase, async (req, res) => {
   try {
     const parsed = RegisterMemberBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
@@ -47,7 +54,7 @@ router.post("/members/register", async (req, res) => {
   }
 });
 
-router.post("/members/login", async (req, res) => {
+router.post("/members/login", requireDatabase, async (req, res) => {
   try {
     const parsed = LoginMemberBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
@@ -71,7 +78,7 @@ router.post("/members/logout", async (req, res) => {
   return res.json({ success: true });
 });
 
-router.get("/members/me", requireAuth, async (req, res) => {
+router.get("/members/me", requireAuth, requireDatabase, async (req, res) => {
   try {
     const [member] = await db.select().from(membersTable).where(eq(membersTable.id, req.session.memberId!));
     if (!member) return res.status(401).json({ error: "Not found" });
@@ -82,7 +89,7 @@ router.get("/members/me", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/members/me/bookings", requireAuth, async (req, res) => {
+router.get("/members/me/bookings", requireAuth, requireDatabase, async (req, res) => {
   try {
     if (!hasDatabase) {
       return res.json([]);

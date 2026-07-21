@@ -131,7 +131,10 @@ export function BrandOrbs() {
         {BRANDS.map(brand => {
           const angle = brand.angle;
           const rad = (angle * Math.PI) / 180;
-          const rx  = isMobile ? 120 : brand.radius * scale;
+          const mobileHorizontalRadius = Math.max(145, Math.min(175, (size.w / 2) - 38));
+          const rx  = isMobile 
+            ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 125) 
+            : brand.radius * scale;
           const ry  = isMobile ? 175 : brand.radius * scale;
           const sx  = cx + Math.cos(rad) * logoRX;
           const sy  = cy + Math.sin(rad) * logoRY;
@@ -166,7 +169,10 @@ export function BrandOrbs() {
       {BRANDS.map(brand => {
         const angle = brand.angle;
         const rad = (angle * Math.PI) / 180;
-        const rx  = isMobile ? 120 : brand.radius * scale;
+        const mobileHorizontalRadius = Math.max(145, Math.min(175, (size.w / 2) - 38));
+        const rx  = isMobile 
+          ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 125) 
+          : brand.radius * scale;
         const ry  = isMobile ? 175 : brand.radius * scale;
         const x   = Math.cos(rad) * rx;
         const y   = Math.sin(rad) * ry;
