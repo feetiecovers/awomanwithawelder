@@ -150,5 +150,5 @@ overrides:
 
 allowBuilds:
   esbuild: true
-  stream-chat: set this to true or false
-  stream-chat-react: set this to true or false
+  stream-chat: true
+  stream-chat-react: true
