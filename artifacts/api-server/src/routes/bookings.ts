@@ -195,6 +195,8 @@ router.post("/bookings", async (req, res) => {
           }
         : null;
 
+    let desktopSyncError: string | null = null;
+
     if (servicePayload) {
       const { websiteId, brandName } = getDesktopSyncConfig();
       try {
@@ -229,13 +231,22 @@ router.post("/bookings", async (req, res) => {
           source: "website-booking",
         });
       } catch (syncErr) {
+        desktopSyncError = syncErr instanceof Error ? syncErr.message : "Failed to forward booking to desktop";
         req.log.error({ err: syncErr, bookingId: booking.id }, "Failed to forward booking to desktop");
       }
+    }
+
+    if (!hasDatabase && desktopSyncError) {
+      return res.status(502).json({
+        error: "Booking could not be saved because the database is not configured and desktop sync failed",
+        desktopSyncError,
+      });
     }
 
     return res.status(201).json({
       ...booking,
       createdAt: booking.createdAt.toISOString(),
+      desktopSynced: !desktopSyncError,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to create booking");

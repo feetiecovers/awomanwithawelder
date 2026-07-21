@@ -4,19 +4,23 @@ import { SubmitContactBody } from "@workspace/api-zod";
 import nodemailer from "nodemailer";
 
 const router = Router();
+const hasDatabase = Boolean(process.env.DATABASE_URL);
 
 router.post("/contact", async (req, res) => {
   try {
     const parsed = SubmitContactBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "Invalid input" });
 
-    // Save submission to database
-    await db.insert(contactsTable).values({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      phone: parsed.data.phone ?? null,
-      message: parsed.data.message,
-    });
+    let savedToDatabase = false;
+    if (hasDatabase) {
+      await db.insert(contactsTable).values({
+        name: parsed.data.name,
+        email: parsed.data.email,
+        phone: parsed.data.phone ?? null,
+        message: parsed.data.message,
+      });
+      savedToDatabase = true;
+    }
 
     // Send email notification via Google SMTP if environment variables exist
     const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
@@ -24,6 +28,7 @@ router.post("/contact", async (req, res) => {
     const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
     const smtpPort = Number(process.env.SMTP_PORT) || 587;
     const emailTo  = process.env.SMTP_TO || "charlotte@awomanwithawelder.co.nz";
+    let emailSent = false;
 
     if (smtpUser && smtpPass) {
       try {
@@ -55,13 +60,23 @@ router.post("/contact", async (req, res) => {
             </div>
           `,
         });
+        emailSent = true;
         req.log.info({ email: emailTo }, "Contact email dispatched successfully");
       } catch (mailErr) {
         req.log.error({ mailErr }, "Failed to send contact email notification");
       }
     }
 
-    return res.json({ success: true, message: "Thank you! We'll be in touch soon." });
+    if (!savedToDatabase && !emailSent) {
+      return res.status(503).json({ error: "Contact storage is not configured" });
+    }
+
+    return res.json({
+      success: true,
+      message: "Thank you! We'll be in touch soon.",
+      savedToDatabase,
+      emailSent,
+    });
   } catch (err) {
     req.log.error({ err }, "Failed to submit contact");
     return res.status(500).json({ error: "Internal server error" });

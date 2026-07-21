@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Clean.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Perfect.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
