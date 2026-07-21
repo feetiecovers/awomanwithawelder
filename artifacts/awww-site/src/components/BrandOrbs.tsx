@@ -136,8 +136,8 @@ export function BrandOrbs() {
             ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 125) 
             : brand.radius * scale;
           const ry  = isMobile ? 175 : brand.radius * scale;
-          const sx  = cx + Math.cos(rad) * logoRX;
-          const sy  = cy + Math.sin(rad) * logoRY;
+          const sx  = cx + Math.cos(rad) * (logoRX * 0.35);
+          const sy  = cy + Math.sin(rad) * (logoRY * 0.35);
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
           const odist = Math.sqrt(ox * ox + oy * oy);

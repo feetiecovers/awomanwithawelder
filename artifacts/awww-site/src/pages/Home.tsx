@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/A_Woman_With_A_Welder_PoweredByCableCAD_Raw.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Clean.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
@@ -103,7 +103,6 @@ export default function Home() {
             src={mainLogo}
             alt="A Woman With a Welder"
             className="w-[200px] sm:w-[280px] h-auto max-w-[70vw] sm:max-w-[80vw] block"
-            style={{ mixBlendMode: "screen" }}
             data-testid="img-main-logo"
           />
         </motion.div>
