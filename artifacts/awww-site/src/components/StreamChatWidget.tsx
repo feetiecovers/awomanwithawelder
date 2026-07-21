@@ -21,9 +21,9 @@ const widgetStyles = `
   }
 
   .native-chat-header {
-    background: #0f172a;
+    background: #080d14;
     padding: 12px 16px;
-    border-bottom: 1px solid #1e293b;
+    border-bottom: 1px solid rgba(26, 157, 224, 0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/Logo_-_Main_Logo_1782352742134.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_DarkMode.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
@@ -15,6 +15,7 @@ import { saveBookingConfirmation, type BookingConfirmationData } from "@/lib/boo
 import { buildApiUrl } from "@/lib/api-base";
 import { useGetCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -23,9 +24,21 @@ export default function Home() {
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
 
+  const { toast } = useToast();
   const { data: cart } = useGetCart();
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
+
+  // Show welcome notification when site opens
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      toast({
+        title: "Click on Logos!",
+        description: "They do stuff.",
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // Detect Stripe redirect back with ?payment=success or ?payment=cancel
   useEffect(() => {
@@ -68,28 +81,41 @@ export default function Home() {
       <BrandOrbs />
       <SmokeEffect />
 
-      {/* Center logo — no border */}
+      {/* Center logo with thin light orb */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={{
-            scale: [1, 1.02, 1],
-            filter: [
-              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
-              "drop-shadow(0 0 22px rgba(26, 157, 224, 0.55))",
-              "drop-shadow(0 0 6px rgba(26, 157, 224, 0.2))",
-            ],
+            scale: [1, 1.015, 1],
           }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="pointer-events-auto cursor-pointer"
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          className="pointer-events-auto cursor-pointer relative flex items-center justify-center p-6 sm:p-8"
           onClick={() => setIsProductsOpen(true)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
           data-testid="button-center-logo"
         >
+          {/* Thin light orb around center logo — half as visible as outer brand orbs */}
+          <motion.div
+            animate={{
+              boxShadow: [
+                "0 0 22px rgba(26, 157, 224, 0.25), inset 0 0 15px rgba(26, 157, 224, 0.10)",
+                "0 0 42px rgba(26, 157, 224, 0.38), inset 0 0 25px rgba(26, 157, 224, 0.18)",
+                "0 0 22px rgba(26, 157, 224, 0.25), inset 0 0 15px rgba(26, 157, 224, 0.10)",
+              ],
+              borderColor: [
+                "rgba(26, 157, 224, 0.25)",
+                "rgba(96, 200, 255, 0.45)",
+                "rgba(26, 157, 224, 0.25)",
+              ],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-1 rounded-full border border-primary/30 pointer-events-none"
+          />
+
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[200px] sm:w-[280px] h-auto max-w-[70vw] sm:max-w-[80vw] block"
+            className="w-[220px] sm:w-[310px] h-auto max-w-[70vw] sm:max-w-[80vw] block relative z-10 filter drop-shadow-[0_0_15px_rgba(26,157,224,0.3)]"
             data-testid="img-main-logo"
           />
         </motion.div>

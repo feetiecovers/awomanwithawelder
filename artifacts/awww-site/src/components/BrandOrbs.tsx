@@ -9,12 +9,12 @@ import denversDeskLogo from "@assets/Denvers_Desk_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
-  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 290, delay: 0,   logo: tradieGagsLogo,     live: true,  dark: false, sizeMultiplier: 1.35 },
-  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  dark: false, sizeMultiplier: 1.35, glowOpacity: 0.55 },
-  { id: 4, name: "Build a Trailer", angle: 180, radius: 285, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
+  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 350, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
+  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.55 },
+  { id: 4, name: "Build a Trailer", angle: 180, radius: 350, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.55, sizeMultiplier: 2.15, stripWhiteBg: true },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  dark: false, widthMultiplier: 1.5,  sizeMultiplier: 1.35 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false, dark: false, widthMultiplier: 1.5,  sizeMultiplier: 1.35 },
 ];
 
 /** Strip near-white backgrounds from a logo image using an off-screen canvas */
@@ -129,8 +129,7 @@ export function BrandOrbs() {
           </filter>
         </defs>
         {BRANDS.map(brand => {
-          const mobileAngleOffset = brand.id === 1 ? -35 : 0;
-          const angle = isMobile ? brand.angle + mobileAngleOffset : brand.angle;
+          const angle = brand.angle;
           const rad = (angle * Math.PI) / 180;
           const rx  = isMobile ? 120 : brand.radius * scale;
           const ry  = isMobile ? 175 : brand.radius * scale;
@@ -165,8 +164,7 @@ export function BrandOrbs() {
 
       {/* Brand orbs — no circle border, just halo glow */}
       {BRANDS.map(brand => {
-        const mobileAngleOffset = brand.id === 1 ? -35 : 0;
-        const angle = isMobile ? brand.angle + mobileAngleOffset : brand.angle;
+        const angle = brand.angle;
         const rad = (angle * Math.PI) / 180;
         const rx  = isMobile ? 120 : brand.radius * scale;
         const ry  = isMobile ? 175 : brand.radius * scale;
@@ -195,6 +193,8 @@ export function BrandOrbs() {
             onClick={() => {
               if (!brand.live) {
                 toast({ title: "Coming Soon", description: "This partner brand is launching shortly." });
+              } else if (brand.url) {
+                window.open(brand.url, "_blank", "noopener,noreferrer");
               } else {
                 toast({ title: brand.name, description: "Partner link coming soon." });
               }

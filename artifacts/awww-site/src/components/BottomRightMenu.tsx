@@ -120,7 +120,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
             style={{ maxHeight: "calc(100dvh - 110px)" }}
           >
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab} className="w-full h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 rounded-none bg-[#080d14] p-0 flex-shrink-0">
+              <TabsList className="grid w-full grid-cols-3 rounded-none bg-[#080d14] p-0 flex-shrink-0 h-auto border-b border-primary/20">
                 <TabsTrigger value="pages" className="rounded-none border-b-2 border-transparent data-[state=active]:bg-primary/10 data-[state=active]:border-primary py-3">
                   <Menu className="h-4 w-4 mr-2" /> Pages
                 </TabsTrigger>
@@ -134,7 +134,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
                   <FileText className="h-4 w-4 mr-2" /> Contact
                 </TabsTrigger>
               </TabsList>
- 
+
               <div className={`flex-1 ${activeMenuTab !== "chat" ? "overflow-y-auto" : "overflow-hidden"} min-h-[500px] max-h-[620px] flex flex-col`}>
                 <TabsContent value="pages" className="p-4 space-y-2 mt-0">
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Home</Button>
@@ -143,7 +143,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>About (Coming Soon)</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Gallery (Coming Soon)</Button>
                 </TabsContent>
- 
+
                 <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0 overflow-hidden bg-[#080d14]">
                   <StreamChatWidget
                     visitorId={visitorId}
@@ -153,11 +153,11 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
                     onRefetch={fetchMessages}
                   />
                 </TabsContent>
- 
+
                 <TabsContent value="contact" className="p-4 mt-0 overflow-y-auto">
                   <p className="text-xs font-mono text-center text-primary/80 mb-4 tracking-wide">
                     Email us directly at:<br />
-                    <a href="mailto:awomanwithawelder@gmail.com" className="text-primary hover:underline font-bold">awomanwithawelder@gmail.com</a>
+                    <a href="mailto:charlotte@awomanwithawelder.co.nz" className="text-primary hover:underline font-bold">charlotte@awomanwithawelder.co.nz</a>
                   </p>
                   <form onSubmit={handleContactSubmit} className="space-y-4">
                     <div className="space-y-2">
