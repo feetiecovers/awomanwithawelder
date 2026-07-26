@@ -6,6 +6,7 @@ import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_TightUninverted.
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
+import { FloatingSocials } from "@/components/FloatingSocials";
 import { BottomRightMenu } from "@/components/BottomRightMenu";
 import { ProductsPopup } from "@/components/ProductsPopup";
 import { CartPopup } from "@/components/CartPopup";
@@ -80,6 +81,7 @@ export default function Home() {
       <ParticleBackground />
       <BrandOrbs />
       <SmokeEffect />
+      <FloatingSocials />
 
       {/* Center logo — uninverted original colors, enlarged for desktop */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">

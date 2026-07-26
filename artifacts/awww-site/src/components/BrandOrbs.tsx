@@ -132,16 +132,37 @@ export function BrandOrbs() {
           const angle = brand.angle;
           const rad = (angle * Math.PI) / 180;
           const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
+          const desktopRadius = angle === 180 ? 375 : angle === 0 ? 365 : brand.radius;
           const rx  = isMobile 
             ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
-            : brand.radius * scale * 1.15;
+            : desktopRadius * scale * 1.15;
           const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(rad) * logoRX;
           const sy  = cy + Math.sin(rad) * logoRY;
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
           const odist = Math.sqrt(ox * ox + oy * oy);
-          const targetDist = odist - orbSize / 2 - 4;
+
+          // Calculate distance from orb center to logo edge along ray for uniform desktop gap
+          const wMultiplier = (brand.widthMultiplier || 1.0) * (brand.sizeMultiplier || 1.0);
+          const hMultiplier = brand.sizeMultiplier || 1.0;
+          const w = orbSize * wMultiplier;
+          const h = orbSize * hMultiplier;
+          const absCos = Math.abs(Math.cos(rad));
+          const absSin = Math.abs(Math.sin(rad));
+          let edgeDist = orbSize / 2;
+          if (absCos > 0.001 && absSin > 0.001) {
+            edgeDist = Math.min((w / 2) / absCos, (h / 2) / absSin);
+          } else if (absCos > 0.001) {
+            edgeDist = w / 2;
+          } else {
+            edgeDist = h / 2;
+          }
+
+          const targetDist = isMobile
+            ? odist - orbSize / 2 - 4
+            : odist - edgeDist - 26;
+
           const ratio = targetDist / odist;
           const ex  = cx + ox * ratio;
           const ey  = cy + oy * ratio;
@@ -170,9 +191,10 @@ export function BrandOrbs() {
         const angle = brand.angle;
         const rad = (angle * Math.PI) / 180;
         const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
+        const desktopRadius = angle === 180 ? 375 : angle === 0 ? 365 : brand.radius;
         const rx  = isMobile 
           ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
-          : brand.radius * scale * 1.15;
+          : desktopRadius * scale * 1.15;
         const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
         const x   = Math.cos(rad) * rx;
         const y   = Math.sin(rad) * ry;
