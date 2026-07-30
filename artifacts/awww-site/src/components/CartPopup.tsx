@@ -93,10 +93,10 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 16 }}
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
-          className="w-full max-w-md flex flex-col bg-[#080d14] border border-primary/20 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)]"
+          className="w-full max-w-md flex flex-col bg-[#080d14]/95 backdrop-blur-xl border border-primary/25 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-primary/15 bg-[#05080e]/80 shrink-0">
             <div className="flex items-center gap-2.5">
               <ShoppingBag className="h-4 w-4 text-primary" />
               <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">

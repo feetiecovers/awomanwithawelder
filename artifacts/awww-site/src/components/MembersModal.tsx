@@ -83,12 +83,12 @@ export function MembersModal({ isOpen, onClose }: MembersModalProps) {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-md flex flex-col bg-card border border-primary/30 rounded-xl shadow-2xl overflow-y-auto max-h-[calc(100dvh-32px)]"
+          className="w-full max-w-md flex flex-col bg-[#080d14]/95 border border-primary/25 rounded-[24px] shadow-[0_0_60px_rgba(26,157,224,0.18)] overflow-hidden max-h-[calc(100dvh-32px)]"
         >
-          <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-            <h2 className="text-xl font-mono font-bold text-primary tracking-widest uppercase">Members Area</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-destructive/20 hover:text-destructive">
-              <X className="h-5 w-5" />
+          <div className="flex items-center justify-between p-4 px-5 border-b border-primary/15 bg-[#05080e]/80">
+            <h2 className="text-base font-mono font-bold text-primary tracking-[0.2em] uppercase">Members Area</h2>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full hover:bg-destructive/20 hover:text-destructive">
+              <X className="h-4 w-4" />
             </Button>
           </div>
 
@@ -141,10 +141,12 @@ export function MembersModal({ isOpen, onClose }: MembersModalProps) {
               </div>
             ) : (
               <Tabs defaultValue="login">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted">
-                  <TabsTrigger value="login" className="font-mono text-xs uppercase tracking-wider">Sign In</TabsTrigger>
-                  <TabsTrigger value="register" className="font-mono text-xs uppercase tracking-wider">Register</TabsTrigger>
-                </TabsList>
+                <div className="p-1 rounded-full bg-[#09101a] border border-primary/25 mb-6 shadow-inner">
+                  <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
+                    <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_16px_rgba(26,157,224,0.6)] py-2 text-xs font-mono tracking-wider uppercase transition-all">Sign In</TabsTrigger>
+                    <TabsTrigger value="register" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_16px_rgba(26,157,224,0.6)] py-2 text-xs font-mono tracking-wider uppercase transition-all">Register</TabsTrigger>
+                  </TabsList>
+                </div>
                 
                 <TabsContent value="login">
                   <form onSubmit={handleLogin} className="space-y-4">

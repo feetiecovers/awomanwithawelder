@@ -212,12 +212,12 @@ export default function RequestQuote() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 pb-6 shrink-0">
           <button
             onClick={() => setLocation("/")}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-[#080d14]/85 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-primary transition-colors hover:border-primary/50 hover:bg-primary/10"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-[#080d14]/90 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-primary transition-all hover:border-primary/60 hover:bg-primary/10 hover:shadow-[0_0_15px_rgba(26,157,224,0.4)]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back
           </button>
-          <img src={mainLogo} alt="A Woman With a Welder" className="h-12 w-auto opacity-90" />
+          <img src={mainLogo} alt="A Woman With a Welder" className="h-12 w-auto opacity-90 drop-shadow-[0_0_12px_rgba(26,157,224,0.3)]" />
         </div>
 
         <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.24fr_0.76fr] flex-1">

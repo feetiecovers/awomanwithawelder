@@ -681,24 +681,30 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 transition={{ type: "spring", stiffness: 320, damping: 34 }}
                 className="pointer-events-auto w-full max-w-4xl overflow-y-auto max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
               >
-                <div className="flex items-start justify-between border-b border-primary/15 px-6 py-6 sm:px-8">
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/70">Booking Details</p>
-                    <h3 className="mt-2 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-[0.12em] text-primary">
+                <div className="flex items-center justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-[0.2em]">
+                      <Wrench className="h-3 w-3" />
+                      <span>Service Booking</span>
+                    </div>
+                    <h3 className="font-mono text-base sm:text-lg font-bold uppercase tracking-[0.12em] text-primary">
                       {selectedService.name}
                     </h3>
-                    <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                      Submit your details to book this service. The Woman with A Welder will get back to you as soon she is able too. If you don't hear back from her in the next 24 Hours - flick us an email at <a href="mailto:charlotte@awomanwithawelder.co.nz" className="text-primary font-semibold underline hover:text-primary/80">charlotte@awomanwithawelder.co.nz</a> it may have just got lost somewhere.
-                    </p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={closeBookingModal}
-                    className="h-8 w-8 rounded-full hover:bg-destructive/20 hover:text-destructive flex-shrink-0 ml-4"
+                    className="h-8 w-8 rounded-full hover:bg-destructive/20 hover:text-destructive flex-shrink-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
+                </div>
+
+                <div className="px-6 pt-5 pb-2 sm:px-8 border-b border-primary/10">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    Submit your details to book this service. The Woman with A Welder will get back to you as soon she is able too. If you don't hear back from her in the next 24 Hours - flick us an email at <a href="mailto:charlotte@awomanwithawelder.co.nz" className="text-primary font-semibold underline hover:text-primary/80">charlotte@awomanwithawelder.co.nz</a> it may have just got lost somewhere.
+                  </p>
                 </div>
 
                 <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
