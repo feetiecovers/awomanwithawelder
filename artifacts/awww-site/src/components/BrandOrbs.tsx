@@ -9,7 +9,7 @@ import denversDeskLogo from "@assets/Denvers_Desk_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
-  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 350, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
+  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
   { id: 4, name: "Build a Trailer", angle: 180, radius: 350, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
@@ -141,8 +141,9 @@ export function BrandOrbs() {
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
           const odist = Math.sqrt(ox * ox + oy * oy);
-          const targetDist = odist - orbSize / 2 - 4;
-          const ratio = targetDist / odist;
+          const currentOrbRadius = (orbSize * (brand.sizeMultiplier || 1.0)) / 2;
+          const targetDist = odist - currentOrbRadius - 10;
+          const ratio = Math.max(0, targetDist / odist);
           const ex  = cx + ox * ratio;
           const ey  = cy + oy * ratio;
           const s1  = tick + brand.id * 11;
