@@ -83,7 +83,7 @@ export function FloatingSocials() {
           rel="noopener noreferrer"
           aria-label={`Visit ${social.name}`}
           data-testid={`social-${social.id}`}
-          className={`absolute pointer-events-auto block transition-all duration-300 group ${social.positionClasses}`}
+          className={`absolute pointer-events-auto block ${social.positionClasses}`}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: social.delay, type: "spring" }}
@@ -99,14 +99,21 @@ export function FloatingSocials() {
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            whileHover={{ scale: 1.22 }}
-            whileTap={{ scale: 0.92 }}
-            className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center transition-all duration-300"
-            style={{
-              filter: `drop-shadow(0 0 14px ${social.glowColor})`,
-            }}
           >
-            {social.icon}
+            <motion.div
+              whileHover={{
+                scale: 1.22,
+                filter: `drop-shadow(0 0 24px ${social.hoverGlow})`,
+              }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 280, damping: 18 }}
+              className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center cursor-pointer transition-all duration-300"
+              style={{
+                filter: `drop-shadow(0 0 14px ${social.glowColor})`,
+              }}
+            >
+              {social.icon}
+            </motion.div>
           </motion.div>
         </motion.a>
       ))}

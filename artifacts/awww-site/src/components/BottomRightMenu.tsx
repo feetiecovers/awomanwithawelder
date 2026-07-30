@@ -108,7 +108,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-7 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -120,20 +120,22 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
             style={{ maxHeight: "calc(100dvh - 110px)" }}
           >
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab} className="w-full h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 rounded-none bg-[#080d14] p-0 flex-shrink-0 h-auto border-b border-primary/20">
-                <TabsTrigger value="pages" className="rounded-none border-b-2 border-transparent data-[state=active]:bg-primary/10 data-[state=active]:border-primary py-3">
-                  <Menu className="h-4 w-4 mr-2" /> Pages
-                </TabsTrigger>
-                <TabsTrigger value="chat" className="rounded-none border-b-2 border-transparent data-[state=active]:bg-primary/10 data-[state=active]:border-primary py-3 relative">
-                  <MessageSquare className="h-4 w-4 mr-2" /> Chat
-                  {hasUnreadChat && (
-                    <span className="absolute top-2.5 right-4.5 w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(26,157,224,0.9)]" />
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="contact" className="rounded-none border-b-2 border-transparent data-[state=active]:bg-primary/10 data-[state=active]:border-primary py-3">
-                  <FileText className="h-4 w-4 mr-2" /> Contact
-                </TabsTrigger>
-              </TabsList>
+              <div className="p-3 border-b border-primary/15 bg-[#05080e]/80 shrink-0">
+                <TabsList className="grid w-full grid-cols-3 rounded-full bg-[#09101a] p-1 border border-primary/25 shadow-inner h-auto">
+                  <TabsTrigger value="pages" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_16px_rgba(26,157,224,0.6)] py-2 text-xs font-mono tracking-wider uppercase transition-all flex items-center justify-center">
+                    <Menu className="h-3.5 w-3.5 mr-1.5" /> Pages
+                  </TabsTrigger>
+                  <TabsTrigger value="chat" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_16px_rgba(26,157,224,0.6)] py-2 text-xs font-mono tracking-wider uppercase transition-all relative flex items-center justify-center">
+                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Chat
+                    {hasUnreadChat && (
+                      <span className="absolute top-2 right-3 w-2 h-2 rounded-full bg-primary-foreground animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="contact" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_16px_rgba(26,157,224,0.6)] py-2 text-xs font-mono tracking-wider uppercase transition-all flex items-center justify-center">
+                    <FileText className="h-3.5 w-3.5 mr-1.5" /> Contact
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <div className={`flex-1 ${activeMenuTab !== "chat" ? "overflow-y-auto" : "overflow-hidden"} min-h-[500px] max-h-[620px] flex flex-col`}>
                 <TabsContent value="pages" className="p-4 space-y-2 mt-0">

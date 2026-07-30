@@ -230,8 +230,8 @@ export default function RequestQuote() {
             <h1 className="mt-2 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-[0.12em] text-primary">
               Request Shipping & Mods
             </h1>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Submit your details to request custom configurations, shipping calculations, and options. Our welding workshop will review your request.
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Submit your details to request custom configurations, shipping calculations, and options. The Woman with A Welder will get back to you as soon she is able too. If you don't hear back from her in the next 24 Hours - flick us an email at <a href="mailto:charlotte@awomanwithawelder.co.nz" className="text-primary font-semibold underline hover:text-primary/80">charlotte@awomanwithawelder.co.nz</a> it may have just got lost somewhere.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5 flex-1">

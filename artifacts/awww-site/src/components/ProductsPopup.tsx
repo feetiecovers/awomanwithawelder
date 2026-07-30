@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin } from "lucide-react";
+import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -454,21 +454,31 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
             </div>
           </div>
 
-          <div className="flex shrink-0 border-b border-primary/10">
-            {(["shop", "services"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                data-testid={`tab-${tab}`}
-                className={`flex-1 py-3 font-mono text-xs uppercase tracking-widest transition-colors ${
-                  activeTab === tab
-                    ? "text-primary border-b-2 border-primary bg-primary/5"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="flex shrink-0 px-5 py-3 border-b border-primary/15 bg-[#05080e]/80">
+            <div className="w-full flex bg-[#09101a] p-1.5 rounded-full border border-primary/25 shadow-inner">
+              {(["shop", "services"] as const).map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    data-testid={`tab-${tab}`}
+                    className={`flex-1 py-2 px-4 rounded-full font-mono text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground font-bold shadow-[0_0_20px_rgba(26,157,224,0.6)] scale-[1.01]"
+                        : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    }`}
+                  >
+                    {tab === "shop" ? (
+                      <ShoppingBag className="h-3.5 w-3.5" />
+                    ) : (
+                      <Wrench className="h-3.5 w-3.5" />
+                    )}
+                    <span>{tab === "shop" ? "Products & Stock" : "Services & Booking"}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex-1 overflow-hidden flex flex-col">
@@ -677,8 +687,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     <h3 className="mt-2 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-[0.12em] text-primary">
                       {selectedService.name}
                     </h3>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Submit your details to book this service. Our welding workshop will review your request and get in touch to confirm.
+                    <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      Submit your details to book this service. The Woman with A Welder will get back to you as soon she is able too. If you don't hear back from her in the next 24 Hours - flick us an email at <a href="mailto:charlotte@awomanwithawelder.co.nz" className="text-primary font-semibold underline hover:text-primary/80">charlotte@awomanwithawelder.co.nz</a> it may have just got lost somewhere.
                     </p>
                   </div>
                   <Button
@@ -969,42 +979,42 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="pointer-events-auto w-full max-w-sm rounded-2xl border border-primary/25 bg-[#080d14]/90 backdrop-blur-md p-6 shadow-xl flex flex-col"
+                className="pointer-events-auto w-full max-w-lg sm:max-w-xl rounded-2xl border border-primary/30 bg-[#080d14]/95 backdrop-blur-xl p-6 sm:p-8 shadow-[0_0_60px_rgba(26,157,224,0.22)] flex flex-col"
               >
-                <h3 className="font-mono text-sm font-bold uppercase tracking-wider text-primary mb-3">
-                  Delivery Location
+                <h3 className="font-mono text-base font-bold uppercase tracking-wider text-primary mb-2">
+                  Delivery Location & Options
                 </h3>
-                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed">
                   Please select a delivery location for <span className="text-foreground font-semibold">{shippingSelectProduct.name}</span>:
                 </p>
                 
                 <select
                   value={selectedShippingPresetIndex}
                   onChange={(e) => setSelectedShippingPresetIndex(Number(e.target.value))}
-                  className="w-full bg-[#0d1520] border border-primary/20 text-foreground rounded-lg p-2.5 text-xs font-mono mb-5 outline-none focus:border-primary"
+                  className="w-full bg-[#0d1520] border border-primary/30 text-foreground rounded-xl p-3 text-xs sm:text-sm font-mono mb-6 outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 shadow-inner cursor-pointer"
                 >
                   {getProductShippingPresets(shippingSelectProduct).map((preset: { label: string; price: number }, idx: number) => (
-                    <option key={idx} value={idx}>
+                    <option key={idx} value={idx} className="bg-[#080d14] text-foreground py-2 font-mono">
                       {preset.label} (+NZ${preset.price.toFixed(2)})
                     </option>
                   ))}
                 </select>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <Button
                     onClick={() => {
                       const presets = getProductShippingPresets(shippingSelectProduct);
                       const selected = presets[selectedShippingPresetIndex];
                       handleAddToCartWithShipping(shippingSelectProduct.id, selected.label, selected.price);
                     }}
-                    className="flex-1 font-mono uppercase tracking-widest text-[10px] h-9"
+                    className="flex-1 font-mono uppercase tracking-widest text-xs h-10 shadow-[0_0_15px_rgba(26,157,224,0.4)]"
                   >
                     Add to Cart
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setShippingSelectProduct(null)}
-                    className="font-mono uppercase tracking-widest text-[10px] border-primary/30 h-9"
+                    className="font-mono uppercase tracking-widest text-xs border-primary/30 hover:border-primary h-10 px-6"
                   >
                     Cancel
                   </Button>

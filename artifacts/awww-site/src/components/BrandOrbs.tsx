@@ -11,7 +11,7 @@ import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 350, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.55 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
   { id: 4, name: "Build a Trailer", angle: 180, radius: 350, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.55, sizeMultiplier: 2.15, stripWhiteBg: true },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false, dark: false, widthMultiplier: 1.5,  sizeMultiplier: 1.35 },
@@ -241,7 +241,7 @@ export function BrandOrbs() {
                             }
                           : {
                               mixBlendMode: "screen" as const,
-                              filter: `drop-shadow(0 0 8px rgba(255,255,255,${brand.glowOpacity ?? 0.6})) drop-shadow(0 0 20px rgba(26,157,224,0.6))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
+                              filter: `${(brand as any).brightness ? `brightness(${(brand as any).brightness}) ` : ""}drop-shadow(0 0 8px rgba(255,255,255,${brand.glowOpacity ?? 0.6})) drop-shadow(0 0 20px rgba(26,157,224,${(brand as any).blueGlowOpacity ?? 0.6}))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
                             }
                         ),
                       }}

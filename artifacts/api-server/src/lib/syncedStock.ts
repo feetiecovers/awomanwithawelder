@@ -78,6 +78,28 @@ function mapImages(value: unknown): unknown[] {
   return [];
 }
 
+function rewriteImageUrl(url: unknown): unknown {
+  if (typeof url !== "string") return url;
+  return url.replace(/^https?:\/\/localhost:\d+\//i, "/");
+}
+
+function rewriteImageObject(image: unknown): unknown {
+  if (!image) return image;
+  if (typeof image === "string") return rewriteImageUrl(image);
+  if (typeof image !== "object") return image;
+
+  const record = image as Record<string, unknown>;
+  return {
+    ...record,
+    original: rewriteImageUrl(record.original),
+    large: rewriteImageUrl(record.large),
+    medium: rewriteImageUrl(record.medium),
+    thumb: rewriteImageUrl(record.thumb),
+    url: rewriteImageUrl(record.url),
+    src: rewriteImageUrl(record.src),
+  };
+}
+
 function getExplicitAvailability(entry: Record<string, unknown>): boolean | null {
   const candidates = [
     entry.available,
@@ -295,11 +317,12 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry) {
     return [];
   })();
 
+  const rawImages = Array.isArray(entry.images) && entry.images.length > 0
+    ? entry.images
+    : mapImages(entry.image);
   const images = websiteImages.length
-    ? websiteImages.filter(Boolean)
-    : Array.isArray(entry.images)
-      ? entry.images
-      : mapImages(entry.image);
+    ? websiteImages.filter(Boolean).map(rewriteImageObject)
+    : rawImages.filter(Boolean).map(rewriteImageObject);
 
   let shippingPresets: { label: string; price: number }[] | undefined = undefined;
   if (Array.isArray(entry.shippingPresets)) {
@@ -337,10 +360,12 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry) {
     inStock: computeAvailability(entry, entry._sourceType),
     images,
     image: typeof entry.image === "string"
-      ? entry.image
+      ? rewriteImageUrl(entry.image)
       : typeof images[0] === "string"
         ? images[0]
-        : null,
+        : (images[0] && typeof images[0] === "object"
+          ? rewriteImageUrl((images[0] as Record<string, unknown>).original ?? (images[0] as Record<string, unknown>).large ?? (images[0] as Record<string, unknown>).url ?? null)
+          : null),
     shippingPresets,
   };
 }

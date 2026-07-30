@@ -30,6 +30,11 @@ export default function Home() {
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
 
+  // Pre-warm backend API immediately on page load to spin up Render free instance
+  useEffect(() => {
+    queryClient.prefetchQuery({ queryKey: getListProductsQueryKey() }).catch(() => {});
+  }, [queryClient]);
+
   // Show welcome notification when site opens
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -117,8 +122,8 @@ export default function Home() {
       </div>
 
       {/* Bottom-center footer */}
-      <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-center text-center pointer-events-none">
-        <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/20 max-w-xs sm:max-w-none leading-relaxed">
+      <div className="absolute bottom-2.5 sm:bottom-4 left-4 right-4 z-10 flex justify-center text-center pointer-events-none">
+        <p className="font-mono text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-white/20 max-w-xs sm:max-w-none leading-tight sm:leading-relaxed">
           &copy; {new Date().getFullYear()} A Woman With a Welder |<br className="sm:hidden" /> All Rights Reserved | Copyright of Feetie Covers Limited 2026
           <span className="mx-2 text-white/10 hidden sm:inline">|</span>
           <span className="block sm:inline mt-0.5 sm:mt-0">Built by<span className="text-primary/40"> The Husband</span></span>
@@ -136,7 +141,7 @@ export default function Home() {
             whileHover={{ scale: 1.1, boxShadow: "0 0 28px rgba(26,157,224,0.7)" }}
             whileTap={{ scale: 0.92 }}
             onClick={handleOpenCart}
-            className="fixed bottom-24 right-4 sm:bottom-28 sm:right-6 z-50 w-11 h-11 rounded-full bg-[#080d14] border border-primary/50 flex items-center justify-center shadow-[0_0_18px_rgba(26,157,224,0.45)] cursor-pointer"
+            className="fixed bottom-[108px] right-4 sm:bottom-28 sm:right-6 z-50 w-11 h-11 rounded-full bg-[#080d14] border border-primary/50 flex items-center justify-center shadow-[0_0_18px_rgba(26,157,224,0.45)] cursor-pointer"
             aria-label="Open cart"
           >
             <ShoppingCart className="h-4 w-4 text-primary" />

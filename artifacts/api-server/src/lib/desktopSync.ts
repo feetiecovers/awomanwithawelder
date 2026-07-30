@@ -1,4 +1,4 @@
-type SyncConfig = {
+﻿type SyncConfig = {
   websiteId: string;
   brandName: string;
   desktopBaseUrl: string;
@@ -156,3 +156,5 @@ export async function forwardBookingToDesktop(bookingPayload: BookingForwardPayl
   const { bookingsUrl } = getDesktopSyncConfig();
   return postToDesktop(bookingsUrl, bookingPayload);
 }
+
+
