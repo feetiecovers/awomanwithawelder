@@ -133,21 +133,35 @@
   }
 }
 
-/* Industrial scrollbar — thin blue track */
+/* Global Industrial Glow Scrollbar for all pages, modals & containers */
+* {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(26, 157, 224, 0.75) rgba(8, 13, 20, 0.95) !important;
+}
+
+*::-webkit-scrollbar {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(8, 13, 20, 0.95) !important;
+  border-radius: 9999px !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1a9de0 0%, #0d6298 100%) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 8px rgba(26, 157, 224, 0.7) !important;
+  border: 1px solid rgba(26, 157, 224, 0.35) !important;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #40b8f5 0%, #1a9de0 100%) !important;
+  box-shadow: 0 0 14px rgba(26, 157, 224, 0.95) !important;
+}
+
+/* Industrial scrollbar utility class */
 .scroll-industrial {
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(26,157,224,0.5) rgba(10,15,26,0.8);
-}
-.scroll-industrial::-webkit-scrollbar {
-  width: 4px;
-}
-.scroll-industrial::-webkit-scrollbar-track {
-  background: rgba(10,15,26,0.8);
-  border-radius: 2px;
-}
-.scroll-industrial::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1a9de0 0%, #1e6fa8 100%);
-  border-radius: 2px;
-  box-shadow: 0 0 6px rgba(26,157,224,0.6);
+  overflow-y: auto !important;
 }

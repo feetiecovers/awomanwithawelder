@@ -679,7 +679,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 18 }}
                 transition={{ type: "spring", stiffness: 320, damping: 34 }}
-                className="pointer-events-auto w-full max-w-4xl overflow-y-auto max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
+                className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
               >
                 <div className="flex items-center justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0">
                   <div className="flex items-center gap-3">
