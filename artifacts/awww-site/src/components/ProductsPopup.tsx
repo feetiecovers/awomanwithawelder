@@ -39,6 +39,8 @@ const PRODUCT_GRADIENTS = [
   "linear-gradient(135deg, #0d1420 0%, #1e3040 50%, #081020 100%)",
 ];
 
+const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
+
 type ProductCard = {
   id: number;
   name: string;
@@ -46,6 +48,7 @@ type ProductCard = {
   price: number;
   type: "product" | "service";
   available: boolean;
+  image: string | null;
   bookingFields?: Array<{
     id: string;
     label: string;
@@ -96,6 +99,55 @@ const emptyBookingForm: BookingFormState = {
   customFields: {},
 };
 
+function normalizeImageUrl(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
+  }
+
+  if (/^\/(?:api\/)?images\/products\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  }
+
+  if (/^images\/products\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
+  }
+
+  return trimmed;
+}
+
+function resolveImageCandidate(candidate: unknown): string {
+  if (typeof candidate === "string") return normalizeImageUrl(candidate);
+  if (!candidate || typeof candidate !== "object") return "";
+
+  const record = candidate as Record<string, unknown>;
+  for (const key of ["publishedOriginal", "original", "url", "src", "medium", "large", "thumb"]) {
+    const resolved = normalizeImageUrl(record[key]);
+    if (resolved) return resolved;
+  }
+
+  return "";
+}
+
+function getProductImage(record: Record<string, unknown>): string | null {
+  for (const candidate of [record.image, record.imageUrl, record.image_url]) {
+    const resolved = resolveImageCandidate(candidate);
+    if (resolved) return resolved;
+  }
+
+  if (Array.isArray(record.images)) {
+    for (const candidate of record.images) {
+      const resolved = resolveImageCandidate(candidate);
+      if (resolved) return resolved;
+    }
+  }
+
+  return null;
+}
+
 function normalizeProducts(value: unknown): ProductCard[] {
   const collections: unknown[] = [];
 
@@ -129,6 +181,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
         || record.fulfillmentType === "job"
       ) ? "service" : "product";
       const price = Number(record.price ?? record.displayPrice ?? record.sellPrice ?? record.unitPrice ?? record.sell_price ?? record.unit_price);
+      const image = getProductImage(record);
       const bookingFields: NonNullable<ProductCard["bookingFields"]> = Array.isArray(record.bookingFields)
         ? record.bookingFields.map((field: any, fieldIndex: number) => ({
             id: String(field?.id ?? `booking-field-${fieldIndex}`),
@@ -153,6 +206,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
         price: Number.isFinite(price) ? price : 0,
         type,
         available: record.available !== false && record.inStock !== false && record.in_stock !== false,
+        image,
         bookingFields,
         shippingPresets: Array.isArray(record.shippingPresets) ? record.shippingPresets : undefined,
         hasVariants: record.hasVariants === true,
@@ -521,15 +575,26 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 className="w-full h-24 sm:h-auto sm:w-52 shrink-0 flex items-center justify-center relative overflow-hidden"
                                 style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
                               >
-                                <div
-                                  className="absolute inset-0"
-                                  style={{
-                                    backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
-                                  }}
-                                />
-                                <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
-                                  Image
-                                </span>
+                                {item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <>
+                                    <div
+                                      className="absolute inset-0"
+                                      style={{
+                                        backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
+                                      }}
+                                    />
+                                    <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
+                                      Image
+                                    </span>
+                                  </>
+                                )}
                               </div>
 
                               <div className="flex flex-col justify-between p-4 flex-1 min-w-0">

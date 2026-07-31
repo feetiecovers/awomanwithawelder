@@ -100,6 +100,19 @@ function rewriteImageObject(image: unknown): unknown {
   };
 }
 
+function resolveImageCandidate(image: unknown): unknown {
+  if (typeof image === "string" && image.trim()) return rewriteImageUrl(image);
+  if (!image || typeof image !== "object") return null;
+
+  const record = image as Record<string, unknown>;
+  for (const key of ["publishedOriginal", "original", "url", "src", "medium", "large", "thumb"]) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return rewriteImageUrl(value);
+  }
+
+  return null;
+}
+
 function getExplicitAvailability(entry: Record<string, unknown>): boolean | null {
   const candidates = [
     entry.available,
@@ -320,9 +333,9 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry) {
   const rawImages = Array.isArray(entry.images) && entry.images.length > 0
     ? entry.images
     : mapImages(entry.image);
-  const images = websiteImages.length
-    ? websiteImages.filter(Boolean).map(rewriteImageObject)
-    : rawImages.filter(Boolean).map(rewriteImageObject);
+  const images = rawImages.length
+    ? rawImages.filter(Boolean).map(rewriteImageObject)
+    : websiteImages.filter(Boolean).map(rewriteImageObject);
 
   let shippingPresets: { label: string; price: number }[] | undefined = undefined;
   if (Array.isArray(entry.shippingPresets)) {
@@ -359,13 +372,7 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry) {
     available: computeAvailability(entry, entry._sourceType),
     inStock: computeAvailability(entry, entry._sourceType),
     images,
-    image: typeof entry.image === "string"
-      ? rewriteImageUrl(entry.image)
-      : typeof images[0] === "string"
-        ? images[0]
-        : (images[0] && typeof images[0] === "object"
-          ? rewriteImageUrl((images[0] as Record<string, unknown>).original ?? (images[0] as Record<string, unknown>).large ?? (images[0] as Record<string, unknown>).url ?? null)
-          : null),
+    image: resolveImageCandidate(images[0]) ?? resolveImageCandidate(entry.image),
     shippingPresets,
   };
 }
