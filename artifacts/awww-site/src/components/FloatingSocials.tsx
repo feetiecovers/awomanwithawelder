@@ -89,15 +89,10 @@ export function FloatingSocials() {
           transition={{ duration: 0.8, delay: social.delay, type: "spring" }}
         >
           <motion.div
-            animate={{
-              y: [-8, 8, -8],
-              x: [-5, 5, -5],
-              rotate: [-3, 3, -3],
-            }}
+            animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
             transition={{
-              duration: social.duration,
-              repeat: Infinity,
-              ease: "easeInOut",
+              y: { duration: social.duration, repeat: Infinity, ease: "easeInOut", delay: social.delay },
+              x: { duration: social.duration * 1.2, repeat: Infinity, ease: "easeInOut", delay: social.delay * 1.4 },
             }}
           >
             <motion.div

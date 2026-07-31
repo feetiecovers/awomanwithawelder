@@ -26,6 +26,7 @@ interface ProductsPopupProps {
   onOpenCart?: () => void;
   onRequireSignIn?: () => void;
   onBookingSuccess?: (bookingData: BookingConfirmationData) => void;
+  onOpenConfigurator?: () => void;
 }
 
 const ITEMS_PER_PAGE = 2;
@@ -257,7 +258,7 @@ function getPricingBreakdown(price: number) {
   return { subtotal, gst, total };
 }
 
-export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess }: ProductsPopupProps) {
+export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator }: ProductsPopupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -509,7 +510,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
           </div>
 
           <div className="flex shrink-0 px-5 py-3 border-b border-primary/15 bg-[#05080e]/80">
-            <div className="w-full flex bg-[#09101a] p-1.5 rounded-full border border-primary/25 shadow-inner">
+            <div className="w-full flex bg-[#09101a] p-1.5 rounded-full border border-primary/25 shadow-inner gap-1">
               {(["shop", "services"] as const).map((tab) => {
                 const isActive = activeTab === tab;
                 return (
@@ -517,7 +518,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     data-testid={`tab-${tab}`}
-                    className={`flex-1 py-2 px-4 rounded-full font-mono text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-2 px-3 rounded-full font-mono text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
                       isActive
                         ? "bg-primary text-primary-foreground font-bold shadow-[0_0_20px_rgba(26,157,224,0.6)] scale-[1.01]"
                         : "text-muted-foreground hover:text-primary hover:bg-primary/10"
@@ -528,10 +529,23 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     ) : (
                       <Wrench className="h-3.5 w-3.5" />
                     )}
-                    <span>{tab === "shop" ? "Products & Stock" : "Services & Booking"}</span>
+                    <span>{tab === "shop" ? "Products" : "Services"}</span>
                   </button>
                 );
               })}
+              {onOpenConfigurator && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenConfigurator();
+                  }}
+                  data-testid="tab-configurator"
+                  className="flex-1 py-2 px-3 rounded-full font-mono text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 bg-[#ff2a8d]/15 text-[#ff2a8d] hover:bg-[#ff2a8d] hover:text-white hover:shadow-[0_0_20px_rgba(255,42,141,0.7)]"
+                >
+                  <Wrench className="h-3.5 w-3.5" />
+                  <span>Trailer Configurator™</span>
+                </button>
+              )}
             </div>
           </div>
 

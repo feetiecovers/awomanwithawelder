@@ -4,17 +4,17 @@ import { useToast } from "@/hooks/use-toast";
 import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
 import feetieCoversLogo from "@assets/Feetie_Covers_Logo_Black.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
-import buildATrailerLogo from "@assets/Build_a_Trailer_Logo.png";
-import denversDeskLogo from "@assets/Denvers_Desk_Logo.png";
+import ladyLuggerLogo from "@assets/Lady_Lugger_Logo.png";
+import denversDeskLogo from "@assets/Denvers_Desk_Logo_BrightDarkTheme.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
-  { id: 4, name: "Build a Trailer", angle: 180, radius: 350, delay: 0.8, logo: buildATrailerLogo,  live: false, dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.8, stripWhiteBg: true },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.55, sizeMultiplier: 2.15, stripWhiteBg: true },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false, dark: false, widthMultiplier: 1.5,  sizeMultiplier: 1.35 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
+  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, stripWhiteBg: true, glowOpacity: 0.15, blueGlowOpacity: 0.15, brightness: 0.75 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.65, sizeMultiplier: 1.85 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, widthMultiplier: 1.5, sizeMultiplier: 1.35 },
 ];
 
 /** Strip near-white backgrounds from a logo image using an off-screen canvas */
@@ -94,7 +94,11 @@ function lightningPath(
   return pts.map(([px, py], idx) => `${idx === 0 ? "M" : "L"} ${px.toFixed(1)} ${py.toFixed(1)}`).join(" ");
 }
 
-export function BrandOrbs() {
+interface BrandOrbsProps {
+  onOpenConfigurator?: () => void;
+}
+
+export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const { toast } = useToast();
   const processedLogos = useProcessedLogos();
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -198,7 +202,9 @@ export function BrandOrbs() {
               zIndex: 2,
             }}
             onClick={() => {
-              if (!brand.live) {
+              if (brand.id === 4 && onOpenConfigurator) {
+                onOpenConfigurator();
+              } else if (!brand.live) {
                 toast({ title: "Coming Soon", description: "This partner brand is launching shortly." });
               } else if (brand.url) {
                 window.open(brand.url, "_blank", "noopener,noreferrer");
@@ -238,7 +244,7 @@ export function BrandOrbs() {
                         // Original screen blend for normal logos; plain display for canvas-processed ones
                         ...(brand.stripWhiteBg
                           ? {
-                              filter: `drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 25px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(26,157,224,0.35))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
+                              filter: `brightness(${(brand as any).brightness || 0.75}) drop-shadow(0 0 6px rgba(255,255,255,0.25)) drop-shadow(0 0 15px rgba(255,255,255,0.15))`,
                             }
                           : {
                               mixBlendMode: "screen" as const,

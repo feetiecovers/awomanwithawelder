@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_TightUninverted.png";
+import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Clean_NoCableCAD.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
 import { FloatingSocials } from "@/components/FloatingSocials";
 import { BottomRightMenu } from "@/components/BottomRightMenu";
 import { ProductsPopup } from "@/components/ProductsPopup";
+import { TrailerConfiguratorPopup } from "@/components/TrailerConfiguratorPopup";
 import { CartPopup } from "@/components/CartPopup";
 import { MembersModal } from "@/components/MembersModal";
 import { OrderSuccessModal } from "@/components/OrderSuccessModal";
@@ -21,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isConfiguratorOpen, setIsConfiguratorOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
@@ -84,7 +86,7 @@ export default function Home() {
   return (
     <div className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
       <ParticleBackground />
-      <BrandOrbs />
+      <BrandOrbs onOpenConfigurator={() => setIsConfiguratorOpen(true)} />
       <SmokeEffect />
       <FloatingSocials />
 
@@ -94,9 +96,9 @@ export default function Home() {
           animate={{
             scale: [1, 1.02, 1],
             filter: [
-              "drop-shadow(0 0 8px rgba(26, 157, 224, 0.25))",
-              "drop-shadow(0 0 28px rgba(26, 157, 224, 0.60))",
-              "drop-shadow(0 0 8px rgba(26, 157, 224, 0.25))",
+              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
+              "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
+              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
             ],
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -109,7 +111,7 @@ export default function Home() {
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[240px] sm:w-[380px] md:w-[460px] h-auto max-w-[85vw] block"
+            className="w-[190px] sm:w-[300px] md:w-[370px] h-auto max-w-[85vw] block"
             data-testid="img-main-logo"
           />
         </motion.div>
@@ -155,6 +157,7 @@ export default function Home() {
       <BottomRightMenu
         onOpenMembers={() => setIsMembersOpen(true)}
         onOpenProducts={() => setIsProductsOpen(true)}
+        onOpenConfigurator={() => setIsConfiguratorOpen(true)}
       />
 
       <ProductsPopup
@@ -163,6 +166,13 @@ export default function Home() {
         onOpenCart={handleOpenCart}
         onRequireSignIn={() => setIsMembersOpen(true)}
         onBookingSuccess={handleBookingSuccess}
+        onOpenConfigurator={() => setIsConfiguratorOpen(true)}
+      />
+
+      <TrailerConfiguratorPopup
+        isOpen={isConfiguratorOpen}
+        onClose={() => setIsConfiguratorOpen(false)}
+        onRequireSignIn={() => setIsMembersOpen(true)}
       />
 
       <CartPopup

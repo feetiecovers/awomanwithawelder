@@ -15,9 +15,10 @@ import { getConfiguredApiBaseUrl } from "@/lib/api-base";
 interface BottomRightMenuProps {
   onOpenMembers: () => void;
   onOpenProducts: () => void;
+  onOpenConfigurator?: () => void;
 }
 
-export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMenuProps) {
+export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigurator }: BottomRightMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeMenuTab, setActiveMenuTab] = useState("pages");
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
@@ -141,6 +142,15 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts }: BottomRightMe
                 <TabsContent value="pages" className="p-4 space-y-2 mt-0">
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Home</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { onOpenProducts(); setIsOpen(false); }}>Products & Services</Button>
+                  {onOpenConfigurator && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-left font-mono text-[#ff2a8d] hover:bg-[#ff2a8d]/15 hover:text-[#ff2a8d]"
+                      onClick={() => { onOpenConfigurator(); setIsOpen(false); }}
+                    >
+                      Trailer Configurator™
+                    </Button>
+                  )}
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { onOpenProducts(); setIsOpen(false); }}>Book Now</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>About (Coming Soon)</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Gallery (Coming Soon)</Button>
