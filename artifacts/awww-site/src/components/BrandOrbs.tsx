@@ -5,20 +5,20 @@ import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
 import feetieCoversLogo from "@assets/Feetie_Covers_Logo_Black.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo.png";
-import denversDeskLogo from "@assets/Denvers_Desk_Logo_BrightDarkTheme.png";
+import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
-  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, stripWhiteBg: true, glowOpacity: 0.15, blueGlowOpacity: 0.15, brightness: 0.75 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 1.65, sizeMultiplier: 1.85 },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, widthMultiplier: 1.5, sizeMultiplier: 1.35 },
+  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.35, stripWhiteBg: true, glowOpacity: 0.15, blueGlowOpacity: 0.15, brightness: 0.75 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35 },
 ];
 
-/** Strip near-white backgrounds from a logo image using an off-screen canvas */
-function removeWhiteBg(src: string): Promise<string> {
+/** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
+function removeWhiteBg(src: string, invertBlackText?: boolean): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -30,10 +30,15 @@ function removeWhiteBg(src: string): Promise<string> {
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imageData.data;
-      const threshold = 240;
+      const threshold = 230;
       for (let i = 0; i < d.length; i += 4) {
-        if (d[i] >= threshold && d[i + 1] >= threshold && d[i + 2] >= threshold) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        if (r >= threshold && g >= threshold && b >= threshold) {
           d[i + 3] = 0;
+        } else if (invertBlackText && r < 70 && g < 70 && b < 70) {
+          d[i] = 255;
+          d[i + 1] = 255;
+          d[i + 2] = 255;
         }
       }
       ctx.putImageData(imageData, 0, 0);
@@ -44,16 +49,16 @@ function removeWhiteBg(src: string): Promise<string> {
   });
 }
 
-/** Only process logos that need white background removal */
+/** Process logos requiring background transparency or text inversion */
 function useProcessedLogos() {
   const [processed, setProcessed] = useState<Record<number, string>>({});
 
   useEffect(() => {
     let cancelled = false;
-    const brandsToProcess = BRANDS.filter((b) => b.stripWhiteBg);
+    const brandsToProcess = BRANDS.filter((b) => (b as any).stripWhiteBg);
     Promise.all(
       brandsToProcess.map(async (brand) => {
-        const cleaned = await removeWhiteBg(brand.logo);
+        const cleaned = await removeWhiteBg(brand.logo, (brand as any).invertBlackText);
         return { id: brand.id, src: cleaned };
       })
     ).then((results) => {
@@ -118,7 +123,6 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
     ? 0.5 
     : Math.min(1, Math.max(0.35, (size.w - 48) / 900));
   const orbSize = Math.round(62 + (110 - 62) * scale);
-  const imgSize = Math.round(orbSize * 0.84);
   const logoRX  = isMobile ? 65 : Math.round(BASE_LOGO_RX * scale * 1.55);
   const logoRY  = isMobile ? 75 : Math.round(BASE_LOGO_RY * scale * 1.55);
 
@@ -170,7 +174,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         })}
       </svg>
 
-      {/* Brand orbs — no circle border, just halo glow */}
+      {/* Brand Orbs */}
       {BRANDS.map(brand => {
         const angle = brand.angle;
         const rad = (angle * Math.PI) / 180;
@@ -182,8 +186,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         const x   = Math.cos(rad) * rx;
         const y   = Math.sin(rad) * ry;
 
-        // Determine logo source: use canvas-processed version for stripWhiteBg brands, original for others
-        const logoSrc = brand.stripWhiteBg
+        const logoSrc = (brand as any).stripWhiteBg
           ? (processedLogos[brand.id] || brand.logo)
           : brand.logo;
 
@@ -205,7 +208,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
               if (brand.id === 4 && onOpenConfigurator) {
                 onOpenConfigurator();
               } else if (!brand.live) {
-                toast({ title: "Coming Soon", description: "This partner brand is launching shortly." });
+                toast({ title: "Coming Soon", description: `${brand.name} partner launch coming shortly.` });
               } else if (brand.url) {
                 window.open(brand.url, "_blank", "noopener,noreferrer");
               } else {
@@ -225,12 +228,12 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                 whileHover={{ scale: 1.22 }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
                 style={{ 
-                  width: brand.widthMultiplier 
-                    ? Math.round(orbSize * brand.widthMultiplier * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
+                  width: (brand as any).widthMultiplier 
+                    ? Math.round(orbSize * (brand as any).widthMultiplier * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
                     : Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))), 
                   height: Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
                 }}
-                className="relative flex flex-col items-center justify-center"
+                className="relative flex flex-col items-center justify-center rounded-2xl overflow-visible"
               >
                 {brand.logo ? (
                   <div className="relative w-full h-full flex items-center justify-center">
@@ -241,20 +244,20 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                         width: "100%",
                         height: "100%",
                         objectFit: "contain",
-                        // Original screen blend for normal logos; plain display for canvas-processed ones
-                        ...(brand.stripWhiteBg
+                        ...((brand as any).stripWhiteBg
                           ? {
-                              filter: `brightness(${(brand as any).brightness || 0.75}) drop-shadow(0 0 6px rgba(255,255,255,0.25)) drop-shadow(0 0 15px rgba(255,255,255,0.15))`,
+                              filter: `drop-shadow(0 0 10px rgba(255,255,255,0.8)) drop-shadow(0 0 25px rgba(255,255,255,0.5)) drop-shadow(0 0 40px rgba(26,157,224,0.35))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
                             }
                           : {
                               mixBlendMode: "screen" as const,
                               filter: `${(brand as any).brightness ? `brightness(${(brand as any).brightness}) ` : ""}drop-shadow(0 0 8px rgba(255,255,255,${brand.glowOpacity ?? 0.6})) drop-shadow(0 0 20px rgba(26,157,224,${(brand as any).blueGlowOpacity ?? 0.6}))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
-                            }
-                        ),
+                            }),
                       }}
                     />
+
+                    {/* Original Glowing Cyan Coming Soon Text Overlay */}
                     {!brand.live && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span
                           className="font-mono font-bold tracking-widest uppercase text-center leading-tight whitespace-nowrap"
                           style={{
@@ -279,29 +282,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                     )}
                   </div>
                 ) : (
-                  // Coming soon — just glowing text, no border or circle
-                  <div className="flex flex-col items-center justify-center">
-                    <span
-                      className="font-mono font-bold tracking-widest uppercase text-center leading-tight"
-                      style={{
-                        fontSize: Math.max(7, 9 * scale),
-                        color: "rgba(26,157,224,0.55)",
-                        textShadow: "0 0 8px rgba(26,157,224,0.4)",
-                      }}
-                    >
-                      Coming
-                    </span>
-                    <span
-                      className="font-mono font-bold tracking-widest uppercase"
-                      style={{
-                        fontSize: Math.max(7, 9 * scale),
-                        color: "rgba(26,157,224,0.55)",
-                        textShadow: "0 0 8px rgba(26,157,224,0.4)",
-                      }}
-                    >
-                      Soon
-                    </span>
-                  </div>
+                  <span className="text-xs font-mono font-bold text-[#60c8ff] uppercase">{brand.name}</span>
                 )}
               </motion.div>
             </motion.div>
