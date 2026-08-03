@@ -14,7 +14,7 @@ const BRANDS = [
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.35, stripWhiteBg: true, glowOpacity: 0.15, blueGlowOpacity: 0.15, brightness: 0.75 },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, widthMultiplier: 1.2, sizeMultiplier: 1.05 },
 ];
 
 /** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
