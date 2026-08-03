@@ -2,17 +2,21 @@ import { Router } from "express";
 import { db, productsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { ListProductsResponseItem, GetProductParams } from "@workspace/api-zod";
-import { mapEntryToCatalogProduct, mapEntryToStockResponse, readStockStore } from "../lib/syncedStock";
+import { mapEntryToCatalogProduct, mapEntryToStockResponse, normalizeWebsiteId, readStockStore } from "../lib/syncedStock";
 
 const router = Router();
 const hasDatabase = Boolean(process.env.DATABASE_URL);
+const defaultWebsiteId = process.env.WEBSITE_ID || "web-1782561404289";
 
 router.get("/products", async (req, res) => {
   try {
+    const websiteId = normalizeWebsiteId(
+      req.query.websiteId ?? req.query.website ?? req.query.siteId ?? req.query.site ?? defaultWebsiteId,
+    );
     const syncedProducts = (await readStockStore())
       .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
-      .map(mapEntryToStockResponse);
+      .map((entry) => mapEntryToStockResponse(entry, websiteId));
     if (syncedProducts.length > 0) {
       return res.json(syncedProducts);
     }
@@ -37,11 +41,14 @@ router.get("/products/:id", async (req, res) => {
   try {
     const parsed = GetProductParams.safeParse({ id: parseInt(req.params.id) });
     if (!parsed.success) return res.status(400).json({ error: "Invalid ID" });
+    const websiteId = normalizeWebsiteId(
+      req.query.websiteId ?? req.query.website ?? req.query.siteId ?? req.query.site ?? defaultWebsiteId,
+    );
 
     const syncedProduct = (await readStockStore())
       .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
-      .map(mapEntryToStockResponse)
+      .map((entry) => mapEntryToStockResponse(entry, websiteId))
       .find((entry) => entry.id === parsed.data.id);
     if (syncedProduct) {
       return res.json(syncedProduct);

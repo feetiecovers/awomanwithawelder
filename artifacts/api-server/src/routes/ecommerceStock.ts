@@ -250,7 +250,7 @@ router.get("/ecommerce/stock", async (req, res): Promise<void> => {
       if (websiteIds.length === 0) return true;
       return websiteIds.some((id) => normalizeWebsiteId(id) === websiteId);
     })
-    .map(mapEntryToStockResponse);
+    .map((product) => mapEntryToStockResponse(product, websiteId));
 
   res.json(filtered);
 });
@@ -269,7 +269,7 @@ router.get("/ecommerce/builds", async (req, res): Promise<void> => {
       if (websiteIds.length === 0) return true;
       return websiteIds.some((id) => normalizeWebsiteId(id) === websiteId);
     })
-    .map(mapEntryToStockResponse);
+    .map((product) => mapEntryToStockResponse(product, websiteId));
 
   res.json(filtered);
 });

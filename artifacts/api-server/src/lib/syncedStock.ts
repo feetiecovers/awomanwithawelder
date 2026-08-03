@@ -113,6 +113,27 @@ function resolveImageCandidate(image: unknown): unknown {
   return null;
 }
 
+function getWebsiteImageCandidates(
+  websiteImageMap: unknown,
+  websiteId?: string,
+): unknown[] {
+  if (!websiteImageMap || typeof websiteImageMap !== "object" || Array.isArray(websiteImageMap)) {
+    return [];
+  }
+
+  const record = websiteImageMap as Record<string, unknown>;
+  const normalizedWebsiteId = normalizeWebsiteId(websiteId);
+  const explicitCandidate = normalizedWebsiteId
+    ? Object.entries(record).find(([key]) => normalizeWebsiteId(key) === normalizedWebsiteId)?.[1]
+    : undefined;
+  const fallbackCandidate = explicitCandidate
+    ?? record.default
+    ?? record.site
+    ?? Object.values(record).find((value) => Array.isArray(value) ? value.length > 0 : Boolean(value));
+
+  return mapImages(fallbackCandidate);
+}
+
 function getExplicitAvailability(entry: Record<string, unknown>): boolean | null {
   const candidates = [
     entry.available,
@@ -333,15 +354,8 @@ export function mapEntryToCatalogProduct(entry: SyncedStockEntry): CatalogProduc
   };
 }
 
-export function mapEntryToStockResponse(entry: SyncedStockEntry) {
-  const websiteImages = (() => {
-    if (entry.websiteImageMap && typeof entry.websiteImageMap === "object" && !Array.isArray(entry.websiteImageMap)) {
-      const candidate = (entry.websiteImageMap as Record<string, unknown>).default
-        ?? (entry.websiteImageMap as Record<string, unknown>).site;
-      return mapImages(candidate);
-    }
-    return [];
-  })();
+export function mapEntryToStockResponse(entry: SyncedStockEntry, websiteId?: string) {
+  const websiteImages = getWebsiteImageCandidates(entry.websiteImageMap, websiteId);
 
   const rawImages = Array.isArray(entry.images) && entry.images.length > 0
     ? entry.images
@@ -385,7 +399,7 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry) {
     available: computeAvailability(entry, entry._sourceType),
     inStock: computeAvailability(entry, entry._sourceType),
     images,
-    image: resolveImageCandidate(images[0]) ?? resolveImageCandidate(entry.image),
+    image: resolveImageCandidate(images[0]) ?? resolveImageCandidate(entry.image) ?? resolveImageCandidate(websiteImages[0]),
     shippingPresets,
   };
 }
