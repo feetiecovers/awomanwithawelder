@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getDesktopAuthHeaders, getDesktopSyncConfig } from "./desktopSync";
 
-export type SyncedSourceType = "product" | "service";
+export type SyncedSourceType = "product" | "service" | "build";
 
 export type SyncedStockEntry = Record<string, unknown> & {
   id: number;
@@ -136,7 +136,7 @@ export function computeAvailability(entry: Record<string, unknown>, sourceType: 
     return toFiniteNumber(quantity) > 0;
   }
 
-  return sourceType === "service";
+  return sourceType === "service" || sourceType === "build";
 }
 
 export function getCollectionIds(product: Record<string, unknown>, effectiveWebsiteId: string): string[] {
@@ -187,9 +187,18 @@ function inferSourceType(product: Record<string, unknown>): SyncedSourceType {
   const rawType = normalizeLabel(
     product.type
     ?? product.productType
+    ?? product.buildType
     ?? product.serviceType
     ?? product._sourceType,
   ).toLowerCase();
+
+  if (
+    rawType === "build"
+    || rawType === "build_product"
+    || Array.isArray(product.optionGroups)
+  ) {
+    return "build";
+  }
 
   if (
     rawType === "service"
@@ -219,6 +228,8 @@ function pickLiveProducts(payload: unknown): Record<string, unknown>[] {
   const collections = [
     record.products,
     record.stockProducts,
+    record.stockBuilds,
+    record.builds,
     record.stockServices,
     record.stockServiceProducts,
     record.serviceProducts,
@@ -226,6 +237,8 @@ function pickLiveProducts(payload: unknown): Record<string, unknown>[] {
     record.stock_items,
     data?.products,
     data?.stockProducts,
+    data?.stockBuilds,
+    data?.builds,
     data?.stockServices,
     data?.stockServiceProducts,
     data?.serviceProducts,

@@ -3,7 +3,7 @@ import { db, bookingsTable, membersTable, productsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { CreateBookingBody, GetBookingParams } from "@workspace/api-zod";
 import { mapEntryToCatalogProduct, readStockStore, refreshStockProducts } from "../lib/syncedStock";
-import { forwardBookingToDesktop, forwardOrderToDesktop, getDesktopSyncConfig } from "../lib/desktopSync";
+import { forwardBookingToDesktop, forwardOrderToDesktop, getDesktopSyncConfig, postToDesktop } from "../lib/desktopSync";
 
 const router = Router();
 const hasDatabase = Boolean(process.env.DATABASE_URL);
@@ -292,6 +292,27 @@ function splitFullName(fullName = "") {
   };
 }
 
+function normalizeBuildSelections(rawSelections: unknown) {
+  if (!rawSelections || typeof rawSelections !== "object" || Array.isArray(rawSelections)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(rawSelections as Record<string, unknown>)
+      .map(([groupKey, value]) => {
+        const normalizedValues = Array.isArray(value)
+          ? value
+              .map((entry) => String(entry ?? "").trim())
+              .filter(Boolean)
+          : typeof value === "string"
+            ? [value.trim()].filter(Boolean)
+            : [];
+        return [String(groupKey).trim(), normalizedValues];
+      })
+      .filter(([groupKey, values]) => groupKey && Array.isArray(values) && values.length > 0),
+  );
+}
+
 router.post("/quote-request", async (req, res) => {
   try {
     const {
@@ -454,6 +475,127 @@ router.post("/quote-request", async (req, res) => {
     });
   } catch (err: any) {
     req.log.error({ err }, "Failed to create quote request");
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+router.post("/build-quote-request", async (req, res) => {
+  try {
+    const {
+      buildName = "",
+      buildCode = "",
+      selections = {},
+      fullName = "",
+      email = "",
+      phone = "",
+      streetAddress = "",
+      townCity = "",
+      region = "",
+      postcode = "",
+      notes = "",
+      deliveryRequired = "no",
+      estimatedTotal = 0,
+      estimatedSubtotal = 0,
+      estimatedGst = 0,
+      selectedAddons = [],
+    } = req.body ?? {};
+
+    const resolvedBuildRef = String(buildCode || buildName || "").trim();
+    if (!resolvedBuildRef) {
+      return res.status(400).json({ error: "Build name is required" });
+    }
+
+    const normalizedSelections = normalizeBuildSelections(selections);
+    const addressLines = [
+      String(streetAddress || "").trim(),
+      String(townCity || "").trim(),
+      String(region || "").trim(),
+      String(postcode || "").trim(),
+      "New Zealand",
+    ].filter(Boolean);
+    const addonsSummary = Array.isArray(selectedAddons)
+      ? selectedAddons
+          .map((addon: any) => {
+            const groupName = String(addon?.groupName || "").trim();
+            const optionName = String(addon?.optionName || "").trim();
+            const price = Number(addon?.price ?? 0) || 0;
+            if (!optionName) return null;
+            return `${groupName ? `${groupName}: ` : ""}${optionName}${price > 0 ? ` (NZ$${price.toFixed(2)})` : ""}`;
+          })
+          .filter(Boolean)
+      : [];
+    const notesSections = [
+      notes ? `Customer notes:\n${String(notes).trim()}` : null,
+      addressLines.length > 1 ? `Delivery address:\n${addressLines.join(", ")}` : null,
+      `Delivery required: ${String(deliveryRequired).trim() === "yes" ? "Yes" : "No - Depot Pickup"}`,
+      addonsSummary.length > 0 ? `Selected extras:\n${addonsSummary.join("\n")}` : null,
+      `Website estimate:\nSubtotal ex GST: NZ$${(Number(estimatedSubtotal) || 0).toFixed(2)}\nGST: NZ$${(Number(estimatedGst) || 0).toFixed(2)}\nTotal inc GST: NZ$${(Number(estimatedTotal) || 0).toFixed(2)}`,
+    ].filter((section): section is string => Boolean(section && section.trim()));
+
+    const { websiteId, brandName, ordersUrl } = getDesktopSyncConfig();
+    const nameParts = splitFullName(fullName);
+    const payload = {
+      buildId: resolvedBuildRef,
+      selections: normalizedSelections,
+      websiteId,
+      brandName,
+      brandDetails: brandName,
+      timestamp: new Date().toISOString(),
+      source: "website-build-quote",
+      quoteOnly: true,
+      memberRegistered: true,
+      memberName: String(fullName || "").trim(),
+      memberEmail: String(email || "").trim(),
+      memberPhone: String(phone || "").trim(),
+      customerName: String(fullName || "").trim(),
+      customerFirstName: nameParts.firstName,
+      customerLastName: nameParts.lastName,
+      customerEmail: String(email || "").trim(),
+      customerPhone: String(phone || "").trim(),
+      customerAddress1: String(streetAddress || "").trim(),
+      customerCity: String(townCity || "").trim(),
+      customerRegion: String(region || "").trim(),
+      customerPostcode: String(postcode || "").trim(),
+      customerCountry: "NZ",
+      shippingAddressText: addressLines.join(", "),
+      shipping_address_text: addressLines.join(", "),
+      shippingAddress: {
+        line1: String(streetAddress || "").trim(),
+        city: String(townCity || "").trim(),
+        state: String(region || "").trim(),
+        postal_code: String(postcode || "").trim(),
+        country: "NZ",
+      },
+      shipping_address: {
+        line1: String(streetAddress || "").trim(),
+        city: String(townCity || "").trim(),
+        state: String(region || "").trim(),
+        postal_code: String(postcode || "").trim(),
+        country: "NZ",
+      },
+      total: Number(estimatedTotal) || 0,
+      notes: notesSections.join("\n\n"),
+      metadata: {
+        source: "website-build-quote",
+        buildName: String(buildName || "").trim(),
+        buildCode: String(buildCode || "").trim(),
+        selectedAddons: Array.isArray(selectedAddons) ? selectedAddons : [],
+        estimatedSubtotal: Number(estimatedSubtotal) || 0,
+        estimatedGst: Number(estimatedGst) || 0,
+        estimatedTotal: Number(estimatedTotal) || 0,
+      },
+    };
+
+    const response = await postToDesktop(ordersUrl, payload);
+
+    return res.status(201).json({
+      success: true,
+      quoteCreated: Boolean((response as any)?.quoteCreated ?? true),
+      quoteId: (response as any)?.quoteId ?? null,
+      quoteNumber: (response as any)?.quoteNumber ?? null,
+    });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to create build quote request");
     return res.status(500).json({ error: err.message || "Internal server error" });
   }
 });

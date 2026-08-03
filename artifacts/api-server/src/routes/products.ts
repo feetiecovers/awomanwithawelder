@@ -10,6 +10,7 @@ const hasDatabase = Boolean(process.env.DATABASE_URL);
 router.get("/products", async (req, res) => {
   try {
     const syncedProducts = (await readStockStore())
+      .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
       .map(mapEntryToStockResponse);
     if (syncedProducts.length > 0) {
@@ -38,6 +39,7 @@ router.get("/products/:id", async (req, res) => {
     if (!parsed.success) return res.status(400).json({ error: "Invalid ID" });
 
     const syncedProduct = (await readStockStore())
+      .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
       .map(mapEntryToStockResponse)
       .find((entry) => entry.id === parsed.data.id);

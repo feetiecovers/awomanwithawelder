@@ -16,10 +16,19 @@ function inferSourceType(item: Record<string, unknown>): SyncedSourceType {
   const rawType = String(
     item.type
     ?? item.productType
+    ?? item.buildType
     ?? item.serviceType
     ?? item._sourceType
     ?? "",
   ).trim().toLowerCase();
+
+  if (
+    rawType === "build"
+    || rawType === "build_product"
+    || Array.isArray(item.optionGroups)
+  ) {
+    return "build";
+  }
 
   if (
     rawType === "service"
@@ -44,6 +53,8 @@ function pickIncomingProducts(payload: Record<string, unknown>): Record<string, 
   const collections = [
     payload.products,
     payload.stockProducts,
+    payload.stockBuilds,
+    payload.builds,
     payload.stockServices,
     payload.stockServiceProducts,
     payload.serviceProducts,
@@ -51,6 +62,8 @@ function pickIncomingProducts(payload: Record<string, unknown>): Record<string, 
     payload.stock_items,
     data?.products,
     data?.stockProducts,
+    data?.stockBuilds,
+    data?.builds,
     data?.stockServices,
     data?.stockServiceProducts,
     data?.serviceProducts,
@@ -108,10 +121,16 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
   const effectiveWebsiteId = getEffectiveWebsiteId(req, payload);
   const incomingProducts = pickIncomingProducts(payload);
   const incomingProductEntries = incomingProducts.filter((item) => inferSourceType(item) === "product");
+  const incomingBuildEntries = incomingProducts.filter((item) => inferSourceType(item) === "build");
   const incomingServiceEntries = incomingProducts.filter((item) => inferSourceType(item) === "service");
   const stockProducts = Array.isArray(payload.stockProducts)
     ? payload.stockProducts
     : incomingProductEntries;
+  const stockBuilds = Array.isArray(payload.stockBuilds)
+    ? payload.stockBuilds
+    : Array.isArray(payload.builds)
+      ? payload.builds
+      : incomingBuildEntries;
   const stockServiceProducts = Array.isArray(payload.stockServiceProducts)
     ? payload.stockServiceProducts
     : Array.isArray(payload.stockServices)
@@ -126,6 +145,7 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     payloadKeys: payload && typeof payload === "object" && !Array.isArray(payload) ? Object.keys(payload).slice(0, 20) : [],
     incomingProducts: incomingProducts.length,
     stockProducts: Array.isArray(stockProducts) ? stockProducts.length : 0,
+    stockBuilds: Array.isArray(stockBuilds) ? stockBuilds.length : 0,
     stockServiceProducts: Array.isArray(stockServiceProducts) ? stockServiceProducts.length : 0,
   }, "Received ecommerce stock payload");
 
@@ -142,6 +162,13 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     existingByKey,
     nextIdRef,
   );
+  const normalizedBuildProducts = normalizeIncomingCollection(
+    stockBuilds,
+    "build",
+    effectiveWebsiteId,
+    existingByKey,
+    nextIdRef,
+  );
   const normalizedServiceProducts = normalizeIncomingCollection(
     stockServiceProducts,
     "service",
@@ -150,17 +177,17 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     nextIdRef,
   );
 
-  if (normalizedStockProducts.length === 0 && normalizedServiceProducts.length === 0) {
+  if (normalizedStockProducts.length === 0 && normalizedBuildProducts.length === 0 && normalizedServiceProducts.length === 0) {
     req.log.warn({
       effectiveWebsiteId,
       payloadKeys: payload && typeof payload === "object" && !Array.isArray(payload) ? Object.keys(payload).slice(0, 20) : [],
       sample: Array.isArray(incomingProducts) && incomingProducts[0] ? Object.keys(incomingProducts[0]).slice(0, 20) : [],
     }, "Rejected ecommerce stock payload");
-    res.status(400).json({ error: "Expected products, stockProducts, stockServiceProducts, or serviceProducts." });
+    res.status(400).json({ error: "Expected products, stockProducts, stockBuilds, builds, stockServiceProducts, or serviceProducts." });
     return;
   }
 
-  for (const product of [...normalizedStockProducts, ...normalizedServiceProducts]) {
+  for (const product of [...normalizedStockProducts, ...normalizedBuildProducts, ...normalizedServiceProducts]) {
     const existing = existingByKey.get(product._syncKey);
     existingByKey.set(product._syncKey, {
       ...(existing ?? {}),
@@ -177,6 +204,7 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
   if (effectiveWebsiteId) {
     const incomingKeysByType = new Map<SyncedSourceType, Set<string>>([
       ["product", new Set(normalizedStockProducts.map((product) => product._syncKey))],
+      ["build", new Set(normalizedBuildProducts.map((product) => product._syncKey))],
       ["service", new Set(normalizedServiceProducts.map((product) => product._syncKey))],
     ]);
 
@@ -187,6 +215,8 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
 
       const hasIncomingCollection = existing._sourceType === "product"
         ? Array.isArray(stockProducts) && stockProducts.length > 0
+        : existing._sourceType === "build"
+          ? Array.isArray(stockBuilds) && stockBuilds.length > 0
         : Array.isArray(stockServiceProducts) && stockServiceProducts.length > 0;
       if (!hasIncomingCollection) continue;
 
@@ -200,6 +230,7 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
   req.log.info({
     effectiveWebsiteId,
     normalizedProducts: normalizedStockProducts.length,
+    normalizedBuilds: normalizedBuildProducts.length,
     normalizedServices: normalizedServiceProducts.length,
     totalStored: existingByKey.size,
   }, "Stored ecommerce stock payload");
@@ -212,6 +243,25 @@ router.get("/ecommerce/stock", async (req, res): Promise<void> => {
   );
   const storedProducts = await readStockStore();
   const filtered = storedProducts
+    .filter((product) => product.showOnWebsite !== false)
+    .filter((product) => {
+      if (!websiteId) return true;
+      const websiteIds = Array.isArray(product.websiteIds) ? product.websiteIds : [];
+      if (websiteIds.length === 0) return true;
+      return websiteIds.some((id) => normalizeWebsiteId(id) === websiteId);
+    })
+    .map(mapEntryToStockResponse);
+
+  res.json(filtered);
+});
+
+router.get("/ecommerce/builds", async (req, res): Promise<void> => {
+  const websiteId = normalizeWebsiteId(
+    req.query.websiteId ?? req.query.website ?? req.query.siteId ?? req.query.site,
+  );
+  const storedProducts = await readStockStore();
+  const filtered = storedProducts
+    .filter((product) => product._sourceType === "build")
     .filter((product) => product.showOnWebsite !== false)
     .filter((product) => {
       if (!websiteId) return true;
