@@ -494,12 +494,12 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
           <div className="flex items-center justify-center gap-3 sm:gap-6 py-1 px-4 bg-[#0a030d] border-b border-[#ff2a8d]/15 text-[10px] sm:text-[11px] font-mono text-pink-200/80 shrink-0 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span>Wired with help from</span>
-              <img src={cableCadLogo} alt="CableCAD" className="h-5 sm:h-6 w-auto object-contain opacity-95 inline-block" />
+              <img src={cableCadLogo} alt="CableCAD" className="h-3.5 sm:h-4 w-auto object-contain opacity-95 inline-block" />
             </div>
             <span className="text-pink-500/40 hidden sm:inline">•</span>
             <div className="flex items-center gap-1.5">
               <span>Electrically tested using</span>
-              <img src={trailerBrainLogo} alt="The Trailer Brain" className="h-4 sm:h-5 w-auto object-contain opacity-95 inline-block" />
+              <img src={trailerBrainLogo} alt="The Trailer Brain" className="h-3.5 sm:h-4.5 w-auto object-contain opacity-95 inline-block" />
             </div>
           </div>
 
@@ -518,12 +518,12 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                     transition={{ duration: 0.25 }}
                     className="flex-1 flex flex-col justify-center items-center overflow-hidden my-auto w-full max-w-2xl mx-auto py-1"
                   >
-                    {/* Centered Lady Lugger Logo */}
+                    {/* Centered Lady Lugger Logo (10% larger) */}
                     <div className="flex flex-col items-center justify-center text-center mb-4 shrink-0">
                       <img
                         src={ladyLuggerLogo}
                         alt="The Lady Lugger"
-                        className="w-[80%] max-w-[450px] h-auto max-h-[135px] sm:max-h-[160px] object-contain drop-shadow-[0_0_30px_rgba(255,42,141,0.9)]"
+                        className="w-[85%] max-w-[495px] h-auto max-h-[150px] sm:max-h-[175px] object-contain drop-shadow-[0_0_30px_rgba(255,42,141,0.9)]"
                       />
                       <p className="text-xs text-pink-200/80 font-mono mt-2">
                         Select a base trailer build model below to begin customizing options.
