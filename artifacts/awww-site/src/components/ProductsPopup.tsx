@@ -509,7 +509,81 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
             </div>
           </div>
 
-          <div className="flex shrink-0 px-5 py-3 border-b border-primary/15 bg-[#05080e]/80">
+          {/* Mobile Navigation Header (< sm) */}
+          <div className="sm:hidden flex shrink-0 px-2 py-3 border-b border-primary/15 bg-[#05080e]/80 overflow-hidden relative">
+            <div className="w-full flex items-center justify-center gap-1.5 px-1">
+              {activeTab === "shop" && (
+                <>
+                  <button
+                    onClick={() => setActiveTab("shop")}
+                    data-testid="tab-shop-mobile"
+                    className="flex-1 max-w-[160px] py-2 px-3 rounded-full font-mono text-xs uppercase tracking-wider bg-primary text-primary-foreground font-bold shadow-[0_0_20px_rgba(26,157,224,0.6)] flex items-center justify-center gap-1.5 truncate z-10"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">Products</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("services")}
+                    data-testid="tab-services-mobile-peek"
+                    className="w-[85px] py-2 px-2.5 rounded-full font-mono text-[10px] uppercase tracking-tight text-muted-foreground bg-[#09101a] border border-primary/20 hover:text-primary flex items-center gap-1 opacity-75 hover:opacity-100 truncate shrink-0"
+                  >
+                    <Wrench className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Serv...</span>
+                  </button>
+                  {onOpenConfigurator && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenConfigurator();
+                      }}
+                      data-testid="tab-configurator-mobile-peek"
+                      className="w-[85px] py-2 px-2 rounded-full font-mono text-[10px] uppercase tracking-tight text-[#ff2a8d] bg-[#ff2a8d]/10 border border-[#ff2a8d]/30 flex items-center gap-1 opacity-75 hover:opacity-100 truncate shrink-0"
+                    >
+                      <Wrench className="h-3 w-3 shrink-0" />
+                      <span className="truncate">Config...</span>
+                    </button>
+                  )}
+                </>
+              )}
+
+              {activeTab === "services" && (
+                <>
+                  <button
+                    onClick={() => setActiveTab("shop")}
+                    data-testid="tab-shop-mobile-peek"
+                    className="w-[85px] py-2 px-2.5 rounded-full font-mono text-[10px] uppercase tracking-tight text-muted-foreground bg-[#09101a] border border-primary/20 hover:text-primary flex items-center gap-1 opacity-75 hover:opacity-100 truncate shrink-0"
+                  >
+                    <ShoppingBag className="h-3 w-3 shrink-0" />
+                    <span className="truncate">Prod...</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("services")}
+                    data-testid="tab-services-mobile"
+                    className="flex-1 max-w-[160px] py-2 px-3 rounded-full font-mono text-xs uppercase tracking-wider bg-primary text-primary-foreground font-bold shadow-[0_0_20px_rgba(26,157,224,0.6)] flex items-center justify-center gap-1.5 truncate z-10"
+                  >
+                    <Wrench className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">Services</span>
+                  </button>
+                  {onOpenConfigurator && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenConfigurator();
+                      }}
+                      data-testid="tab-configurator-mobile-peek"
+                      className="w-[85px] py-2 px-2 rounded-full font-mono text-[10px] uppercase tracking-tight text-[#ff2a8d] bg-[#ff2a8d]/10 border border-[#ff2a8d]/30 flex items-center gap-1 opacity-75 hover:opacity-100 truncate shrink-0"
+                    >
+                      <Wrench className="h-3 w-3 shrink-0" />
+                      <span className="truncate">Config...</span>
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Navigation Header (sm:) */}
+          <div className="hidden sm:flex shrink-0 px-5 py-3 border-b border-primary/15 bg-[#05080e]/80">
             <div className="w-full flex bg-[#09101a] p-1.5 rounded-full border border-primary/25 shadow-inner gap-1">
               {(["shop", "services"] as const).map((tab) => {
                 const isActive = activeTab === tab;
@@ -581,12 +655,12 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           {currentShopItems.map((item, idx) => (
                             <div
                               key={item.id}
-                              className="flex flex-col sm:flex-row rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors"
+                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors"
                               style={{ flex: "1 1 0", minHeight: 0 }}
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full h-24 sm:h-auto sm:w-52 shrink-0 flex items-center justify-center relative overflow-hidden"
+                                className="w-full h-32 sm:h-44 shrink-0 flex items-center justify-center relative overflow-hidden"
                                 style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
                               >
                                 {item.image ? (
