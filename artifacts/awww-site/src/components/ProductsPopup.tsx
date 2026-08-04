@@ -19,6 +19,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { BookingConfirmationData } from "@/lib/bookingConfirmation";
+import { buildApiUrl } from "@/lib/api-base";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -106,15 +107,20 @@ function normalizeImageUrl(value: unknown): string {
   if (!trimmed) return "";
 
   if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
+    const cleanPath = trimmed.replace(/^https?:\/\/localhost:\d+\//i, "");
+    return buildApiUrl(`/${cleanPath}`);
   }
 
   if (/^\/(?:api\/)?images\/products\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    return buildApiUrl(trimmed);
   }
 
   if (/^images\/products\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
+    return buildApiUrl(`/${trimmed}`);
+  }
+
+  if (trimmed.startsWith("/")) {
+    return buildApiUrl(trimmed);
   }
 
   return trimmed;
@@ -277,6 +283,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [shippingSelectProduct, setShippingSelectProduct] = useState<ProductCard | null>(null);
   const [selectedShippingPresetIndex, setSelectedShippingPresetIndex] = useState<number>(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product");
@@ -663,12 +670,15 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 className="w-full h-32 sm:h-44 shrink-0 flex items-center justify-center relative overflow-hidden"
                                 style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
                               >
-                                {item.image ? (
+                                {item.image && !failedImages[item.id] ? (
                                   <img
                                     src={item.image}
                                     alt={item.name}
                                     className="absolute inset-0 h-full w-full object-cover"
                                     loading="lazy"
+                                    onError={() => {
+                                      setFailedImages((prev) => ({ ...prev, [item.id]: true }));
+                                    }}
                                   />
                                 ) : (
                                   <>
