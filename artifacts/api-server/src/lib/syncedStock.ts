@@ -29,6 +29,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const stockStorePath = path.resolve(__dirname, "../../lib/ecommerce-stock-store.json");
 const defaultWebsiteId = process.env.WEBSITE_ID || "web-1782561404289";
+const stockStoreRefreshTtlMs = Math.max(
+  60_000,
+  Number.parseInt(String(process.env.ECOMMERCE_STOCK_REFRESH_TTL_MS || "900000"), 10) || 900_000,
+);
 
 export function normalizeWebsiteId(value: unknown): string {
   return String(value ?? "").trim().toLowerCase();
@@ -175,11 +179,19 @@ export function getCollectionIds(product: Record<string, unknown>, effectiveWebs
 }
 
 export async function readStockStore(): Promise<SyncedStockEntry[]> {
+  let cachedEntries: SyncedStockEntry[] = [];
+  let cacheIsFresh = false;
+
   try {
+    const stat = await fs.stat(stockStorePath);
+    cacheIsFresh = (Date.now() - stat.mtimeMs) < stockStoreRefreshTtlMs;
     const raw = await fs.readFile(stockStorePath, "utf-8");
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed as SyncedStockEntry[];
+      cachedEntries = parsed as SyncedStockEntry[];
+      if (cacheIsFresh) {
+        return cachedEntries;
+      }
     }
   } catch {
     // Fall through to the live desktop fallback below.
@@ -188,8 +200,10 @@ export async function readStockStore(): Promise<SyncedStockEntry[]> {
   const liveProducts = await fetchLiveDesktopStock();
   if (liveProducts.length > 0) {
     await writeStockStore(liveProducts);
+    return liveProducts;
   }
-  return liveProducts;
+
+  return cachedEntries;
 }
 
 export async function writeStockStore(products: SyncedStockEntry[]) {
