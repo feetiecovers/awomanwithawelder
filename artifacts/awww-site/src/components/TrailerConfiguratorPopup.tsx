@@ -503,34 +503,6 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
             </div>
           </div>
 
-          {/* Mobile 3-Step Progress Header (< lg screens) */}
-          <div className="lg:hidden shrink-0 flex items-center justify-between px-3 py-2 border-b border-[#ff2a8d]/25 bg-[#120417]">
-            {[
-              { step: 1, label: "1. Model" },
-              { step: 2, label: "2. Configurations" },
-              { step: 3, label: "3. Breakdown & Quote" },
-            ].map(({ step, label }) => {
-              const isActive = currentStep === step;
-              const isCompleted = currentStep > step;
-              return (
-                <button
-                  key={step}
-                  onClick={() => setCurrentStep(step)}
-                  data-testid={`mobile-step-tab-${step}`}
-                  className={`flex-1 py-1.5 px-1.5 mx-0.5 rounded-xl text-[10px] sm:text-[11px] font-mono font-bold uppercase transition-all duration-200 flex items-center justify-center gap-1 border truncate ${
-                    isActive
-                      ? "bg-[#ff2a8d] text-white border-[#ff2a8d] shadow-[0_0_12px_rgba(255,42,141,0.7)]"
-                      : isCompleted
-                      ? "bg-[#ff2a8d]/20 text-pink-200 border-[#ff2a8d]/40"
-                      : "bg-white/5 text-pink-200/50 border-pink-500/15 hover:text-pink-200 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="truncate">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Main Paginated Slide Content Area */}
           <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_390px]">
             {/* Left Paginated Slide Pane */}
@@ -595,7 +567,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                     </div>
 
                     {/* Step 1 Footer Navigation Button */}
-                    <div className="w-full flex justify-center pt-2 pb-1 sticky bottom-0 bg-[#0e0412]/95 backdrop-blur-md border-t border-pink-500/20 mt-auto shrink-0 z-10">
+                    <div className="w-full flex justify-center pt-3 shrink-0">
                       <Button
                         onClick={() => setCurrentStep(2)}
                         className="h-10 px-7 rounded-xl bg-gradient-to-r from-[#ff2a8d] to-[#d92376] text-white font-mono font-bold text-xs uppercase tracking-wider shadow-[0_0_18px_rgba(255,42,141,0.6)] hover:brightness-110 flex items-center gap-2"
@@ -750,7 +722,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                     </div>
 
                     {/* Step 2 Footer Navigation */}
-                    <div className="pt-2 pb-1 flex items-center justify-between shrink-0 border-t border-pink-500/15 bg-[#0e0412]/95 backdrop-blur-md sticky bottom-0 z-10">
+                    <div className="pt-3 flex items-center justify-between shrink-0 border-t border-pink-500/15">
                       <Button
                         variant="ghost"
                         onClick={() => setCurrentStep(1)}
@@ -849,7 +821,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                       </div>
                     </div>
 
-                    <div className="pt-2 pb-1 flex items-center justify-between shrink-0 border-t border-pink-500/15 bg-[#0e0412]/95 backdrop-blur-md sticky bottom-0 z-10">
+                    <div className="pt-3 flex items-center justify-between shrink-0 border-t border-pink-500/15">
                       <Button
                         variant="ghost"
                         onClick={() => setCurrentStep(2)}
