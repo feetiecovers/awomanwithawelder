@@ -91,6 +91,32 @@ function hashToNumericId(value: string, fallback: number) {
   return hash > 0 ? hash : fallback;
 }
 
+const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
+
+function normalizeImageUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
+  }
+
+  if (/^\/(?:api\/)?images\/products\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  }
+
+  if (/^images\/products\//i.test(trimmed)) {
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
+  }
+
+  if (trimmed.startsWith("/")) {
+    return `${SHARED_IMAGE_BASE_URL}${trimmed}`;
+  }
+
+  return trimmed;
+}
+
 function mapSyncedBuildCatalog(value: unknown): {
   builds: TrailerBuild[];
   featureGroupsByBuildId: Record<number, FeatureGroupWithOptions[]>;
@@ -112,11 +138,7 @@ function mapSyncedBuildCatalog(value: unknown): {
       trailerTypeId: 1,
       name: String(record?.name ?? `Build ${buildIndex + 1}`),
       description: String(record?.description ?? ""),
-      imageUrl: typeof record.imageUrl === "string"
-        ? record.imageUrl
-        : typeof record.image === "string"
-          ? record.image
-          : null,
+      imageUrl: normalizeImageUrl(record.imageUrl ?? record.image),
       basePrice: Number(record.displayPrice ?? record.price ?? 0),
       sortOrder: buildIndex + 1,
     };
@@ -139,7 +161,7 @@ function mapSyncedBuildCatalog(value: unknown): {
           featureGroupId: groupId,
           name: String(option?.name ?? `Option ${optionIndex + 1}`),
           description: typeof option?.description === "string" ? option.description : null,
-          imageUrl: typeof option?.imageUrl === "string" ? option.imageUrl : null,
+          imageUrl: normalizeImageUrl(option?.imageUrl),
           price: Number(option?.price ?? 0),
           isIncluded: option?.isIncluded === true,
           sortOrder: Number(option?.sortOrder ?? optionIndex + 1),

@@ -107,20 +107,19 @@ function normalizeImageUrl(value: unknown): string {
   if (!trimmed) return "";
 
   if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
-    const cleanPath = trimmed.replace(/^https?:\/\/localhost:\d+\//i, "");
-    return buildApiUrl(`/${cleanPath}`);
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
   }
 
   if (/^\/(?:api\/)?images\/products\//i.test(trimmed)) {
-    return buildApiUrl(trimmed);
+    return `${SHARED_IMAGE_BASE_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
   }
 
   if (/^images\/products\//i.test(trimmed)) {
-    return buildApiUrl(`/${trimmed}`);
+    return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
   }
 
   if (trimmed.startsWith("/")) {
-    return buildApiUrl(trimmed);
+    return `${SHARED_IMAGE_BASE_URL}${trimmed}`;
   }
 
   return trimmed;
