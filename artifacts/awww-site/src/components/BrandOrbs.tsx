@@ -149,8 +149,15 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
           const odist = Math.sqrt(ox * ox + oy * oy);
-          const currentOrbRadius = (orbSize * (brand.sizeMultiplier || 1.0)) / 2;
-          const targetDist = odist - currentOrbRadius - 10;
+          
+          // Calculate precise elliptical orb boundary along angle rad
+          const cosA = Math.cos(rad);
+          const sinA = Math.sin(rad);
+          const wMult = brand.widthMultiplier || 1.0;
+          const sMult = brand.sizeMultiplier || 1.0;
+          const effOrbRadius = (orbSize * sMult / 2) * Math.sqrt(wMult * wMult * cosA * cosA + sinA * sinA);
+          const extraOffset = (brand as any).lightningOffset ?? 10;
+          const targetDist = odist - effOrbRadius - extraOffset;
           const ratio = Math.max(0, targetDist / odist);
           const ex  = cx + ox * ratio;
           const ey  = cy + oy * ratio;

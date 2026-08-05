@@ -1251,10 +1251,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     className="max-h-[70dvh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl"
                   />
                 </div>
-
-                <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase shrink-0">
-                  Click outside or X to close
-                </p>
               </motion.div>
             </div>
           </>
