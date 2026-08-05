@@ -131,9 +131,12 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
       {/* Electricity SVG */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
         <defs>
-          <filter id="elec-glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          <filter id="elec-glow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
         </defs>
         {BRANDS.map(brand => {
@@ -158,17 +161,27 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const s2  = tick + brand.id * 11 + 6;
           const b1  = lightningPath(sx, sy, ex, ey, 18, 16 * scale, s1);
           const b2  = lightningPath(sx, sy, ex, ey, 13,  9 * scale, s2);
-          const flk = 0.55 + Math.abs(hash(tick, brand.id)) * 0.35;
+          const flk = 0.6 + Math.abs(hash(tick, brand.id)) * 0.4;
           return (
             <g key={brand.id}>
-              <path d={b1} fill="none" stroke="#1a9de0" strokeWidth="8"
-                    strokeLinecap="round" opacity={flk * 0.1} filter="url(#elec-glow)" />
-              <path d={b2} fill="none" stroke="#60c8ff" strokeWidth="2"
-                    strokeLinecap="round" opacity={flk * 0.4} />
-              <path d={b1} fill="none" stroke="#b8e4ff" strokeWidth="1.2"
+              {/* Outer electric cyan glow aura */}
+              <path d={b1} fill="none" stroke="#1a9de0" strokeWidth="10"
+                    strokeLinecap="round" opacity={flk * 0.25} filter="url(#elec-glow)" />
+              {/* Secondary dynamic jittering fork */}
+              <path d={b2} fill="none" stroke="#38bdf8" strokeWidth="2.2"
+                    strokeLinecap="round" opacity={flk * 0.65} filter="url(#elec-glow)" />
+              {/* Main energetic electric stroke */}
+              <path d={b1} fill="none" stroke="#7dd3fc" strokeWidth="2"
                     strokeLinecap="round" opacity={flk * 0.85} />
-              <circle cx={sx} cy={sy} r={2.5} fill="#ffffff"
-                      opacity={0.3 + Math.abs(hash(tick * 2, brand.id)) * 0.7} />
+              {/* High-intensity pure white core bolt */}
+              <path d={b1} fill="none" stroke="#ffffff" strokeWidth="1.3"
+                    strokeLinecap="round" opacity={flk * 0.95} />
+              {/* Contact spark node on central logo */}
+              <circle cx={sx} cy={sy} r={3} fill="#ffffff" filter="url(#elec-glow)"
+                      opacity={0.5 + Math.abs(hash(tick * 2, brand.id)) * 0.5} />
+              {/* Contact spark node on brand orb terminal */}
+              <circle cx={ex} cy={ey} r={2.5} fill="#38bdf8" filter="url(#elec-glow)"
+                      opacity={0.4 + Math.abs(hash(tick * 3, brand.id)) * 0.6} />
             </g>
           );
         })}
