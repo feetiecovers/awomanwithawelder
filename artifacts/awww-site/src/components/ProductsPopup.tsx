@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench } from "lucide-react";
+import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -283,6 +283,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [selectedShippingPresetIndex, setSelectedShippingPresetIndex] = useState<number>(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product");
@@ -666,19 +667,34 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full h-32 sm:h-44 shrink-0 flex items-center justify-center relative overflow-hidden"
+                                className="w-full h-32 sm:h-44 shrink-0 flex items-center justify-center relative overflow-hidden group"
                                 style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
                               >
                                 {item.image && !failedImages[item.id] ? (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                    loading="lazy"
-                                    onError={() => {
-                                      setFailedImages((prev) => ({ ...prev, [item.id]: true }));
-                                    }}
-                                  />
+                                  <>
+                                    <img
+                                      src={item.image}
+                                      alt={item.name}
+                                      className="absolute inset-0 h-full w-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                      onClick={() => setPreviewImage({ url: item.image!, title: item.name })}
+                                      onError={() => {
+                                        setFailedImages((prev) => ({ ...prev, [item.id]: true }));
+                                      }}
+                                    />
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPreviewImage({ url: item.image!, title: item.name });
+                                      }}
+                                      className="absolute top-2 right-2 bg-black/60 hover:bg-primary/80 backdrop-blur-md text-white px-2 py-1 rounded-lg border border-white/20 transition-all opacity-90 sm:opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] font-mono shadow-md z-10 cursor-pointer"
+                                      title="View Fullscreen"
+                                      data-testid={`button-fullscreen-${item.id}`}
+                                    >
+                                      <Maximize2 className="h-3 w-3" />
+                                      <span className="hidden xs:inline">Full Screen</span>
+                                    </button>
+                                  </>
                                 ) : (
                                   <>
                                     <div
@@ -1187,6 +1203,58 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     Cancel
                   </Button>
                 </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+        {/* Fullscreen Image Lightbox Modal */}
+        {previewImage && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md cursor-pointer"
+              onClick={() => setPreviewImage(null)}
+            />
+            <div className="fixed inset-0 z-[101] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                className="pointer-events-auto relative max-w-4xl max-h-[90dvh] w-full rounded-2xl border border-primary/40 bg-[#080d14]/95 backdrop-blur-2xl p-3 sm:p-5 flex flex-col items-center justify-between shadow-[0_0_60px_rgba(26,157,224,0.35)] overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-full flex items-center justify-between pb-3 border-b border-primary/20 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Maximize2 className="h-4 w-4 text-primary" />
+                    <h3 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-primary truncate max-w-[240px] sm:max-w-md">
+                      {previewImage.title}
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setPreviewImage(null)}
+                    className="h-8 w-8 rounded-full bg-white/5 border border-primary/30 text-white hover:bg-destructive/30 hover:text-white transition-all shrink-0"
+                    data-testid="button-close-image-lightbox"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="relative w-full flex-1 flex items-center justify-center my-2 overflow-hidden rounded-xl bg-black/60 p-2 border border-primary/15 min-h-0">
+                  <img
+                    src={previewImage.url}
+                    alt={previewImage.title}
+                    className="max-h-[70dvh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl"
+                  />
+                </div>
+
+                <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase shrink-0">
+                  Click outside or X to close
+                </p>
               </motion.div>
             </div>
           </>
