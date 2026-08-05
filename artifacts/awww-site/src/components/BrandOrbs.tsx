@@ -9,12 +9,12 @@ import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
-  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35 },
-  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85 },
-  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35 },
+  { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 12 },
+  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, lightningOffset: 10 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
+  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 10 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, lightningOffset: 12 },
 ];
 
 /** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
@@ -150,14 +150,10 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const oy  = Math.sin(rad) * ry;
           const odist = Math.sqrt(ox * ox + oy * oy);
           
-          // Calculate precise elliptical orb boundary along angle rad
-          const cosA = Math.cos(rad);
-          const sinA = Math.sin(rad);
-          const wMult = brand.widthMultiplier || 1.0;
-          const sMult = brand.sizeMultiplier || 1.0;
-          const effOrbRadius = (orbSize * sMult / 2) * Math.sqrt(wMult * wMult * cosA * cosA + sinA * sinA);
-          const extraOffset = (brand as any).lightningOffset ?? 10;
-          const targetDist = odist - effOrbRadius - extraOffset;
+          // Calculate target distance so lightning line reaches the orb border for all brands
+          const baseOrbRadius = orbSize / 2;
+          const customOffset = (brand as any).lightningOffset ?? 8;
+          const targetDist = odist - baseOrbRadius - customOffset;
           const ratio = Math.max(0, targetDist / odist);
           const ex  = cx + ox * ratio;
           const ey  = cy + oy * ratio;
