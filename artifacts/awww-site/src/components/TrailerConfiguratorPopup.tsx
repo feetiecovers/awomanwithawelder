@@ -492,11 +492,11 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
             </div>
 
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center text-center">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black uppercase tracking-wider bg-gradient-to-r from-white via-pink-200 to-[#ff2a8d] bg-clip-text text-transparent">
+              <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2">
+                <h2 className="text-xs xs:text-sm sm:text-lg font-black uppercase tracking-wider bg-gradient-to-r from-white via-pink-200 to-[#ff2a8d] bg-clip-text text-transparent whitespace-nowrap">
                   Trailer Configurator™
                 </h2>
-                <span className="px-2 py-0.5 text-[8.5px] font-mono font-bold uppercase tracking-widest bg-[#ff2a8d] text-white rounded-full shadow-[0_0_10px_rgba(255,42,141,0.7)]">
+                <span className="px-2 py-0.5 text-[8px] xs:text-[8.5px] font-mono font-bold uppercase tracking-widest bg-[#ff2a8d] text-white rounded-full shadow-[0_0_10px_rgba(255,42,141,0.7)] whitespace-nowrap">
                   Lady Lugger Edition
                 </span>
               </div>
@@ -513,7 +513,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
           </div>
 
           {/* Credits Bar */}
-          <div className="flex items-center justify-center gap-3 sm:gap-6 py-1 px-4 bg-[#0a030d] border-b border-[#ff2a8d]/15 text-[10px] sm:text-[11px] font-mono text-pink-200/80 shrink-0 flex-wrap">
+          <div className="hidden sm:flex items-center justify-center gap-3 sm:gap-6 py-1 px-4 bg-[#0a030d] border-b border-[#ff2a8d]/15 text-[10px] sm:text-[11px] font-mono text-pink-200/80 shrink-0 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span>Wired with help from</span>
               <img src={cableCadLogo} alt="CableCAD" className="h-3.5 sm:h-4 w-auto object-contain opacity-95 inline-block" />
@@ -841,25 +841,37 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                           </div>
                         </div>
                       </div>
+                      {/* Mobile Last Page Credits */}
+                      <div className="rounded-xl border border-pink-500/20 bg-[#0a030d]/80 p-2 flex flex-wrap items-center justify-center gap-2 text-[10px] font-mono text-pink-200/80 mt-1">
+                        <div className="flex items-center gap-1.5">
+                          <span>Wired with help from</span>
+                          <img src={cableCadLogo} alt="CableCAD" className="h-3.5 w-auto object-contain opacity-95 inline-block" />
+                        </div>
+                        <span className="text-pink-500/40">•</span>
+                        <div className="flex items-center gap-1.5">
+                          <span>Electrically tested using</span>
+                          <img src={trailerBrainLogo} alt="The Trailer Brain" className="h-3.5 w-auto object-contain opacity-95 inline-block" />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="pt-3 flex items-center justify-between shrink-0 border-t border-pink-500/15">
+                    <div className="pt-3 flex items-center justify-between shrink-0 border-t border-pink-500/15 gap-2">
                       <Button
                         variant="ghost"
                         onClick={() => setCurrentStep(2)}
-                        className="h-8.5 px-3.5 rounded-xl border border-pink-500/20 text-pink-200 hover:bg-white/5 text-xs font-mono uppercase flex items-center gap-1.5"
+                        className="h-8 px-2.5 xs:px-3 rounded-xl border border-pink-500/20 text-pink-200 hover:bg-white/5 text-[10px] xs:text-xs font-mono uppercase flex items-center gap-1 shrink-0"
                         data-testid="button-back-to-step-2"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <ArrowLeft className="w-3 h-3 xs:w-3.5 xs:h-3.5" />
                         <span>Configurations</span>
                       </Button>
 
                       <Button
                         onClick={() => setIsQuoteModalOpen(true)}
-                        className="h-9 px-4.5 rounded-xl bg-gradient-to-r from-[#ff2a8d] via-[#e11d48] to-[#9333ea] text-white font-mono font-bold text-xs uppercase tracking-wider shadow-[0_0_18px_rgba(255,42,141,0.6)] flex items-center gap-2"
+                        className="h-8.5 px-2.5 xs:px-3.5 rounded-xl bg-gradient-to-r from-[#ff2a8d] via-[#e11d48] to-[#9333ea] text-white font-mono font-bold text-[10px] xs:text-[11px] uppercase tracking-tight xs:tracking-wider shadow-[0_0_18px_rgba(255,42,141,0.6)] flex items-center gap-1.5 shrink-0"
                         data-testid="button-request-quote-mobile-step3"
                       >
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="w-3 h-3 xs:w-3.5 xs:h-3.5" />
                         <span>Request Official Quote</span>
                       </Button>
                     </div>

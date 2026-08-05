@@ -143,7 +143,7 @@ export default function Home() {
             whileHover={{ scale: 1.1, boxShadow: "0 0 28px rgba(26,157,224,0.7)" }}
             whileTap={{ scale: 0.92 }}
             onClick={handleOpenCart}
-            className="fixed bottom-[108px] right-4 sm:bottom-28 sm:right-6 z-50 w-11 h-11 rounded-full bg-[#080d14] border border-primary/50 flex items-center justify-center shadow-[0_0_18px_rgba(26,157,224,0.45)] cursor-pointer"
+            className="fixed bottom-[148px] right-4 sm:bottom-28 sm:right-6 z-50 w-11 h-11 rounded-full bg-[#080d14] border border-primary/50 flex items-center justify-center shadow-[0_0_18px_rgba(26,157,224,0.45)] cursor-pointer"
             aria-label="Open cart"
           >
             <ShoppingCart className="h-4 w-4 text-primary" />
