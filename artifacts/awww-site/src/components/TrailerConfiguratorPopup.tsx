@@ -25,8 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   TRAILER_CATEGORIES,
-  TRAILER_BUILDS,
-  FEATURE_GROUPS,
   type TrailerBuild,
   type FeatureGroupWithOptions,
   type FeatureOption
@@ -34,7 +32,7 @@ import {
 import { buildApiUrl } from "@/lib/api-base";
 import { getTrailerIcon } from "./TrailerIcons";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo_Cropped.png";
-import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
+import denversDeskIcon from "@assets/Denvers_Desk_Logo_CleanCropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
 
@@ -178,7 +176,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   
   // Slide Paginated Navigation & Accordion state (Step 1: Base Model, Step 2: Options, Step 3: Mobile Breakdown)
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [openGroupId, setOpenGroupId] = useState<number | null>(FEATURE_GROUPS[0]?.id ?? 1);
+  const [openGroupId, setOpenGroupId] = useState<number | null>(null);
   
   // Selection state
   const selectedCategoryId = 1; // Locked default category (Car Hauler)
@@ -234,9 +232,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   }, []);
 
   const selectedCategory = TRAILER_CATEGORIES.find((c) => c.id === selectedCategoryId) || TRAILER_CATEGORIES[0];
-  const availableBuilds = syncedBuilds.length > 0
-    ? syncedBuilds
-    : TRAILER_BUILDS.filter((b) => b.trailerTypeId === selectedCategoryId);
+  const availableBuilds = syncedBuilds;
 
   // Default build initialization
   useEffect(() => {
@@ -254,9 +250,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   }, [availableBuilds, selectedBuildId]);
 
   const selectedBuild = availableBuilds.find((b) => b.id === selectedBuildId) || availableBuilds[0];
-  const activeFeatureGroups = syncedBuilds.length > 0
-    ? (selectedBuild ? syncedFeatureGroupsByBuildId[selectedBuild.id] ?? [] : [])
-    : FEATURE_GROUPS;
+  const activeFeatureGroups = selectedBuild ? syncedFeatureGroupsByBuildId[selectedBuild.id] ?? [] : [];
 
   // Default feature options initialization
   useEffect(() => {
@@ -554,38 +548,45 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
 
                     {/* Centered Base Model Grid */}
                     <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                      {availableBuilds.map((build) => {
-                        const isSelected = selectedBuild?.id === build.id;
-                        return (
-                          <div
-                            key={build.id}
-                            onClick={() => {
-                              handleBuildSelect(build);
-                            }}
-                            className={`cursor-pointer rounded-2xl p-3.5 border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-                              isSelected
-                                ? "bg-[#25092b]/95 border-[#ff2a8d] shadow-[0_0_25px_rgba(255,42,141,0.5)] ring-1 ring-[#ff2a8d]"
-                                : "bg-[#14051a]/60 border-pink-500/15 hover:border-pink-500/40 hover:bg-[#1f0727]/50"
-                            }`}
-                          >
-                            {isSelected && (
-                              <div className="absolute top-3 right-3 text-[#ff2a8d]">
-                                <CheckCircle2 className="h-4.5 w-4.5 drop-shadow-[0_0_6px_rgba(255,42,141,0.8)]" />
+                      {availableBuilds.length === 0 ? (
+                        <div className="col-span-full py-12 flex flex-col items-center justify-center text-center">
+                          <div className="w-6 h-6 border-2 border-[#ff2a8d] border-t-transparent rounded-full animate-spin mb-3"></div>
+                          <p className="text-xs text-pink-200/60 font-mono">Loading configurator data...</p>
+                        </div>
+                      ) : (
+                        availableBuilds.map((build) => {
+                          const isSelected = selectedBuild?.id === build.id;
+                          return (
+                            <div
+                              key={build.id}
+                              onClick={() => {
+                                handleBuildSelect(build);
+                              }}
+                              className={`cursor-pointer rounded-2xl p-3.5 border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+                                isSelected
+                                  ? "bg-[#25092b]/95 border-[#ff2a8d] shadow-[0_0_25px_rgba(255,42,141,0.5)] ring-1 ring-[#ff2a8d]"
+                                  : "bg-[#14051a]/60 border-pink-500/15 hover:border-pink-500/40 hover:bg-[#1f0727]/50"
+                              }`}
+                            >
+                              {isSelected && (
+                                <div className="absolute top-3 right-3 text-[#ff2a8d]">
+                                  <CheckCircle2 className="h-4.5 w-4.5 drop-shadow-[0_0_6px_rgba(255,42,141,0.8)]" />
+                                </div>
+                              )}
+                              <div>
+                                <h4 className="font-bold text-xs sm:text-sm text-white pr-6">{build.name}</h4>
+                                <p className="text-[11px] text-pink-200/60 mt-1 line-clamp-2">{build.description}</p>
                               </div>
-                            )}
-                            <div>
-                              <h4 className="font-bold text-xs sm:text-sm text-white pr-6">{build.name}</h4>
-                              <p className="text-[11px] text-pink-200/60 mt-1 line-clamp-2">{build.description}</p>
+                              <div className="mt-3 pt-1.5 border-t border-pink-500/15 flex items-center justify-between">
+                                <span className="text-[9.5px] font-mono uppercase tracking-widest text-pink-200/50">Base Model Price</span>
+                                <span className="font-mono font-black text-xs sm:text-sm text-[#ff2a8d]">
+                                  NZ${build.basePrice.toLocaleString()}
+                                </span>
+                              </div>
                             </div>
-                            <div className="mt-3 pt-1.5 border-t border-pink-500/15 flex items-center justify-between">
-                              <span className="text-[9.5px] font-mono uppercase tracking-widest text-pink-200/50">Base Model Price</span>
-                              <span className="font-mono font-black text-xs sm:text-sm text-[#ff2a8d]">
-                                NZ${build.basePrice.toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
 
                     {/* Step 1 Footer Navigation Button */}

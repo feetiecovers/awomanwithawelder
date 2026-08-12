@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import StreamChatWidget from "./StreamChatWidget";
 import { getConfiguredApiBaseUrl } from "@/lib/api-base";
 
-
+const CHAT_POLL_INTERVAL_MS = 15000;
 
 interface BottomRightMenuProps {
   onOpenMembers: () => void;
@@ -87,12 +87,36 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     }
   };
 
-  // Poll chat endpoint every 3 seconds for new messages
+  // Poll chat only while the page is actively visible to reduce backend churn.
   useEffect(() => {
     if (!visitorId) return;
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
+
+    const shouldPoll = () => document.visibilityState === "visible" && document.hasFocus();
+    const pollIfVisible = () => {
+      if (!shouldPoll()) return;
+      void fetchMessages();
+    };
+
+    pollIfVisible();
+    const interval = setInterval(pollIfVisible, CHAT_POLL_INTERVAL_MS);
+
+    const handleFocus = () => {
+      pollIfVisible();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        pollIfVisible();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [visitorId]);
 
   const handleContactSubmit = (e: React.FormEvent) => {

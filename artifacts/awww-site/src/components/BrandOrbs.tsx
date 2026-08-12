@@ -148,17 +148,24 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const sy  = cy + Math.sin(rad) * logoRY;
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
-          const odist = Math.sqrt(ox * ox + oy * oy);
+          
+          // Calculate vector from start point (sx, sy) to orb center (cx + ox, cy + oy)
+          const orbCenterX = cx + ox;
+          const orbCenterY = cy + oy;
+          const pathDx = orbCenterX - sx;
+          const pathDy = orbCenterY - sy;
+          const pathDist = Math.sqrt(pathDx * pathDx + pathDy * pathDy);
           
           // Calculate target distance so lightning line reaches the orb border for all brands
           const baseOrbRadius = orbSize / 2;
           const customOffset = isMobile
             ? Math.round(((brand as any).lightningOffset ?? 8) * 0.4)
             : ((brand as any).lightningOffset ?? 8);
-          const targetDist = odist - baseOrbRadius - customOffset;
-          const ratio = Math.max(0, targetDist / odist);
-          const ex  = cx + ox * ratio;
-          const ey  = cy + oy * ratio;
+            
+          const targetDist = Math.max(0, pathDist - baseOrbRadius - customOffset);
+          const ratio = pathDist > 0 ? targetDist / pathDist : 0;
+          const ex  = sx + pathDx * ratio;
+          const ey  = sy + pathDy * ratio;
           const s1  = tick + brand.id * 11;
           const s2  = tick + brand.id * 11 + 6;
           const b1  = lightningPath(sx, sy, ex, ey, 18, 16 * scale, s1);
