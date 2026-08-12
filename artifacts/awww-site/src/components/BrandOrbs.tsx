@@ -137,15 +137,28 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           </filter>
         </defs>
         {BRANDS.map(brand => {
-          const angle = brand.angle;
+          let angle = brand.angle;
+          let originAngle = brand.angle;
+
+          if (isMobile) {
+            if (brand.id === 1) { // Tradie Gags
+              angle = 32; 
+              originAngle = 55; // from "R" in welder (bottom right)
+            } else if (brand.id === 4) { // Lady Lugger
+              angle = 212;
+              originAngle = 235; // from "A" in woman (top left)
+            }
+          }
+
           const rad = (angle * Math.PI) / 180;
+          const originRad = (originAngle * Math.PI) / 180;
           const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
           const rx  = isMobile 
-            ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
+            ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : 125) 
             : brand.radius * scale * 1.15;
           const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
-          const sx  = cx + Math.cos(rad) * logoRX;
-          const sy  = cy + Math.sin(rad) * logoRY;
+          const sx  = cx + Math.cos(originRad) * logoRX;
+          const sy  = cy + Math.sin(originRad) * logoRY;
           const ox  = Math.cos(rad) * rx;
           const oy  = Math.sin(rad) * ry;
           
@@ -188,11 +201,19 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
 
       {/* Brand Orbs */}
       {BRANDS.map(brand => {
-        const angle = brand.angle;
+        let angle = brand.angle;
+        if (isMobile) {
+          if (brand.id === 1) { // Tradie Gags
+            angle = 32; 
+          } else if (brand.id === 4) { // Lady Lugger
+            angle = 212;
+          }
+        }
+
         const rad = (angle * Math.PI) / 180;
         const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
         const rx  = isMobile 
-          ? (angle === 0 || angle === 180 ? mobileHorizontalRadius : 120) 
+          ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : 125) 
           : brand.radius * scale * 1.15;
         const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
         const x   = Math.cos(rad) * rx;
