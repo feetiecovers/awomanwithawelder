@@ -214,7 +214,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
         available: record.available !== false && record.inStock !== false && record.in_stock !== false,
         image,
         bookingFields,
-        shippingPresets: Array.isArray(record.shippingPresets) ? record.shippingPresets : undefined,
+        shippingPresets: Array.isArray(record.shippingPresets) ? record.shippingPresets : (Array.isArray(record.preset_shipping_costs) ? record.preset_shipping_costs : (Array.isArray(record.presetShippingCosts) ? record.presetShippingCosts : undefined)),
         hasVariants: record.hasVariants === true,
         variantLabel: typeof record.variantLabel === "string" ? record.variantLabel : "Option",
         variantMode: typeof record.variantMode === "string" ? record.variantMode : "none",

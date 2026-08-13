@@ -83,7 +83,7 @@ export default function RequestQuote() {
           price: Number(found.price ?? 0),
           type: found.type === "service" ? "service" : "product",
           available: found.available !== false,
-          shippingPresets: found.shippingPresets
+          shippingPresets: found.shippingPresets || found.preset_shipping_costs || found.presetShippingCosts
         };
         setProduct(normalized);
         const presets = getProductShippingPresets(normalized);
