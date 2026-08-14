@@ -475,6 +475,18 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
             backgroundImage: "radial-gradient(ellipse at top right, rgba(255,42,141,0.15), transparent 60%), radial-gradient(ellipse at bottom left, rgba(147,51,234,0.12), transparent 70%)"
           }}
         >
+          {/* COMING SOON OVERLAY */}
+          <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a020d]/60 backdrop-blur-md">
+            <div className="bg-[#16061c] border border-[#ff2a8d]/30 p-8 rounded-2xl shadow-[0_0_50px_rgba(255,42,141,0.15)] flex flex-col items-center gap-4 text-center max-w-sm mx-4">
+              <Sparkles className="w-12 h-12 text-[#ff2a8d]" />
+              <h2 className="text-2xl font-bold font-mono tracking-widest text-white uppercase">Coming Soon</h2>
+              <p className="text-pink-200/60 text-sm mb-2">The Lady Lugger Edition Configurator is currently being assembled. Stay tuned for the launch!</p>
+              <Button onClick={onClose} className="bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white font-bold tracking-wider rounded-xl w-full">
+                CLOSE
+              </Button>
+            </div>
+          </div>
+
           {/* Header Bar - Original Layout */}
           <div className="relative flex items-center justify-between px-5 py-3 border-b border-[#ff2a8d]/20 bg-[#16061c]/80 backdrop-blur-md shrink-0">
             <div className="flex items-center gap-3">
