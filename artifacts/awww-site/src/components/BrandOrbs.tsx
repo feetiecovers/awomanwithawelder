@@ -163,8 +163,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           let oy  = Math.sin(rad) * ry;
 
           if (isMobile) {
-            if (brand.id === 3) { ox = 0; oy = 145; }
-            if (brand.id === 2) { ox = 0; oy = 215; }
+            if (brand.id === 2) { ox = 95; oy = 215; }
           }
           
           // Calculate vector from start point (sx, sy) to orb center (cx + ox, cy + oy)
@@ -225,8 +224,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         let y   = Math.sin(rad) * ry;
 
         if (isMobile) {
-          if (brand.id === 3) { x = 0; y = 145; }
-          if (brand.id === 2) { x = 0; y = 215; }
+          if (brand.id === 2) { x = 95; y = 215; }
         }
 
         const logoSrc = (brand as any).stripWhiteBg
