@@ -10,8 +10,8 @@ import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40 },
-  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, lightningOffset: 10 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.78, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
+  { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
@@ -159,8 +159,13 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(originRad) * logoRX;
           const sy  = cy + Math.sin(originRad) * logoRY;
-          const ox  = Math.cos(rad) * rx;
-          const oy  = Math.sin(rad) * ry;
+          let ox  = Math.cos(rad) * rx;
+          let oy  = Math.sin(rad) * ry;
+
+          if (isMobile) {
+            if (brand.id === 3) { ox = 0; oy = 145; }
+            if (brand.id === 2) { ox = 0; oy = 215; }
+          }
           
           // Calculate vector from start point (sx, sy) to orb center (cx + ox, cy + oy)
           const orbCenterX = cx + ox;
@@ -216,8 +221,13 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : 125) 
           : brand.radius * scale * 1.15;
         const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
-        const x   = Math.cos(rad) * rx;
-        const y   = Math.sin(rad) * ry;
+        let x   = Math.cos(rad) * rx;
+        let y   = Math.sin(rad) * ry;
+
+        if (isMobile) {
+          if (brand.id === 3) { x = 0; y = 145; }
+          if (brand.id === 2) { x = 0; y = 215; }
+        }
 
         const logoSrc = (brand as any).stripWhiteBg
           ? (processedLogos[brand.id] || brand.logo)
