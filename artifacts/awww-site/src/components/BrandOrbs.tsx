@@ -270,9 +270,6 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
               >
                 {brand.logo ? (
                   <div className="relative w-full h-full flex items-center justify-center">
-                    {brand.id === 6 && (
-                      <div className="absolute inset-0 bg-white/40 blur-md rounded-[40%] scale-[1.3] pointer-events-none" />
-                    )}
                     <img
                       src={logoSrc}
                       alt={brand.name}

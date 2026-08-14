@@ -32,7 +32,7 @@ import {
 import { buildApiUrl } from "@/lib/api-base";
 import { getTrailerIcon } from "./TrailerIcons";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo_Cropped.png";
-import denversDeskIcon from "@assets/Denvers_Desk_New_Chevron_Logo.png";
+import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
 
