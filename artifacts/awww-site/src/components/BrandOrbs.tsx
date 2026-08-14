@@ -11,7 +11,7 @@ import cableCadLogo from "@assets/Cable_CAD_Logo.png";
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, lightningOffset: 10 },
-  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
+  { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.78, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: true,  dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
@@ -262,14 +262,17 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
                 style={{ 
                   width: (brand as any).widthMultiplier 
-                    ? Math.round(orbSize * (brand as any).widthMultiplier * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
-                    : Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))), 
-                  height: Math.round(orbSize * (isMobile ? 1.0 : (brand.sizeMultiplier || 1.0))) 
+                    ? Math.round(orbSize * (brand as any).widthMultiplier * (isMobile ? ((brand as any).mobileSizeMultiplier || brand.sizeMultiplier || 1.0) : (brand.sizeMultiplier || 1.0))) 
+                    : Math.round(orbSize * (isMobile ? ((brand as any).mobileSizeMultiplier || brand.sizeMultiplier || 1.0) : (brand.sizeMultiplier || 1.0))), 
+                  height: Math.round(orbSize * (isMobile ? ((brand as any).mobileSizeMultiplier || brand.sizeMultiplier || 1.0) : (brand.sizeMultiplier || 1.0))) 
                 }}
                 className="relative flex flex-col items-center justify-center rounded-2xl overflow-visible"
               >
                 {brand.logo ? (
                   <div className="relative w-full h-full flex items-center justify-center">
+                    {brand.id === 6 && (
+                      <div className="absolute inset-0 bg-white/40 blur-md rounded-[40%] scale-[1.3] pointer-events-none" />
+                    )}
                     <img
                       src={logoSrc}
                       alt={brand.name}

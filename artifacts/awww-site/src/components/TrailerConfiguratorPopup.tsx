@@ -32,7 +32,7 @@ import {
 import { buildApiUrl } from "@/lib/api-base";
 import { getTrailerIcon } from "./TrailerIcons";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo_Cropped.png";
-import denversDeskIcon from "@assets/Denvers_Desk_Logo_CleanCropped.png";
+import denversDeskIcon from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
 
@@ -800,9 +800,9 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="p-4 text-center flex flex-col items-center gap-1 text-pink-300/60">
-                              <CategoryIcon className="w-12 h-12 text-[#ff2a8d]/60" />
-                              <span className="text-xs font-mono">Build preview</span>
+                            <div className="p-4 text-center flex flex-col items-center gap-1 text-pink-300/60 w-full h-full justify-center">
+                              <CategoryIcon className="w-12 h-12 text-[#ff2a8d]/60 mb-2" />
+                              <span className="text-sm font-mono font-bold tracking-widest text-white">COMING SOON</span>
                             </div>
                           )}
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5">
@@ -900,9 +900,9 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="p-4 text-center flex flex-col items-center gap-1.5 text-pink-300/60">
-                        <CategoryIcon className="w-12 h-12 text-[#ff2a8d]/60" />
-                        <span className="text-[11px] font-mono">Select a build or option</span>
+                      <div className="p-4 text-center flex flex-col items-center gap-1.5 text-pink-300/60 w-full h-full justify-center">
+                        <CategoryIcon className="w-12 h-12 text-[#ff2a8d]/60 mb-2" />
+                        <span className="text-[11px] font-mono font-bold tracking-widest text-white">COMING SOON</span>
                       </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5">
@@ -1026,11 +1026,16 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                         <span className="text-[11px] text-pink-200/60 font-mono">{selectedCategory.name}</span>
                       </div>
 
-                      {activePreviewImage && (
-                        <div className="rounded-xl overflow-hidden border border-pink-500/30 aspect-video w-full">
+                      <div className="rounded-xl overflow-hidden border border-pink-500/30 aspect-video w-full flex items-center justify-center bg-[#1a0822]">
+                        {activePreviewImage ? (
                           <img src={activePreviewImage} alt={activePreviewLabel} className="w-full h-full object-cover" />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="p-4 text-center flex flex-col items-center justify-center gap-1.5 text-pink-300/60 w-full h-full">
+                            <CategoryIcon className="w-10 h-10 text-[#ff2a8d]/60 mb-2" />
+                            <span className="text-[11px] font-mono font-bold tracking-widest text-white">COMING SOON</span>
+                          </div>
+                        )}
+                      </div>
 
                       {/* Extras Listing */}
                       <div className="space-y-2 pt-2 border-t border-pink-500/20">
