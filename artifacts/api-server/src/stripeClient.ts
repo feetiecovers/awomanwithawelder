@@ -22,7 +22,7 @@ export async function getStripeCredentials(): Promise<{ secretKey: string; webho
   if (!hostname || !xReplitToken) {
     throw new Error(
       "Stripe credentials are missing. " +
-      "Set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET or connect Stripe via the Replit Integrations tab."
+      "Set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET or connect Stripe via the Denver's Desk Integrations tab."
     );
   }
 
