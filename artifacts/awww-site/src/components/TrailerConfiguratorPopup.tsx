@@ -524,7 +524,18 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
           </div>
 
           {/* Main Paginated Slide Content Area */}
-          <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_390px]">
+          <div className="flex-1 overflow-hidden relative grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_390px]">
+            {/* COMING SOON OVERLAY */}
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0a030d]/85 backdrop-blur-md">
+              <div className="text-[#ff2a8d] mb-4">
+                <Sparkles className="w-12 h-12 opacity-80" />
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-white mb-2 drop-shadow-[0_0_15px_rgba(255,42,141,0.5)]">Coming Soon</h2>
+              <p className="text-pink-200/70 font-mono text-sm max-w-sm text-center">
+                The Lady Lugger trailer configurator is currently under construction. Check back shortly!
+              </p>
+            </div>
+            
             {/* Left Paginated Slide Pane */}
             <div className="overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 relative no-scrollbar">
               <AnimatePresence mode="wait">
