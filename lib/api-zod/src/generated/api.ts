@@ -79,7 +79,8 @@ export const AddToCartBody = zod.object({
   "productId": zod.number(),
   "quantity": zod.number(),
   "shippingLabel": zod.string().optional(),
-  "shippingPrice": zod.number().optional()
+  "shippingPrice": zod.number().optional(),
+  "configuration": zod.any().optional()
 })
 
 export const AddToCartResponse = zod.object({

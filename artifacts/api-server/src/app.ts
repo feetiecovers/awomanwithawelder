@@ -34,7 +34,7 @@ import { getStripeCredentials } from "./stripeClient";
 
 declare module "express-session" {
   interface SessionData {
-    cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[];
+    cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[];
     memberId?: number;
   }
 }

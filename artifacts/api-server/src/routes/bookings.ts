@@ -328,7 +328,11 @@ router.post("/quote-request", async (req, res) => {
       zipCode = "",
       notes = "",
       shippingLabel = "",
-      shippingPrice = 0
+      shippingPrice = 0,
+      configurableProductId,
+      selections,
+      selectedOptionIds,
+      configuration
     } = req.body;
 
     if (!productId) {
@@ -461,6 +465,24 @@ router.post("/quote-request", async (req, res) => {
         notes,
         quoteRequested: "true"
       },
+      websiteRequest: configurableProductId ? {
+        source: "quote-request",
+        productId,
+        configurableProductId,
+        quantity,
+        fullName,
+        email,
+        phone,
+        address1,
+        address2,
+        suburb,
+        city,
+        zipCode,
+        notes,
+        selectedOptionIds,
+        configuration,
+        selections
+      } : undefined,
       deferStockDeduction: true
     };
 

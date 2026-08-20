@@ -28,6 +28,8 @@ interface ProductsPopupProps {
   onRequireSignIn?: () => void;
   onBookingSuccess?: (bookingData: BookingConfirmationData) => void;
   onOpenConfigurator?: () => void;
+  onOpenConfigurableProduct?: (id: number) => void;
+  onOpenParametricProduct?: (id: number) => void;
 }
 
 const ITEMS_PER_PAGE = 2;
@@ -48,7 +50,7 @@ type ProductCard = {
   name: string;
   description: string | null;
   price: number;
-  type: "product" | "service";
+  type: "product" | "service" | "configurable" | "parametric";
   available: boolean;
   image: string | null;
   bookingFields?: Array<{
@@ -71,6 +73,11 @@ type ProductCard = {
     quantity?: number;
     isDefault?: boolean;
   }>;
+  optionGroups?: Array<any>;
+  commerceActions?: {
+    allowCheckout: boolean;
+    allowQuoteRequest: boolean;
+  };
 };
 
 type BookingFormState = {
@@ -185,7 +192,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
         || rawType === "stock_service"
         || record.bookingRequired === true
         || record.fulfillmentType === "job"
-      ) ? "service" : "product";
+      ) ? "service" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : (rawType === "parametric_product" || rawType === "parametric") ? "parametric" : "product";
       const price = Number(record.price ?? record.displayPrice ?? record.sellPrice ?? record.unitPrice ?? record.sell_price ?? record.unit_price);
       const image = getProductImage(record);
       const bookingFields: NonNullable<ProductCard["bookingFields"]> = Array.isArray(record.bookingFields)
@@ -226,6 +233,11 @@ function normalizeProducts(value: unknown): ProductCard[] {
           quantity: v.quantity !== undefined ? Number(v.quantity) : undefined,
           isDefault: v.isDefault === true
         })) : undefined,
+        optionGroups: Array.isArray(record.optionGroups) ? record.optionGroups : undefined,
+        commerceActions: record.commerceActions && typeof record.commerceActions === "object" ? {
+          allowCheckout: (record.commerceActions as any).allowCheckout === true,
+          allowQuoteRequest: (record.commerceActions as any).allowQuoteRequest !== false,
+        } : undefined,
       };
     })
     .filter((item): item is ProductCard => item !== null && Number.isFinite(item.id) && item.id > 0);
@@ -263,7 +275,7 @@ function getPricingBreakdown(price: number) {
   return { subtotal, gst, total };
 }
 
-export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator }: ProductsPopupProps) {
+export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator, onOpenConfigurableProduct, onOpenParametricProduct }: ProductsPopupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -286,7 +298,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
 
   const products = normalizeProducts(productsData);
-  const shopItems = products.filter((p) => p.type === "product");
+  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
   const serviceItems = products.filter((p) => p.type === "service");
   const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
   const currentShopItems = shopItems.slice(shopPage * ITEMS_PER_PAGE, (shopPage + 1) * ITEMS_PER_PAGE);
@@ -719,14 +731,38 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">{item.description}</p>
                                 </div>
                                 <div className="flex flex-col gap-1.5 mt-3">
-                                  <Button
-                                    onClick={() => onAddToCartClick(item)}
-                                    className="w-full font-mono uppercase tracking-widest text-[11px] h-9"
-                                    disabled={addToCart.isPending || item.available === false}
-                                    data-testid={`button-add-to-cart-${item.id}`}
-                                  >
-                                    {item.available === false ? "Unavailable" : "Add to Cart"}
-                                  </Button>
+                                    {item.type === "configurable" ? (
+                                      <Button
+                                        onClick={() => {
+                                          onClose();
+                                          if (onOpenConfigurableProduct) onOpenConfigurableProduct(item.id);
+                                        }}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white"
+                                        data-testid={`button-configure-${item.id}`}
+                                      >
+                                        Configure &amp; Quote
+                                      </Button>
+                                    ) : item.type === "parametric" ? (
+                                      <Button
+                                        onClick={() => {
+                                          onClose();
+                                          if (onOpenParametricProduct) onOpenParametricProduct(item.id);
+                                        }}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30"
+                                        data-testid={`button-parametric-${item.id}`}
+                                      >
+                                        Measure &amp; Quote
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        onClick={() => onAddToCartClick(item)}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9"
+                                        disabled={addToCart.isPending || item.available === false}
+                                        data-testid={`button-add-to-cart-${item.id}`}
+                                      >
+                                        {item.available === false ? "Unavailable" : "Add to Cart"}
+                                      </Button>
+                                    )}
                                   {item.type === "product" && (
                                     <Button
                                       variant="ghost"

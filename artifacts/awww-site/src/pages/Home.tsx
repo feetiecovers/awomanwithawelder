@@ -10,6 +10,8 @@ import { FloatingSocials } from "@/components/FloatingSocials";
 import { BottomRightMenu } from "@/components/BottomRightMenu";
 import { ProductsPopup } from "@/components/ProductsPopup";
 import { TrailerConfiguratorPopup } from "@/components/TrailerConfiguratorPopup";
+import { ConfigurableProductPopup } from "@/components/ConfigurableProductPopup";
+import { ParametricProductPopup } from "@/components/ParametricProductPopup";
 import { CartPopup } from "@/components/CartPopup";
 import { MembersModal } from "@/components/MembersModal";
 import { OrderSuccessModal } from "@/components/OrderSuccessModal";
@@ -23,6 +25,10 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isConfiguratorOpen, setIsConfiguratorOpen] = useState(false);
+  const [isConfigurableProductOpen, setIsConfigurableProductOpen] = useState(false);
+  const [configurableProductId, setConfigurableProductId] = useState<number | null>(null);
+  const [isParametricProductOpen, setIsParametricProductOpen] = useState(false);
+  const [parametricProductId, setParametricProductId] = useState<number | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
@@ -167,11 +173,33 @@ export default function Home() {
         onRequireSignIn={() => setIsMembersOpen(true)}
         onBookingSuccess={handleBookingSuccess}
         onOpenConfigurator={() => setIsConfiguratorOpen(true)}
+        onOpenConfigurableProduct={(id) => {
+          setConfigurableProductId(id);
+          setIsConfigurableProductOpen(true);
+        }}
+        onOpenParametricProduct={(id) => {
+          setParametricProductId(id);
+          setIsParametricProductOpen(true);
+        }}
       />
 
       <TrailerConfiguratorPopup
         isOpen={isConfiguratorOpen}
         onClose={() => setIsConfiguratorOpen(false)}
+        onRequireSignIn={() => setIsMembersOpen(true)}
+      />
+
+      <ConfigurableProductPopup
+        isOpen={isConfigurableProductOpen}
+        onClose={() => setIsConfigurableProductOpen(false)}
+        productId={configurableProductId}
+        onRequireSignIn={() => setIsMembersOpen(true)}
+      />
+
+      <ParametricProductPopup
+        isOpen={isParametricProductOpen}
+        onClose={() => setIsParametricProductOpen(false)}
+        productId={parametricProductId}
         onRequireSignIn={() => setIsMembersOpen(true)}
       />
 

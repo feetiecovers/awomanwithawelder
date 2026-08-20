@@ -5,7 +5,7 @@ import { mapEntryToCatalogProduct, readStockStore, type CatalogProduct } from ".
 
 declare module "express-session" {
   interface SessionData {
-    cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[];
+    cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[];
     memberId?: number;
   }
 }
@@ -13,7 +13,7 @@ declare module "express-session" {
 const router = Router();
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 
-async function buildCartResponse(cartItems: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[]) {
+async function buildCartResponse(cartItems: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[]) {
   if (cartItems.length === 0) return { items: [], total: 0 };
 
   const syncedProducts = (await readStockStore())
@@ -45,6 +45,7 @@ async function buildCartResponse(cartItems: { productId: number; quantity: numbe
         quantity: item.quantity,
         shippingLabel: item.shippingLabel,
         shippingPrice: item.shippingPrice,
+        configuration: item.configuration,
         product,
       };
     })
@@ -86,7 +87,8 @@ router.post("/cart", async (req, res) => {
         productId: parsed.data.productId,
         quantity: parsed.data.quantity,
         shippingLabel: parsed.data.shippingLabel,
-        shippingPrice: parsed.data.shippingPrice
+        shippingPrice: parsed.data.shippingPrice,
+        configuration: parsed.data.configuration
       });
     }
 

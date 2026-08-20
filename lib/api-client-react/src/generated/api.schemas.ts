@@ -46,6 +46,7 @@ export interface CartItemInput {
   quantity: number;
   shippingLabel?: string;
   shippingPrice?: number;
+  configuration?: any;
 }
 
 export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];

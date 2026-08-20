@@ -34,7 +34,7 @@ function getFrontendBaseUrl(req: any): string {
 }
 
 router.post("/checkout", async (req: any, res) => {
-  const cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number }[] = req.session.cart ?? [];
+  const cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[] = req.session.cart ?? [];
 
   if (cart.length === 0) {
     return res.status(400).json({ error: "Cart is empty" });
@@ -87,6 +87,11 @@ router.post("/checkout", async (req: any, res) => {
               metadata: {
                 sku: typeof syncedEntry?.sku === "string" ? syncedEntry.sku : "",
                 productId: String(syncedEntry?.externalId ?? item.productId),
+                configuration: (item as any).configuration ? JSON.stringify({
+                  selections: (item as any).configuration.selections,
+                  selectedOptionIds: (item as any).configuration.selectedOptionIds,
+                  totalPriceAdjustment: (item as any).configuration.totalPriceAdjustment
+                }).substring(0, 500) : "",
               },
             },
           },
@@ -135,6 +140,7 @@ router.post("/checkout", async (req: any, res) => {
         unitPrice,
         total: unitPrice * item.quantity,
         itemType: product?.type === "service" ? "service" : "product",
+        configuration: (item as any).configuration ?? undefined,
       };
     });
 
