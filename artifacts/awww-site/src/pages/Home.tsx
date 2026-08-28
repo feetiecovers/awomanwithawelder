@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import mainLogo from "@assets/A_Woman_With_A_Welder_Center_Logo_Clean_NoCableCAD.png";
+import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
@@ -123,18 +124,18 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Top-left wordmark */}
-      <div className="absolute top-6 left-6 right-6 z-10 text-center md:text-left md:right-auto pointer-events-none opacity-50">
-        <h1 className="font-mono text-xs tracking-[0.3em] uppercase text-primary">A Woman With a Welder</h1>
-        <p className="font-mono text-[10px] text-muted-foreground mt-1 tracking-widest">Two cats, a baby and a husband too!</p>
+      {/* Top-left attribution */}
+      <div className="absolute top-6 left-6 right-6 z-10 flex items-center justify-center md:justify-start gap-2.5 pointer-events-none opacity-75">
+        <img src={ddIcon} alt="Denver's Desk" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(26,157,224,0.4)]" />
+        <span className="font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-primary/90 font-semibold drop-shadow-sm">Powered by Denver's Desk</span>
       </div>
 
       {/* Bottom-center footer */}
-      <div className="absolute bottom-2.5 sm:bottom-4 left-4 right-4 z-10 flex justify-center text-center pointer-events-none">
-        <p className="font-mono text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-white/20 max-w-xs sm:max-w-none leading-tight sm:leading-relaxed">
+      <div className="absolute bottom-3 sm:bottom-5 left-4 right-4 z-10 flex justify-center text-center pointer-events-none">
+        <p className="font-mono text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-white/30 max-w-xs sm:max-w-none leading-relaxed">
           &copy; {new Date().getFullYear()} A Woman With a Welder |<br className="sm:hidden" /> All Rights Reserved | Copyright of Feetie Covers Limited 2026
-          <span className="mx-2 text-white/10 hidden sm:inline">|</span>
-          <span className="block sm:inline mt-0.5 sm:mt-0">Built by<span className="text-primary/40"> The Husband</span></span>
+          <span className="mx-2 text-white/20 hidden sm:inline">|</span>
+          <span className="block sm:inline mt-1 sm:mt-0">Built by<span className="text-primary/60"> The Husband</span></span>
         </p>
       </div>
 

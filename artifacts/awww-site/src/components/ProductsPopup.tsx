@@ -20,6 +20,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import type { BookingConfirmationData } from "@/lib/bookingConfirmation";
 import { buildApiUrl } from "@/lib/api-base";
+import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ interface ProductsPopupProps {
   onOpenParametricProduct?: (id: number) => void;
 }
 
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 1;
 const GST_RATE = 0.15;
 
 const PRODUCT_GRADIENTS = [
@@ -505,9 +506,15 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
           className="w-full max-w-2xl flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] max-h-[calc(100dvh-32px)]"
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
-            <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">
-              Offerings
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">
+                Offerings
+              </h2>
+              <div className="hidden xs:flex items-center gap-1.5 opacity-60 ml-2 border-l border-primary/20 pl-3">
+                <img src={ddIcon} alt="Denver's Desk" className="w-3.5 h-3.5 object-contain" />
+                <span className="font-mono text-[9px] tracking-wider uppercase text-primary/80">Powered by Denver's Desk</span>
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={onOpenCart}
@@ -674,20 +681,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           {currentShopItems.map((item, idx) => (
                             <div
                               key={item.id}
-                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors"
-                              style={{ flex: "1 1 0", minHeight: 0 }}
+                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors h-full"
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full h-32 sm:h-44 shrink-0 flex items-center justify-center relative overflow-hidden group"
-                                style={{ background: PRODUCT_GRADIENTS[(shopPage * ITEMS_PER_PAGE + idx) % PRODUCT_GRADIENTS.length] }}
+                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[160px] bg-black/40"
                               >
                                 {item.image && !failedImages[item.id] ? (
                                   <>
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 h-full w-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                                      className="absolute inset-0 h-full w-full object-contain cursor-pointer hover:scale-[1.02] transition-transform duration-300"
                                       loading="lazy"
                                       onClick={() => setPreviewImage({ url: item.image!, title: item.name })}
                                       onError={() => {
@@ -699,11 +704,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                         e.stopPropagation();
                                         setPreviewImage({ url: item.image!, title: item.name });
                                       }}
-                                      className="absolute top-2 right-2 bg-black/60 hover:bg-primary/80 backdrop-blur-md text-white px-2 py-1 rounded-lg border border-white/20 transition-all opacity-90 sm:opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] font-mono shadow-md z-10 cursor-pointer"
+                                      className="absolute top-3 right-3 bg-black/60 hover:bg-primary/80 backdrop-blur-md text-white px-2.5 py-1.5 rounded-lg border border-white/20 transition-all opacity-90 sm:opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-[11px] font-mono shadow-md z-10 cursor-pointer"
                                       title="View Fullscreen"
                                       data-testid={`button-fullscreen-${item.id}`}
                                     >
-                                      <Maximize2 className="h-3 w-3" />
+                                      <Maximize2 className="h-4 w-4" />
                                       <span className="hidden xs:inline">Full Screen</span>
                                     </button>
                                   </>
@@ -712,35 +717,47 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <div
                                       className="absolute inset-0"
                                       style={{
-                                        backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
+                                        backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(26,157,224,0.04) 8px, rgba(26,157,224,0.04) 10px)",
                                       }}
                                     />
-                                    <span className="font-mono text-[8px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
-                                      Image
+                                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/25 z-10 whitespace-nowrap">
+                                      No Image Available
                                     </span>
                                   </>
                                 )}
                               </div>
 
-                              <div className="flex flex-col justify-between p-4 flex-1 min-w-0">
-                                <div>
-                                  <div className="flex justify-between items-start gap-3 mb-2">
-                                    <h3 className="font-bold text-sm sm:text-base text-foreground leading-tight line-clamp-2 sm:truncate">{item.name}</h3>
-                                    <span className="font-mono text-primary font-bold text-sm sm:text-base shrink-0">{formatCurrency(item.price)}</span>
+                              <div className="flex flex-col sm:flex-row justify-between p-5 gap-4 bg-[#0a1018]/80 shrink-0 border-t border-primary/10">
+                                <div className="flex flex-col justify-start gap-2 flex-1 min-w-0">
+                                  <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-green-400 border-green-400/30 bg-green-400/10' : 'text-red-400 border-red-400/30 bg-red-400/10'}`}>
+                                      {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
+                                    </span>
                                   </div>
-                                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">{item.description}</p>
+                                  {item.description && (
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 mt-1 pr-2">
+                                      {item.description}
+                                    </p>
+                                  )}
                                 </div>
-                                <div className="flex flex-col gap-1.5 mt-3">
+                                
+                                <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
+                                  <div className="text-left sm:text-right">
+                                    <span className="font-mono text-primary font-bold text-xl sm:text-2xl">{formatCurrency(item.price)}</span>
+                                  </div>
+                                  
+                                  <div className="flex flex-col gap-2">
                                     {item.type === "configurable" ? (
                                       <Button
                                         onClick={() => {
                                           onClose();
                                           if (onOpenConfigurableProduct) onOpenConfigurableProduct(item.id);
                                         }}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white"
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white shadow-[0_0_15px_rgba(255,42,141,0.25)]"
                                         data-testid={`button-configure-${item.id}`}
                                       >
-                                        Configure &amp; Quote
+                                        Configure
                                       </Button>
                                     ) : item.type === "parametric" ? (
                                       <Button
@@ -748,33 +765,33 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                           onClose();
                                           if (onOpenParametricProduct) onOpenParametricProduct(item.id);
                                         }}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30"
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30"
                                         data-testid={`button-parametric-${item.id}`}
                                       >
-                                        Measure &amp; Quote
+                                        Customise
                                       </Button>
                                     ) : (
                                       <Button
                                         onClick={() => onAddToCartClick(item)}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-9"
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
                                         disabled={addToCart.isPending || item.available === false}
                                         data-testid={`button-add-to-cart-${item.id}`}
                                       >
                                         {item.available === false ? "Unavailable" : "Add to Cart"}
                                       </Button>
                                     )}
-                                  {item.type === "product" && (
+                                    
                                     <Button
                                       variant="ghost"
                                       onClick={() => {
                                         onClose();
                                         setLocation(`/request-quote?productId=${item.id}`);
                                       }}
-                                      className="w-full font-mono uppercase tracking-wider sm:tracking-widest text-[8px] sm:text-[9px] h-auto min-h-8 py-1 px-2 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary shrink-0 whitespace-normal text-center"
+                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
                                     >
-                                      Request Quote with Shipping or Modifications
+                                      View Product
                                     </Button>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
