@@ -235,11 +235,13 @@ export default function StreamChatWidget({
         <div className="native-chat-header-info">
           <div className="native-chat-status" />
           <div>
-            <h4 className="native-chat-title">Live Chat Support</h4>
+            <h4 className="native-chat-title flex items-center gap-1.5">
+              Live Chat Support
+              <img src={denversDeskIcon} alt="Denver's Desk" className="w-3.5 h-3.5 object-contain opacity-50" />
+            </h4>
             <p className="native-chat-subtitle">Self-hosted local support operator</p>
           </div>
         </div>
-        <img src={denversDeskIcon} alt="Denver's Desk" className="w-4 h-4 object-contain opacity-80" />
       </div>
 
       {/* Error Banner */}

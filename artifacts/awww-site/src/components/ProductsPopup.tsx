@@ -295,6 +295,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [selectedService, setSelectedService] = useState<ProductCard | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormState>(emptyBookingForm);
   const [shippingSelectProduct, setShippingSelectProduct] = useState<ProductCard | null>(null);
+  const [shippingSelectConfig, setShippingSelectConfig] = useState<any>(null);
   const [selectedShippingPresetIndex, setSelectedShippingPresetIndex] = useState<number>(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
@@ -338,24 +339,26 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     setShopPage(next);
   };
 
-  const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number) => {
-    addToCart.mutate({ data: { productId, quantity: 1, shippingLabel, shippingPrice } as any }, {
+  const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number, configuration?: any) => {
+    addToCart.mutate({ data: { productId, quantity: 1, shippingLabel, shippingPrice, configuration } as any }, {
       onSuccess: () => {
         toast({ title: "Added to cart" });
         queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
         setShippingSelectProduct(null);
+        setShippingSelectConfig(null);
       },
     });
   };
 
-  const onAddToCartClick = (item: ProductCard) => {
+  const onAddToCartClick = (item: ProductCard, configuration?: any) => {
     const presets = getProductShippingPresets(item);
     if (presets.length > 1) {
       setShippingSelectProduct(item);
+      setShippingSelectConfig(configuration || null);
       setSelectedShippingPresetIndex(0);
     } else {
       const singlePreset = presets[0];
-      handleAddToCartWithShipping(item.id, singlePreset?.label, singlePreset?.price);
+      handleAddToCartWithShipping(item.id, singlePreset?.label, singlePreset?.price, configuration);
     }
   };
 
@@ -510,17 +513,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
               product={selectedWorkspaceProduct}
               onClose={() => setSelectedWorkspaceProduct(null)}
               onAddToCart={(payload) => {
-                addToCart.mutate({ data: { productId: payload.product.id, quantity: 1, configuration: payload.options } as any }, {
-                  onSuccess: () => {
-                    toast({ title: "Added to cart" });
-                    queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
-                    setSelectedWorkspaceProduct(null);
-                  },
-                  onError: () => toast({ title: "Failed to add to cart", variant: "destructive" }),
-                });
+                onAddToCartClick(payload.product, payload.options);
               }}
               onRequestQuote={(payload) => {
-                setShippingSelectProduct(payload.product);
+                // Now handled internally inside ProductDetailWorkspace
               }}
             />
           ) : (
@@ -1247,7 +1243,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     onClick={() => {
                       const presets = getProductShippingPresets(shippingSelectProduct);
                       const selected = presets[selectedShippingPresetIndex];
-                      handleAddToCartWithShipping(shippingSelectProduct.id, selected.label, selected.price);
+                      handleAddToCartWithShipping(shippingSelectProduct.id, selected.label, selected.price, shippingSelectConfig);
                     }}
                     className="flex-1 font-mono uppercase tracking-widest text-xs h-10 shadow-[0_0_15px_rgba(26,157,224,0.4)]"
                   >
