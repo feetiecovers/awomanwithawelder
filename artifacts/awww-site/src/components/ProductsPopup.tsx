@@ -776,6 +776,17 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   
                                   <div className="flex flex-col gap-2">
                                     <Button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAddToCartClick(item);
+                                      }}
+                                      className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
+                                      disabled={addToCart.isPending || item.available === false}
+                                      data-testid={`button-add-to-cart-${item.id}`}
+                                    >
+                                      {item.available === false ? "Unavailable" : "Add to Cart"}
+                                    </Button>
+                                    <Button
                                       variant="outline"
                                       onClick={() => setSelectedWorkspaceProduct(item)}
                                       className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
@@ -792,7 +803,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                         </AnimatePresence>
                       </div>
 
-                    {totalPages > 1 && (
+                    {totalPages > 0 && (
                       <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-primary/10">
                         <Button
                           variant="ghost"
