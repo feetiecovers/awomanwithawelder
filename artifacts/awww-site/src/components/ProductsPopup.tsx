@@ -54,7 +54,6 @@ type ProductCard = {
   type: "product" | "service" | "configurable" | "parametric";
   available: boolean;
   image: string | null;
-  images: string[];
   bookingFields?: Array<{
     id: string;
     label: string;
@@ -160,16 +159,6 @@ function getProductImage(record: Record<string, unknown>): string | null {
     }
   }
 
-  if (record.stockProduct && typeof record.stockProduct === "object") {
-    const stockImage = getProductImage(record.stockProduct as Record<string, unknown>);
-    if (stockImage) return stockImage;
-  }
-  
-  if (record.product && typeof record.product === "object") {
-    const pImage = getProductImage(record.product as Record<string, unknown>);
-    if (pImage) return pImage;
-  }
-
   return null;
 }
 
@@ -207,18 +196,6 @@ function normalizeProducts(value: unknown): ProductCard[] {
       ) ? "service" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : (rawType === "parametric_product" || rawType === "parametric") ? "parametric" : "product";
       const price = Number(record.price ?? record.displayPrice ?? record.sellPrice ?? record.unitPrice ?? record.sell_price ?? record.unit_price);
       const image = getProductImage(record);
-      
-      const images: string[] = [];
-      if (Array.isArray(record.images)) {
-        for (const candidate of record.images) {
-          const resolved = resolveImageCandidate(candidate);
-          if (resolved && !images.includes(resolved)) images.push(resolved);
-        }
-      }
-      if (image && !images.includes(image)) {
-        images.unshift(image);
-      }
-      
       const bookingFields: NonNullable<ProductCard["bookingFields"]> = Array.isArray(record.bookingFields)
         ? record.bookingFields.map((field: any, fieldIndex: number) => ({
             id: String(field?.id ?? `booking-field-${fieldIndex}`),
@@ -244,7 +221,6 @@ function normalizeProducts(value: unknown): ProductCard[] {
         type,
         available: record.available !== false && record.inStock !== false && record.in_stock !== false,
         image,
-        images,
         bookingFields,
         shippingPresets: Array.isArray(record.shippingPresets) ? record.shippingPresets : (Array.isArray(record.preset_shipping_costs) ? record.preset_shipping_costs : (Array.isArray(record.presetShippingCosts) ? record.presetShippingCosts : undefined)),
         hasVariants: record.hasVariants === true,
@@ -321,8 +297,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
-  const [selectedProductDetail, setSelectedProductDetail] = useState<ProductCard | null>(null);
-  const [detailActiveImage, setDetailActiveImage] = useState(0);
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
@@ -352,8 +326,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       setSelectedService(null);
       setSelectedVariantId(null);
       setBookingForm(emptyBookingForm);
-      setSelectedProductDetail(null);
-      setDetailActiveImage(0);
     }
   }, [isOpen]);
 
@@ -775,14 +747,47 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <span className="font-mono text-primary font-bold text-xl sm:text-2xl">{formatCurrency(item.price)}</span>
                                   </div>
                                   
-                                  <div className="flex flex-col justify-end flex-1 pb-2">
+                                  <div className="flex flex-col gap-2">
+                                    {item.type === "configurable" ? (
+                                      <Button
+                                        onClick={() => {
+                                          onClose();
+                                          if (onOpenConfigurableProduct) onOpenConfigurableProduct(item.id);
+                                        }}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white shadow-[0_0_15px_rgba(255,42,141,0.25)]"
+                                        data-testid={`button-configure-${item.id}`}
+                                      >
+                                        Configure
+                                      </Button>
+                                    ) : item.type === "parametric" ? (
+                                      <Button
+                                        onClick={() => {
+                                          onClose();
+                                          if (onOpenParametricProduct) onOpenParametricProduct(item.id);
+                                        }}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30"
+                                        data-testid={`button-parametric-${item.id}`}
+                                      >
+                                        Customise
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        onClick={() => onAddToCartClick(item)}
+                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
+                                        disabled={addToCart.isPending || item.available === false}
+                                        data-testid={`button-add-to-cart-${item.id}`}
+                                      >
+                                        {item.available === false ? "Unavailable" : "Add to Cart"}
+                                      </Button>
+                                    )}
+                                    
                                     <Button
+                                      variant="ghost"
                                       onClick={() => {
-                                        setSelectedProductDetail(item);
-                                        setDetailActiveImage(0);
+                                        onClose();
+                                        setLocation(`/request-quote?productId=${item.id}`);
                                       }}
-                                      className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-primary/20 hover:bg-primary text-primary-foreground border border-primary/50 shadow-[0_0_15px_rgba(26,157,224,0.15)] transition-all"
-                                      data-testid={`button-view-product-${item.id}`}
+                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
                                     >
                                       View Product
                                     </Button>
@@ -1298,168 +1303,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     alt={previewImage.title}
                     className="max-h-[70dvh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl"
                   />
-                </div>
-              </motion.div>
-            </div>
-          </>
-        )}
-        {/* Product Detail Modal */}
-        {selectedProductDetail && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md cursor-pointer"
-              onClick={() => setSelectedProductDetail(null)}
-            />
-            <div className="fixed inset-0 z-[121] flex items-center justify-center p-2 sm:p-6 pointer-events-none">
-              <motion.div
-                initial={{ scale: 0.95, y: 10, opacity: 0 }}
-                animate={{ scale: 1, y: 0, opacity: 1 }}
-                exit={{ scale: 0.95, y: 10, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                className="pointer-events-auto relative w-full max-w-4xl h-[92dvh] sm:h-[85dvh] max-h-[800px] bg-[#080d14]/95 border-2 border-primary/40 rounded-2xl shadow-[0_0_60px_rgba(26,157,224,0.35)] overflow-hidden flex flex-col md:flex-row backdrop-blur-2xl"
-              >
-                {/* Left Column: Image Gallery */}
-                <div className="md:w-1/2 flex flex-col bg-black/40 border-b md:border-b-0 md:border-r border-primary/20 p-4">
-                  <div className="flex-1 min-h-0 relative rounded-xl overflow-hidden bg-black/60 border border-white/5 flex items-center justify-center group mb-3 shadow-inner">
-                    {selectedProductDetail.images?.length > 0 ? (
-                      <img
-                        src={selectedProductDetail.images[detailActiveImage]}
-                        alt={selectedProductDetail.name}
-                        className="max-w-full max-h-full object-contain drop-shadow-[0_0_15px_rgba(26,157,224,0.15)]"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-black/40 flex items-center justify-center">
-                        <ImageIcon className="w-12 h-12 text-white/10" />
-                      </div>
-                    )}
-                    {selectedProductDetail.images?.length > 1 && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDetailActiveImage((prev) => (prev > 0 ? prev - 1 : selectedProductDetail.images.length - 1));
-                          }}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 border border-primary/30 text-white hover:bg-primary hover:text-white opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_10px_rgba(26,157,224,0.3)]"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDetailActiveImage((prev) => (prev < selectedProductDetail.images.length - 1 ? prev + 1 : 0));
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 border border-primary/30 text-white hover:bg-primary hover:text-white opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_10px_rgba(26,157,224,0.3)]"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  {/* Thumbnails */}
-                  {selectedProductDetail.images?.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar shrink-0">
-                      {selectedProductDetail.images.map((img, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setDetailActiveImage(idx)}
-                          className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
-                            idx === detailActiveImage ? "border-primary shadow-[0_0_10px_rgba(26,157,224,0.4)]" : "border-transparent hover:border-primary/50 opacity-60 hover:opacity-100"
-                          }`}
-                        >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Column: Details & Actions */}
-                <div className="md:w-1/2 flex flex-col p-5 sm:p-8 overflow-y-auto no-scrollbar relative bg-[#0a0a0f]">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedProductDetail(null)}
-                    className="absolute right-4 top-4 h-8 w-8 rounded-full bg-white/5 border border-primary/30 text-primary hover:bg-destructive/30 hover:text-white hover:border-destructive/50 transition-all z-20"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-
-                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-wider text-primary mb-2 pr-8 leading-tight drop-shadow-[0_0_8px_rgba(26,157,224,0.4)]">
-                    {selectedProductDetail.name}
-                  </h2>
-                  
-                  <div className="flex items-center gap-4 mb-6">
-                    <span className="font-mono text-2xl text-white font-bold">{formatCurrency(selectedProductDetail.price)}</span>
-                    <div className={`inline-flex items-center gap-2 font-mono text-xs px-3 py-1 rounded-full border ${selectedProductDetail.available ? "text-green-400 border-green-400/30 bg-green-400/10" : "text-red-400 border-red-400/30 bg-red-400/10"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${selectedProductDetail.available ? "bg-green-400" : "bg-red-400"}`} />
-                      {selectedProductDetail.available ? "AVAILABLE NOW" : "OUT OF STOCK"}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto pr-2 pb-4">
-                    {selectedProductDetail.description && (
-                      <div 
-                        className="text-white/80 text-sm leading-relaxed space-y-3"
-                        dangerouslySetInnerHTML={{ __html: selectedProductDetail.description }} 
-                      />
-                    )}
-                  </div>
-
-                  <div className="pt-5 border-t border-primary/20 shrink-0 mt-auto">
-                    {selectedProductDetail.type === "configurable" ? (
-                      <Button
-                        onClick={() => {
-                          const id = selectedProductDetail.id;
-                          setSelectedProductDetail(null);
-                          onClose();
-                          if (onOpenConfigurableProduct) onOpenConfigurableProduct(id);
-                        }}
-                        className="w-full font-mono uppercase tracking-widest text-sm h-12 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white shadow-[0_0_20px_rgba(255,42,141,0.35)] hover:shadow-[0_0_25px_rgba(255,42,141,0.5)] transition-all"
-                      >
-                        Configure Product
-                      </Button>
-                    ) : selectedProductDetail.type === "parametric" ? (
-                      <Button
-                        onClick={() => {
-                          const id = selectedProductDetail.id;
-                          setSelectedProductDetail(null);
-                          onClose();
-                          if (onOpenParametricProduct) onOpenParametricProduct(id);
-                        }}
-                        className="w-full font-mono uppercase tracking-widest text-sm h-12 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all"
-                      >
-                        Customise Dimensions
-                      </Button>
-                    ) : selectedProductDetail.type === "service" ? (
-                      <Button
-                        onClick={() => {
-                          openBookingModal(selectedProductDetail);
-                          setSelectedProductDetail(null);
-                        }}
-                        className="w-full font-mono uppercase tracking-widest text-sm h-12 bg-primary/20 hover:bg-primary text-primary-foreground border border-primary/50 shadow-[0_0_15px_rgba(26,157,224,0.15)] transition-all"
-                      >
-                        Request Booking
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          onAddToCartClick(selectedProductDetail);
-                          setSelectedProductDetail(null);
-                        }}
-                        disabled={addToCart.isPending || selectedProductDetail.available === false}
-                        className="w-full font-mono uppercase tracking-widest text-sm h-12 bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(26,157,224,0.3)] transition-all"
-                      >
-                        {selectedProductDetail.available === false ? "Unavailable" : addToCart.isPending ? "Adding..." : "Add to Cart"}
-                      </Button>
-                    )}
-                  </div>
                 </div>
               </motion.div>
             </div>
