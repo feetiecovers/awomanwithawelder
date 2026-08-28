@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, AlertCircle, RefreshCw, Send } from 'lucide-react';
-
+import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 type ChatMessage = {
   id: string;
   sender: 'visitor' | 'operator';
@@ -239,6 +239,7 @@ export default function StreamChatWidget({
             <p className="native-chat-subtitle">Self-hosted local support operator</p>
           </div>
         </div>
+        <img src={denversDeskIcon} alt="Denver's Desk" className="w-4 h-4 object-contain opacity-80" />
       </div>
 
       {/* Error Banner */}

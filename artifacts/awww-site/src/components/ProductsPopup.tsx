@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
+import { Switch } from "@components/ui/switch";
+import { ProductDetailWorkspace } from "./ProductDetailWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -297,12 +299,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
+  const [selectedWorkspaceProduct, setSelectedWorkspaceProduct] = useState<ProductCard | null>(null);
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
   const serviceItems = products.filter((p) => p.type === "service");
   const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
-  const currentShopItems = shopItems.slice(shopPage * ITEMS_PER_PAGE, (shopPage + 1) * ITEMS_PER_PAGE);
+  const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
+  const currentShopItems = shopItems.slice(safeShopPage * ITEMS_PER_PAGE, (safeShopPage + 1) * ITEMS_PER_PAGE);
   const activePrice = (() => {
     if (!selectedService) return 0;
     if (selectedService.hasVariants && selectedService.variants) {
@@ -498,16 +502,39 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 16 }}
-          transition={{ type: "spring", stiffness: 320, damping: 34 }}
-          className="w-full max-w-2xl flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] max-h-[calc(100dvh-32px)]"
-        >
-          <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
-            <div className="flex items-center gap-3">
-              <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">
+        
+        <AnimatePresence mode="wait">
+          {selectedWorkspaceProduct ? (
+            <ProductDetailWorkspace
+              key="workspace"
+              product={selectedWorkspaceProduct}
+              onClose={() => setSelectedWorkspaceProduct(null)}
+              onAddToCart={(payload) => {
+                addToCart.mutate({ data: { productId: payload.product.id, quantity: 1, configuration: payload.options } as any }, {
+                  onSuccess: () => {
+                    toast({ title: "Added to cart" });
+                    queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+                    setSelectedWorkspaceProduct(null);
+                  },
+                  onError: () => toast({ title: "Failed to add to cart", variant: "destructive" }),
+                });
+              }}
+              onRequestQuote={(payload) => {
+                setShippingSelectProduct(payload.product);
+              }}
+            />
+          ) : (
+            <motion.div
+              key="offerings"
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              className="w-full max-w-2xl flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] max-h-[calc(100dvh-32px)]"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
+                <div className="flex items-center gap-3">
+                  <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">
                 Offerings
               </h2>
               <div className="hidden xs:flex items-center gap-1.5 opacity-60 ml-2 border-l border-primary/20 pl-3">
@@ -665,7 +692,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     <div className="overflow-hidden relative px-5 pt-4 pb-2" style={{ flex: "1 1 0" }}>
                       <AnimatePresence mode="wait" custom={slideDir}>
                         <motion.div
-                          key={shopPage}
+                          key={safeShopPage}
                           custom={slideDir}
                           variants={{
                             enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
@@ -748,46 +775,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   </div>
                                   
                                   <div className="flex flex-col gap-2">
-                                    {item.type === "configurable" ? (
-                                      <Button
-                                        onClick={() => {
-                                          onClose();
-                                          if (onOpenConfigurableProduct) onOpenConfigurableProduct(item.id);
-                                        }}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-[#ff2a8d] hover:bg-[#ff2a8d]/80 text-white shadow-[0_0_15px_rgba(255,42,141,0.25)]"
-                                        data-testid={`button-configure-${item.id}`}
-                                      >
-                                        Configure
-                                      </Button>
-                                    ) : item.type === "parametric" ? (
-                                      <Button
-                                        onClick={() => {
-                                          onClose();
-                                          if (onOpenParametricProduct) onOpenParametricProduct(item.id);
-                                        }}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-50 border border-cyan-400/30"
-                                        data-testid={`button-parametric-${item.id}`}
-                                      >
-                                        Customise
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        onClick={() => onAddToCartClick(item)}
-                                        className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
-                                        disabled={addToCart.isPending || item.available === false}
-                                        data-testid={`button-add-to-cart-${item.id}`}
-                                      >
-                                        {item.available === false ? "Unavailable" : "Add to Cart"}
-                                      </Button>
-                                    )}
-                                    
                                     <Button
-                                      variant="ghost"
-                                      onClick={() => {
-                                        onClose();
-                                        setLocation(`/request-quote?productId=${item.id}`);
-                                      }}
+                                      variant="outline"
+                                      onClick={() => setSelectedWorkspaceProduct(item)}
                                       className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
+                                      data-testid={`button-view-product-${item.id}`}
                                     >
                                       View Product
                                     </Button>
@@ -795,18 +787,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </motion.div>
-                      </AnimatePresence>
-                    </div>
+                            ))}
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
 
                     {totalPages > 1 && (
                       <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-primary/10">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => goToPage(shopPage - 1)}
-                          disabled={shopPage === 0}
+                          onClick={() => goToPage(safeShopPage - 1)}
+                          disabled={safeShopPage === 0}
                           className="h-8 w-8 text-primary disabled:opacity-25"
                           data-testid="button-prev-page"
                         >
@@ -819,7 +811,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               key={i}
                               onClick={() => goToPage(i)}
                               className={`rounded-full transition-all ${
-                                i === shopPage
+                                i === safeShopPage
                                   ? "w-5 h-2 bg-primary"
                                   : "w-2 h-2 bg-primary/25 hover:bg-primary/50"
                               }`}
@@ -831,8 +823,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => goToPage(shopPage + 1)}
-                          disabled={shopPage >= totalPages - 1}
+                          onClick={() => goToPage(safeShopPage + 1)}
+                          disabled={safeShopPage >= totalPages - 1}
                           className="h-8 w-8 text-primary disabled:opacity-25"
                           data-testid="button-next-page"
                         >
@@ -892,6 +884,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
             )}
           </div>
         </motion.div>
+        )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>
