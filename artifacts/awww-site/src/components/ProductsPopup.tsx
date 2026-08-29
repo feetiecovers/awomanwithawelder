@@ -45,9 +45,11 @@ const PRODUCT_GRADIENTS = [
 ];
 
 const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
+const CANONICAL_STOREFRONT_STOCK_URL = `${SHARED_IMAGE_BASE_URL}/api/website/stock?websiteId=web-1782561404289`;
 
 type ProductCard = {
   id: number;
+  sourceId?: string;
   name: string;
   description: string | null;
   price: number;
@@ -81,6 +83,19 @@ type ProductCard = {
   };
   customerMessage?: string;
 };
+
+function getStableProductId(value: unknown, index: number): number {
+  const numericId = Number(value);
+  if (Number.isFinite(numericId) && numericId > 0) return numericId;
+
+  const sourceId = String(value ?? `storefront-item-${index}`);
+  let hash = 2166136261;
+  for (let characterIndex = 0; characterIndex < sourceId.length; characterIndex += 1) {
+    hash ^= sourceId.charCodeAt(characterIndex);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) + 1;
+}
 
 type BookingFormState = {
   fullName: string;
@@ -189,6 +204,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;
       const rawType = String(record.type ?? record.productType ?? record.serviceType ?? record.itemType ?? "").trim().toLowerCase();
+      if (rawType === "build" || rawType === "build_product") return null;
       const type: ProductCard["type"] = (
         rawType === "service"
         || rawType === "stock_service"
@@ -216,7 +232,8 @@ function normalizeProducts(value: unknown): ProductCard[] {
 
       return {
         ...(record as any),
-        id: Number(record.id ?? record.productId ?? index),
+        id: getStableProductId(record.id ?? record.productId, index),
+        sourceId: String(record.id ?? record.productId ?? index),
         name: String(record.name ?? record.title ?? record.label ?? "Untitled Item"),
         description: typeof record.description === "string" ? record.description : null,
         price: Number.isFinite(price) ? price : 0,
@@ -306,10 +323,20 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [selectedWorkspaceProduct, setSelectedWorkspaceProduct] = useState<ProductCard | null>(null);
+  const [canonicalProductsData, setCanonicalProductsData] = useState<unknown>(null);
 
-  const products = normalizeProducts(productsData);
-  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
-  const serviceItems = products.filter((p) => p.type === "service");
+  const primaryProducts = normalizeProducts(productsData);
+  const primaryShopItems = primaryProducts.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
+  const serviceItems = primaryProducts.filter((p) => p.type === "service");
+  const canonicalShopItems = normalizeProducts(canonicalProductsData)
+    .filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric")
+    .map((canonicalItem) => {
+      const primaryMatch = primaryShopItems.find((primaryItem) => (
+        String((primaryItem as any).externalId ?? primaryItem.sourceId) === canonicalItem.sourceId
+      ));
+      return primaryMatch ? { ...canonicalItem, id: primaryMatch.id } : canonicalItem;
+    });
+  const shopItems = canonicalShopItems.length > primaryShopItems.length ? canonicalShopItems : primaryShopItems;
   const activePrice = (() => {
     if (!selectedService) return 0;
     if (selectedService.hasVariants && selectedService.variants) {
@@ -319,6 +346,27 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     return selectedService.price;
   })();
   const pricing = selectedService ? getPricingBreakdown(activePrice) : null;
+
+  useEffect(() => {
+    if (!isOpen || canonicalProductsData !== null) return;
+
+    const controller = new AbortController();
+    fetch(CANONICAL_STOREFRONT_STOCK_URL, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Canonical storefront stock request failed: ${response.status}`);
+        return response.json();
+      })
+      .then(setCanonicalProductsData)
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.warn("Unable to load canonical storefront stock fallback", error);
+      });
+
+    return () => controller.abort();
+  }, [canonicalProductsData, isOpen]);
 
   useEffect(() => {
     setBookingForm((current) => ({
