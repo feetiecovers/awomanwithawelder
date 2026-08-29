@@ -288,7 +288,9 @@ function pickLiveProducts(payload: unknown): Record<string, unknown>[] {
 async function fetchLiveDesktopStock(): Promise<SyncedStockEntry[]> {
   try {
     const { desktopBaseUrl } = getDesktopSyncConfig();
-    const liveUrl = new URL("/api/ecommerce/stock", desktopBaseUrl);
+    // This recovery path is read-only and must work after a website service
+    // restart even when the private desktop API token is not configured.
+    const liveUrl = new URL("/api/website/stock", desktopBaseUrl);
     if (defaultWebsiteId) {
       liveUrl.searchParams.set("websiteId", defaultWebsiteId);
     }

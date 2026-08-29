@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
+import { X, ShoppingCart, Calendar, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
 import { ProductDetailWorkspace } from "./ProductDetailWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,6 @@ interface ProductsPopupProps {
   onOpenParametricProduct?: (id: number) => void;
 }
 
-const ITEMS_PER_PAGE = 1;
 const GST_RATE = 0.15;
 
 const PRODUCT_GRADIENTS = [
@@ -298,8 +297,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const createBooking = useCreateBooking();
 
   const [activeTab, setActiveTab] = useState<"shop" | "services">("shop");
-  const [shopPage, setShopPage] = useState(0);
-  const [slideDir, setSlideDir] = useState(1);
   const [selectedService, setSelectedService] = useState<ProductCard | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormState>(emptyBookingForm);
   const [shippingSelectProduct, setShippingSelectProduct] = useState<ProductCard | null>(null);
@@ -313,9 +310,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
   const serviceItems = products.filter((p) => p.type === "service");
-  const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
-  const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
-  const currentShopItems = shopItems.slice(safeShopPage * ITEMS_PER_PAGE, (safeShopPage + 1) * ITEMS_PER_PAGE);
   const activePrice = (() => {
     if (!selectedService) return 0;
     if (selectedService.hasVariants && selectedService.variants) {
@@ -341,11 +335,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       setBookingForm(emptyBookingForm);
     }
   }, [isOpen]);
-
-  const goToPage = (next: number) => {
-    setSlideDir(next > shopPage ? 1 : -1);
-    setShopPage(next);
-  };
 
   const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number, configuration?: any) => {
     addToCart.mutate({ data: { productId, quantity: 1, shippingLabel, shippingPrice, configuration } as any }, {
@@ -694,25 +683,19 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 ) : (
                   <>
                     <div className="overflow-hidden relative px-5 pt-4 pb-2" style={{ flex: "1 1 0" }}>
-                      <AnimatePresence mode="wait" custom={slideDir}>
+                      <AnimatePresence mode="wait">
                         <motion.div
-                          key={safeShopPage}
-                          custom={slideDir}
-                          variants={{
-                            enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
-                            center: { x: 0, opacity: 1 },
-                            exit: (dir: number) => ({ x: dir * -60, opacity: 0 }),
-                          }}
-                          initial="enter"
-                          animate="center"
-                          exit="exit"
+                          key={shopItems.map((item) => item.id).join(":")}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
                           transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                          className="flex flex-col gap-3 h-full"
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full overflow-y-auto pr-1 content-start"
                         >
-                          {currentShopItems.map((item, idx) => (
+                          {shopItems.map((item, idx) => (
                             <div
                               key={item.id}
-                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors h-full"
+                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors min-h-[360px]"
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
@@ -812,46 +795,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                         </AnimatePresence>
                       </div>
 
-                    {totalPages > 0 && (
-                      <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-primary/10">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => goToPage(safeShopPage - 1)}
-                          disabled={safeShopPage === 0}
-                          className="h-8 w-8 text-primary disabled:opacity-25"
-                          data-testid="button-prev-page"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </Button>
-
-                        <div className="flex gap-1.5">
-                          {Array.from({ length: totalPages }).map((_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => goToPage(i)}
-                              className={`rounded-full transition-all ${
-                                i === safeShopPage
-                                  ? "w-5 h-2 bg-primary"
-                                  : "w-2 h-2 bg-primary/25 hover:bg-primary/50"
-                              }`}
-                              data-testid={`dot-page-${i}`}
-                            />
-                          ))}
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => goToPage(safeShopPage + 1)}
-                          disabled={safeShopPage >= totalPages - 1}
-                          className="h-8 w-8 text-primary disabled:opacity-25"
-                          data-testid="button-next-page"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
