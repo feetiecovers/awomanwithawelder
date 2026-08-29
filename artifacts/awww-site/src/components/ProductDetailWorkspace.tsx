@@ -140,59 +140,59 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   // --- IMAGE GALLERY RESOLUTION ---
   const galleryImages = useMemo(() => {
-    const images: string[] = [];
-    if (product.image) images.push(product.image);
-    
-    // Add additional images from nested payloads if available
+    const pushUnique = (target: string[], value: unknown) => {
+      const normalized = String(value ?? '').trim();
+      if (!normalized || target.includes(normalized)) return;
+      target.push(normalized);
+    };
+    const collectOptionImages = (option: any) => {
+      const authored = Array.isArray(option?.images)
+        ? option.images.map((entry: unknown) => String(entry ?? '').trim()).filter(Boolean)
+        : [];
+      if (authored.length > 0) return authored;
+      const fallback = String(option?.imageUrl || option?.image || option?.media || '').trim();
+      return fallback ? [fallback] : [];
+    };
+
+    const baseImages: string[] = [];
+    pushUnique(baseImages, product.image);
+    (rawProduct.stockProduct?.images || rawProduct.images || []).forEach((img: unknown) => pushUnique(baseImages, img));
+    (rawProduct.product?.images || []).forEach((img: unknown) => pushUnique(baseImages, img));
+
     if (optionGroups.length > 0) {
-      // Base config images
-      const baseImages = rawProduct.stockProduct?.images || rawProduct.images || [];
-      baseImages.forEach((img: string) => {
-        if (!images.includes(img)) images.push(img);
-      });
-      
-      // Look for selected option images
-      const authoredDefaults = configurableMode?.defaultSelections || configurableMode?.defaultConfiguration?.selections || rawProduct.defaultConfiguration?.selections;
-      const isAuthoredDefault = authoredDefaults && Object.entries(authoredDefaults).every(([groupId, optionIds]) => {
-        const selected = [...(configSelections[groupId] || [])].sort();
-        const expected = [...(Array.isArray(optionIds) ? optionIds.map(String) : [])].sort();
-        return selected.length === expected.length && selected.every((value, index) => value === expected[index]);
-      });
-      if (!isAuthoredDefault) {
-        optionGroups.forEach((group: any) => {
-          const selected = configSelections[group.id] || [];
-          selected.forEach((optId) => {
-            const opt = group.options?.find((o: any) => String(o.id) === optId);
-            const optionImage = opt?.imageUrl || opt?.image || opt?.media;
-            if (optionImage && !images.includes(optionImage)) {
-              images.unshift(optionImage);
-            }
-          });
+      const selectedGallery: string[] = [];
+      optionGroups.forEach((group: any) => {
+        const selected = configSelections[group.id] || [];
+        selected.forEach((optId) => {
+          const opt = group.options?.find((candidate: any) => String(candidate.id) === String(optId));
+          collectOptionImages(opt).forEach((image: string) => pushUnique(selectedGallery, image));
         });
+      });
+      if (selectedGallery.length > 0) {
+        return selectedGallery;
       }
     }
-    
+
     if (inputDefinitions.length > 0) {
-      const baseImages = rawProduct.product?.images || rawProduct.images || [];
-      baseImages.forEach((img: string) => {
-        if (!images.includes(img)) images.push(img);
-      });
-      
-      // Look for selected discrete choice images
+      const selectedGallery: string[] = [];
       inputDefinitions.forEach((def: any) => {
         const choices = getInputChoices(def);
-        if (choices.length > 0) {
-          const selectedValue = parametricValues[getInputKey(def)];
-          const choice = choices.find((candidate: any) => candidate.value === selectedValue);
-          const choiceImage = choice?.imageUrl || choice?.image;
-          if (choiceImage && !images.includes(choiceImage)) {
-            images.unshift(choiceImage);
-          }
-        }
+        if (choices.length === 0) return;
+        const selectedValue = parametricValues[getInputKey(def)];
+        const choice = choices.find((candidate: any) => candidate.value === selectedValue);
+        const choiceImages = Array.isArray(choice?.images)
+          ? choice.images.map((entry: unknown) => String(entry ?? '').trim()).filter(Boolean)
+          : [];
+        const fallback = String(choice?.imageUrl || choice?.image || '').trim();
+        const nextImages = choiceImages.length > 0 ? choiceImages : (fallback ? [fallback] : []);
+        nextImages.forEach((image: string) => pushUnique(selectedGallery, image));
       });
+      if (selectedGallery.length > 0) {
+        return selectedGallery;
+      }
     }
 
-    return images.length > 0 ? images : ['/placeholder-image.png'];
+    return baseImages.length > 0 ? baseImages : ['/placeholder-image.png'];
   }, [product, configSelections, parametricValues]);
 
   // When selected images change, clamp index
