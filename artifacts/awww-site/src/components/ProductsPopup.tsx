@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Calendar, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
+import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
 import { ProductDetailWorkspace } from "./ProductDetailWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ interface ProductsPopupProps {
   onOpenParametricProduct?: (id: number) => void;
 }
 
+const ITEMS_PER_PAGE = 1;
 const GST_RATE = 0.15;
 
 const PRODUCT_GRADIENTS = [
@@ -45,11 +46,9 @@ const PRODUCT_GRADIENTS = [
 ];
 
 const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
-const CANONICAL_STOREFRONT_STOCK_URL = `${SHARED_IMAGE_BASE_URL}/api/website/stock?websiteId=web-1782561404289`;
 
 type ProductCard = {
   id: number;
-  sourceId?: string;
   name: string;
   description: string | null;
   price: number;
@@ -83,19 +82,6 @@ type ProductCard = {
   };
   customerMessage?: string;
 };
-
-function getStableProductId(value: unknown, index: number): number {
-  const numericId = Number(value);
-  if (Number.isFinite(numericId) && numericId > 0) return numericId;
-
-  const sourceId = String(value ?? `storefront-item-${index}`);
-  let hash = 2166136261;
-  for (let characterIndex = 0; characterIndex < sourceId.length; characterIndex += 1) {
-    hash ^= sourceId.charCodeAt(characterIndex);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0) + 1;
-}
 
 type BookingFormState = {
   fullName: string;
@@ -204,7 +190,6 @@ function normalizeProducts(value: unknown): ProductCard[] {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;
       const rawType = String(record.type ?? record.productType ?? record.serviceType ?? record.itemType ?? "").trim().toLowerCase();
-      if (rawType === "build" || rawType === "build_product") return null;
       const type: ProductCard["type"] = (
         rawType === "service"
         || rawType === "stock_service"
@@ -232,8 +217,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
 
       return {
         ...(record as any),
-        id: getStableProductId(record.id ?? record.productId, index),
-        sourceId: String(record.id ?? record.productId ?? index),
+        id: Number(record.id ?? record.productId ?? index),
         name: String(record.name ?? record.title ?? record.label ?? "Untitled Item"),
         description: typeof record.description === "string" ? record.description : null,
         price: Number.isFinite(price) ? price : 0,
@@ -314,6 +298,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const createBooking = useCreateBooking();
 
   const [activeTab, setActiveTab] = useState<"shop" | "services">("shop");
+  const [shopPage, setShopPage] = useState(0);
+  const [slideDir, setSlideDir] = useState(1);
   const [selectedService, setSelectedService] = useState<ProductCard | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormState>(emptyBookingForm);
   const [shippingSelectProduct, setShippingSelectProduct] = useState<ProductCard | null>(null);
@@ -323,20 +309,13 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [selectedWorkspaceProduct, setSelectedWorkspaceProduct] = useState<ProductCard | null>(null);
-  const [canonicalProductsData, setCanonicalProductsData] = useState<unknown>(null);
 
-  const primaryProducts = normalizeProducts(productsData);
-  const primaryShopItems = primaryProducts.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
-  const serviceItems = primaryProducts.filter((p) => p.type === "service");
-  const canonicalShopItems = normalizeProducts(canonicalProductsData)
-    .filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric")
-    .map((canonicalItem) => {
-      const primaryMatch = primaryShopItems.find((primaryItem) => (
-        String((primaryItem as any).externalId ?? primaryItem.sourceId) === canonicalItem.sourceId
-      ));
-      return primaryMatch ? { ...canonicalItem, id: primaryMatch.id } : canonicalItem;
-    });
-  const shopItems = canonicalShopItems.length > primaryShopItems.length ? canonicalShopItems : primaryShopItems;
+  const products = normalizeProducts(productsData);
+  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
+  const serviceItems = products.filter((p) => p.type === "service");
+  const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
+  const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
+  const currentShopItems = shopItems.slice(safeShopPage * ITEMS_PER_PAGE, (safeShopPage + 1) * ITEMS_PER_PAGE);
   const activePrice = (() => {
     if (!selectedService) return 0;
     if (selectedService.hasVariants && selectedService.variants) {
@@ -346,27 +325,6 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     return selectedService.price;
   })();
   const pricing = selectedService ? getPricingBreakdown(activePrice) : null;
-
-  useEffect(() => {
-    if (!isOpen || canonicalProductsData !== null) return;
-
-    const controller = new AbortController();
-    fetch(CANONICAL_STOREFRONT_STOCK_URL, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Canonical storefront stock request failed: ${response.status}`);
-        return response.json();
-      })
-      .then(setCanonicalProductsData)
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        console.warn("Unable to load canonical storefront stock fallback", error);
-      });
-
-    return () => controller.abort();
-  }, [canonicalProductsData, isOpen]);
 
   useEffect(() => {
     setBookingForm((current) => ({
@@ -383,6 +341,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       setBookingForm(emptyBookingForm);
     }
   }, [isOpen]);
+
+  const goToPage = (next: number) => {
+    setSlideDir(next > shopPage ? 1 : -1);
+    setShopPage(next);
+  };
 
   const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number, configuration?: any) => {
     addToCart.mutate({ data: { productId, quantity: 1, shippingLabel, shippingPrice, configuration } as any }, {
@@ -731,19 +694,25 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 ) : (
                   <>
                     <div className="overflow-hidden relative px-5 pt-4 pb-2" style={{ flex: "1 1 0" }}>
-                      <AnimatePresence mode="wait">
+                      <AnimatePresence mode="wait" custom={slideDir}>
                         <motion.div
-                          key={shopItems.map((item) => item.id).join(":")}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -12 }}
+                          key={safeShopPage}
+                          custom={slideDir}
+                          variants={{
+                            enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
+                            center: { x: 0, opacity: 1 },
+                            exit: (dir: number) => ({ x: dir * -60, opacity: 0 }),
+                          }}
+                          initial="enter"
+                          animate="center"
+                          exit="exit"
                           transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                          className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full overflow-y-auto pr-1 content-start"
+                          className="flex flex-col gap-3 h-full"
                         >
-                          {shopItems.map((item, idx) => (
+                          {currentShopItems.map((item, idx) => (
                             <div
                               key={item.id}
-                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors min-h-[360px]"
+                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors h-full"
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
@@ -843,6 +812,46 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                         </AnimatePresence>
                       </div>
 
+                    {totalPages > 0 && (
+                      <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-primary/10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => goToPage(safeShopPage - 1)}
+                          disabled={safeShopPage === 0}
+                          className="h-8 w-8 text-primary disabled:opacity-25"
+                          data-testid="button-prev-page"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </Button>
+
+                        <div className="flex gap-1.5">
+                          {Array.from({ length: totalPages }).map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => goToPage(i)}
+                              className={`rounded-full transition-all ${
+                                i === safeShopPage
+                                  ? "w-5 h-2 bg-primary"
+                                  : "w-2 h-2 bg-primary/25 hover:bg-primary/50"
+                              }`}
+                              data-testid={`dot-page-${i}`}
+                            />
+                          ))}
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => goToPage(safeShopPage + 1)}
+                          disabled={safeShopPage >= totalPages - 1}
+                          className="h-8 w-8 text-primary disabled:opacity-25"
+                          data-testid="button-next-page"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
