@@ -81,6 +81,7 @@ type ProductCard = {
     allowQuoteRequest: boolean;
   };
   customerMessage?: string;
+  fulfillmentMode?: string;
 };
 
 type BookingFormState = {
@@ -249,6 +250,9 @@ function normalizeProducts(value: unknown): ProductCard[] {
             : typeof record.customerMessage === "string"
               ? record.customerMessage
               : undefined,
+        fulfillmentMode: typeof (record.availability as any)?.fulfillmentMode === "string"
+          ? (record.availability as any).fulfillmentMode
+          : undefined,
       };
     })
     .filter((item): item is ProductCard => item !== null && Number.isFinite(item.id) && item.id > 0);
@@ -771,7 +775,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       {item.description}
                                     </p>
                                   )}
-                                  {item.customerMessage && (
+                                  {item.fulfillmentMode === 'backorder' && item.customerMessage && (
                                     <p className="font-mono text-[11px] text-cyan-100/70 leading-relaxed">
                                       {item.customerMessage}
                                     </p>

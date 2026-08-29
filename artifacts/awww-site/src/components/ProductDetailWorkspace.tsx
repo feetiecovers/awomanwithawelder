@@ -251,7 +251,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const pricing = getPricingBreakdown(activePrice);
   const isAvailable = product.available;
-  const customerMessage = String(rawProduct.customerMessage || rawProduct.availability?.customerMessage || rawProduct.promise?.message || '').trim();
+  const isBackorder = rawProduct.availability?.fulfillmentMode === 'backorder';
+  const customerMessage = isBackorder 
+    ? String(rawProduct.customerMessage || rawProduct.availability?.customerMessage || rawProduct.promise?.message || '').trim() 
+    : '';
 
   // --- HANDLers ---
   const handleNextImage = () => setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
