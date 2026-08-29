@@ -251,9 +251,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const pricing = getPricingBreakdown(activePrice);
   const isAvailable = product.available;
-  const isBackorder = rawProduct.availability?.fulfillmentMode === 'backorder';
+  const isBackorder = product.fulfillmentMode === 'backorder';
   const customerMessage = isBackorder 
-    ? String(rawProduct.customerMessage || rawProduct.availability?.customerMessage || rawProduct.promise?.message || '').trim() 
+    ? String(product.customerMessage || '').trim() 
     : '';
 
   // --- HANDLers ---
