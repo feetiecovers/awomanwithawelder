@@ -6,7 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { buildApiUrl } from '@/lib/api-base';
-import { ProductCard } from '@hooks/useGetProducts';
+
+type ProductCard = {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  type: 'product' | 'service' | 'configurable' | 'parametric';
+  available: boolean;
+  image?: string | null;
+};
 
 const GST_RATE = 0.15;
 
@@ -15,6 +24,39 @@ function getPricingBreakdown(price: number) {
   const gst = Number((price - subtotal).toFixed(2));
   const total = Number(price.toFixed(2));
   return { subtotal, gst, total };
+}
+
+function getInputKey(definition: any): string {
+  return String(definition?.key ?? definition?.name ?? definition?.id ?? '').trim();
+}
+
+function getInputControlType(definition: any): 'slider' | 'number' | 'dropdown' | 'choice' | 'checkbox' | 'text' {
+  const authored = String(definition?.controlType ?? '').trim().toLowerCase();
+  if (authored === 'slider' || authored === 'number' || authored === 'dropdown' || authored === 'choice' || authored === 'checkbox') {
+    return authored;
+  }
+  const legacy = String(definition?.inputType ?? definition?.type ?? '').trim().toLowerCase();
+  if (legacy === 'discrete' || legacy === 'select' || legacy === 'dropdown') return 'dropdown';
+  if (legacy === 'boolean' || legacy === 'checkbox') return 'checkbox';
+  if (legacy === 'number' && definition?.min !== undefined && definition?.max !== undefined) return 'slider';
+  if (legacy === 'number') return 'number';
+  return 'text';
+}
+
+function getInputChoices(definition: any): any[] {
+  if (Array.isArray(definition?.choices)) return definition.choices;
+  if (Array.isArray(definition?.discreteChoices)) return definition.discreteChoices;
+  return [];
+}
+
+function getInputMinimum(definition: any): number | undefined {
+  const value = definition?.minimum ?? definition?.min;
+  return value === undefined || value === null || value === '' ? undefined : Number(value);
+}
+
+function getInputMaximum(definition: any): number | undefined {
+  const value = definition?.maximum ?? definition?.max;
+  return value === undefined || value === null || value === '' ? undefined : Number(value);
 }
 
 interface ProductDetailWorkspaceProps {
@@ -40,9 +82,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const [parametricValues, setParametricValues] = useState<Record<string, any>>({});
 
   // --- STOREFRONT PRODUCT MODEL STATE ---
-  const hasCustomization = product.type === "configurable" || product.type === "parametric";
+  const purchaseModes = Array.isArray(rawProduct.purchaseModes) ? rawProduct.purchaseModes : [];
+  const configurableMode = purchaseModes.find((mode: any) => (mode?.purchaseMode ?? mode?.mode) === 'configurable');
+  const parametricMode = purchaseModes.find((mode: any) => (mode?.purchaseMode ?? mode?.mode) === 'parametric');
+  const optionGroups = configurableMode?.optionGroups || rawProduct.optionGroups || rawProduct.stockProduct?.optionGroups || [];
+  const inputDefinitions = parametricMode?.inputDefinitions || rawProduct.inputDefinitions || rawProduct.product?.inputDefinitions || [];
+  const hasCustomization = product.type === "configurable" || product.type === "parametric" || Boolean(configurableMode || parametricMode);
   const isStockProduct = product.type === "product";
-  const hasNestedCustomization = (rawProduct.stockProduct?.optionGroups?.length > 0) || (rawProduct.inputDefinitions?.length > 0) || (rawProduct.product?.inputDefinitions?.length > 0);
+  const hasNestedCustomization = optionGroups.length > 0 || inputDefinitions.length > 0;
   
   // If it's explicitly configurable/parametric natively, show immediately. 
   // If it's a Stock product that HAS customization, hide behind "Customize Me!"
@@ -57,20 +104,16 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   // --- INITIALIZE CONFIG DEFAULTS ---
   useEffect(() => {
-    if (product.type !== "configurable") return;
-    
     const defaults: Record<string, string[]> = {};
-    const optionGroups = rawProduct.optionGroups || rawProduct.stockProduct?.optionGroups || [];
-    
-    if (rawProduct.defaultConfiguration?.selections) {
-      Object.assign(defaults, rawProduct.defaultConfiguration.selections);
+    const authoredDefaults = configurableMode?.defaultSelections || configurableMode?.defaultConfiguration?.selections || rawProduct.defaultConfiguration?.selections;
+
+    if (authoredDefaults) {
+      Object.assign(defaults, authoredDefaults);
     } else {
       optionGroups.forEach((group: any) => {
         const defaultOptions = group.options?.filter((o: any) => o.isDefault) || [];
         if (defaultOptions.length > 0) {
           defaults[group.id] = defaultOptions.map((o: any) => String(o.id));
-        } else if (group.selectionType !== "multiple" && group.options?.length > 0) {
-          defaults[group.id] = [String(group.options[0].id)];
         } else {
           defaults[group.id] = [];
         }
@@ -81,19 +124,16 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   // --- INITIALIZE PARAMETRIC DEFAULTS ---
   useEffect(() => {
-    if (product.type !== "parametric") return;
-    
-    const inputDefinitions = rawProduct.inputDefinitions || rawProduct.product?.inputDefinitions || [];
     const defaults: Record<string, any> = {};
     
     inputDefinitions.forEach((def: any) => {
-      if (def.type === "number" && def.min !== undefined) {
-        defaults[def.name] = def.min; // Set to minimum by default if numeric
-      } else if (def.type === "discrete" && def.discreteChoices?.length > 0) {
-        defaults[def.name] = def.discreteChoices[0].value;
-      } else if (def.type === "boolean") {
-        defaults[def.name] = false;
-      }
+      const key = getInputKey(def);
+      if (!key) return;
+      const controlType = getInputControlType(def);
+      const defaultChoice = getInputChoices(def).find((choice: any) => choice?.isDefault === true);
+      if (def.defaultValue !== undefined) defaults[key] = def.defaultValue;
+      else if (defaultChoice) defaults[key] = defaultChoice.value;
+      else if (controlType === 'checkbox') defaults[key] = false;
     });
     setParametricValues(defaults);
   }, [product]);
@@ -104,7 +144,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     if (product.image) images.push(product.image);
     
     // Add additional images from nested payloads if available
-    if (product.type === "configurable") {
+    if (optionGroups.length > 0) {
       // Base config images
       const baseImages = rawProduct.stockProduct?.images || rawProduct.images || [];
       baseImages.forEach((img: string) => {
@@ -112,32 +152,41 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       });
       
       // Look for selected option images
-      const optionGroups = rawProduct.optionGroups || rawProduct.stockProduct?.optionGroups || [];
-      optionGroups.forEach((group: any) => {
-        const selected = configSelections[group.id] || [];
-        selected.forEach((optId) => {
-          const opt = group.options?.find((o: any) => String(o.id) === optId);
-          if (opt?.image && !images.includes(opt.image)) {
-            images.unshift(opt.image); // Option images take precedence (put at front)
-          }
-        });
+      const authoredDefaults = configurableMode?.defaultSelections || configurableMode?.defaultConfiguration?.selections || rawProduct.defaultConfiguration?.selections;
+      const isAuthoredDefault = authoredDefaults && Object.entries(authoredDefaults).every(([groupId, optionIds]) => {
+        const selected = [...(configSelections[groupId] || [])].sort();
+        const expected = [...(Array.isArray(optionIds) ? optionIds.map(String) : [])].sort();
+        return selected.length === expected.length && selected.every((value, index) => value === expected[index]);
       });
+      if (!isAuthoredDefault) {
+        optionGroups.forEach((group: any) => {
+          const selected = configSelections[group.id] || [];
+          selected.forEach((optId) => {
+            const opt = group.options?.find((o: any) => String(o.id) === optId);
+            const optionImage = opt?.imageUrl || opt?.image || opt?.media;
+            if (optionImage && !images.includes(optionImage)) {
+              images.unshift(optionImage);
+            }
+          });
+        });
+      }
     }
     
-    if (product.type === "parametric") {
+    if (inputDefinitions.length > 0) {
       const baseImages = rawProduct.product?.images || rawProduct.images || [];
       baseImages.forEach((img: string) => {
         if (!images.includes(img)) images.push(img);
       });
       
       // Look for selected discrete choice images
-      const inputDefinitions = rawProduct.inputDefinitions || rawProduct.product?.inputDefinitions || [];
       inputDefinitions.forEach((def: any) => {
-        if (def.type === "discrete" && def.discreteChoices) {
-          const selectedValue = parametricValues[def.name];
-          const choice = def.discreteChoices.find((c: any) => c.value === selectedValue);
-          if (choice?.image && !images.includes(choice.image)) {
-            images.unshift(choice.image); // Put at front
+        const choices = getInputChoices(def);
+        if (choices.length > 0) {
+          const selectedValue = parametricValues[getInputKey(def)];
+          const choice = choices.find((candidate: any) => candidate.value === selectedValue);
+          const choiceImage = choice?.imageUrl || choice?.image;
+          if (choiceImage && !images.includes(choiceImage)) {
+            images.unshift(choiceImage);
           }
         }
       });
@@ -162,11 +211,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     
     const payload: any = {};
     
-    if (product.type === "configurable") {
+    if (optionGroups.length > 0) {
       const selectedIds: string[] = [];
       const details: any[] = [];
-      const optionGroups = rawProduct.optionGroups || rawProduct.stockProduct?.optionGroups || [];
-      
       optionGroups.forEach((group: any) => {
         const selected = configSelections[group.id] || [];
         selected.forEach((optId) => {
@@ -191,7 +238,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       payload.totalPriceAdjustment = adjustment;
     }
     
-    if (product.type === "parametric") {
+    if (inputDefinitions.length > 0) {
        // Assuming param calculation is primarily done on backend, but we can send values
        payload.values = parametricValues;
     }
@@ -204,6 +251,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const pricing = getPricingBreakdown(activePrice);
   const isAvailable = product.available;
+  const customerMessage = String(rawProduct.customerMessage || rawProduct.availability?.customerMessage || rawProduct.promise?.message || '').trim();
 
   // --- HANDLers ---
   const handleNextImage = () => setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
@@ -360,11 +408,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 <span className="font-mono text-xl sm:text-2xl text-[#f8fafc] font-medium tracking-tight">
                   NZ${activePrice.toFixed(2)}
                 </span>
-                <span className={`text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border ${isAvailable ? 'text-primary border-primary bg-primary/10' : 'text-red-400 border-red-400/50 bg-red-400/10'}`}>
+                <span className={`text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border ${isAvailable ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/40 bg-red-500/10'}`}>
                   {isAvailable ? 'AVAILABLE NOW' : 'OUT OF STOCK'}
                 </span>
              </div>
              <p className="text-[#94a3b8] text-sm leading-relaxed mt-2" dangerouslySetInnerHTML={{ __html: product.description || "" }} />
+             {customerMessage && (
+               <p className="font-mono text-xs text-cyan-100/70 leading-relaxed">{customerMessage}</p>
+             )}
           </div>
 
           {/* Customize Me Button for Stock Products */}
@@ -386,7 +437,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
           {showCustomizer && (
             <>
               {/* Configurable Product Controls */}
-              {product.type === "configurable" && (rawProduct.optionGroups || rawProduct.stockProduct?.optionGroups)?.map((group: any) => (
+              {optionGroups.map((group: any) => (
                 <div key={group.id} className="flex flex-col gap-3">
                   <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{group.name} {group.required && '*'}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -416,37 +467,67 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               ))}
 
               {/* Parametric Product Controls */}
-              {(product.type === "parametric" || hasNestedCustomization) && (rawProduct.inputDefinitions || rawProduct.product?.inputDefinitions)?.map((def: any) => (
-                <div key={def.name} className="flex flex-col gap-3">
-                   <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || def.name}</h4>
-                   
-                   {def.type === "number" && def.min !== undefined && def.max !== undefined && (
+              {inputDefinitions.map((def: any) => {
+                const inputKey = getInputKey(def);
+                const controlType = getInputControlType(def);
+                const minimum = getInputMinimum(def);
+                const maximum = getInputMaximum(def);
+                const choices = getInputChoices(def);
+                const unit = def.unit || def.units || '';
+                return (
+                <div key={inputKey} className="flex flex-col gap-3">
+                   <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || inputKey}</h4>
+
+                   {controlType === 'slider' && minimum !== undefined && maximum !== undefined && (
                       <div className="flex flex-col gap-2 p-4 border border-primary/20 rounded-lg bg-[#0d1520]/50">
                          <div className="flex justify-between items-center font-mono text-[10px] text-primary/60">
-                           <span>{def.min} {def.units}</span>
-                           <span className="text-primary font-bold text-xs">{parametricValues[def.name]} {def.units}</span>
-                           <span>{def.max} {def.units}</span>
+                           <span>{minimum} {unit}</span>
+                           <span className="text-primary font-bold text-xs">{parametricValues[inputKey] ?? minimum} {unit}</span>
+                           <span>{maximum} {unit}</span>
                          </div>
                          <input 
                            type="range"
-                           min={def.min}
-                           max={def.max}
+                           min={minimum}
+                           max={maximum}
                            step={def.step || 1}
-                           value={parametricValues[def.name] || def.min}
-                           onChange={(e) => handleParametricChange(def.name, Number(e.target.value))}
+                           value={parametricValues[inputKey] ?? minimum}
+                           onChange={(e) => handleParametricChange(inputKey, Number(e.target.value))}
                            className="w-full accent-primary h-1.5 bg-primary/20 rounded-lg appearance-none cursor-pointer"
                          />
                       </div>
                    )}
 
-                   {def.type === "discrete" && def.discreteChoices && (
+                   {controlType === 'number' && (
+                     <Input
+                       type="number"
+                       min={minimum}
+                       max={maximum}
+                       step={def.step || 1}
+                       value={parametricValues[inputKey] ?? ''}
+                       onChange={(event) => handleParametricChange(inputKey, event.target.value === '' ? undefined : Number(event.target.value))}
+                       className="bg-black/30 border-primary/20 text-white"
+                     />
+                   )}
+
+                   {controlType === 'dropdown' && (
+                     <select
+                       value={parametricValues[inputKey] ?? ''}
+                       onChange={(event) => handleParametricChange(inputKey, event.target.value)}
+                       className="h-10 rounded-md border border-primary/20 bg-black/30 px-3 font-mono text-xs text-white"
+                     >
+                       <option value="">Choose an option</option>
+                       {choices.map((choice: any) => <option key={choice.id ?? choice.value} value={choice.value}>{choice.label || choice.value}</option>)}
+                     </select>
+                   )}
+
+                   {controlType === 'choice' && choices.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {def.discreteChoices.map((choice: any) => {
-                           const isSelected = parametricValues[def.name] === choice.value;
+                        {choices.map((choice: any) => {
+                           const isSelected = parametricValues[inputKey] === choice.value;
                            return (
                              <button
-                               key={choice.value}
-                               onClick={() => handleParametricChange(def.name, choice.value)}
+                               key={choice.id ?? choice.value}
+                               onClick={() => handleParametricChange(inputKey, choice.value)}
                                className={`text-left p-3 rounded-lg border font-mono text-xs transition-all ${
                                  isSelected
                                    ? "border-primary bg-primary/10 text-primary shadow-[inset_0_0_12px_rgba(26,157,224,0.2)]"
@@ -465,19 +546,27 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                       </div>
                    )}
 
-                   {def.type === "boolean" && (
+                   {controlType === 'checkbox' && (
                       <label className="flex items-center gap-3 cursor-pointer p-3 border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
                          <input 
                            type="checkbox"
-                           checked={parametricValues[def.name] || false}
-                           onChange={(e) => handleParametricChange(def.name, e.target.checked)}
+                           checked={parametricValues[inputKey] || false}
+                           onChange={(e) => handleParametricChange(inputKey, e.target.checked)}
                            className="w-4 h-4 accent-primary rounded border-primary/30"
                          />
-                         <span className="font-mono text-xs text-muted-foreground">Enable {def.label || def.name}</span>
+                         <span className="font-mono text-xs text-muted-foreground">Enable {def.label || inputKey}</span>
                       </label>
                    )}
+
+                   {controlType === 'text' && (
+                     <Input
+                       value={parametricValues[inputKey] ?? ''}
+                       onChange={(event) => handleParametricChange(inputKey, event.target.value)}
+                       className="bg-black/30 border-primary/20 text-white"
+                     />
+                   )}
                 </div>
-              ))}
+              );})}
             </>
           )}
 

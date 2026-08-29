@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
-import { Switch } from "@components/ui/switch";
 import { ProductDetailWorkspace } from "./ProductDetailWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +80,7 @@ type ProductCard = {
     allowCheckout: boolean;
     allowQuoteRequest: boolean;
   };
+  customerMessage?: string;
 };
 
 type BookingFormState = {
@@ -216,6 +216,7 @@ function normalizeProducts(value: unknown): ProductCard[] {
         : [];
 
       return {
+        ...(record as any),
         id: Number(record.id ?? record.productId ?? index),
         name: String(record.name ?? record.title ?? record.label ?? "Untitled Item"),
         description: typeof record.description === "string" ? record.description : null,
@@ -241,6 +242,13 @@ function normalizeProducts(value: unknown): ProductCard[] {
           allowCheckout: (record.commerceActions as any).allowCheckout === true,
           allowQuoteRequest: (record.commerceActions as any).allowQuoteRequest !== false,
         } : undefined,
+        customerMessage: typeof (record.availability as any)?.customerMessage === "string"
+          ? (record.availability as any).customerMessage
+          : typeof (record.promise as any)?.message === "string"
+            ? (record.promise as any).message
+            : typeof record.customerMessage === "string"
+              ? record.customerMessage
+              : undefined,
       };
     })
     .filter((item): item is ProductCard => item !== null && Number.isFinite(item.id) && item.id > 0);
@@ -754,7 +762,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 <div className="flex flex-col justify-start gap-2 flex-1 min-w-0">
                                   <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-green-400 border-green-400/30 bg-green-400/10' : 'text-red-400 border-red-400/30 bg-red-400/10'}`}>
+                                    <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/30 bg-red-500/10'}`}>
                                       {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
                                     </span>
                                   </div>
@@ -763,11 +771,16 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       {item.description}
                                     </p>
                                   )}
+                                  {item.customerMessage && (
+                                    <p className="font-mono text-[11px] text-cyan-100/70 leading-relaxed">
+                                      {item.customerMessage}
+                                    </p>
+                                  )}
                                 </div>
                                 
                                 <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
                                   <div className="text-left sm:text-right">
-                                    <span className="font-mono text-primary font-bold text-xl sm:text-2xl">{formatCurrency(item.price)}</span>
+                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">{formatCurrency(item.price)}</span>
                                   </div>
                                   
                                   <div className="flex flex-col gap-2">

@@ -85,6 +85,48 @@ function getEffectiveWebsiteId(req: Request, payload?: Record<string, unknown>):
   return queryWebsiteId || bodyWebsiteId;
 }
 
+function attachPurchaseModeDefinitions(
+  stockProducts: unknown,
+  configurableProducts: unknown,
+  parametricProducts: unknown,
+): Record<string, unknown>[] {
+  const configurable = Array.isArray(configurableProducts) ? configurableProducts : [];
+  const parametric = Array.isArray(parametricProducts) ? parametricProducts : [];
+  const normalizeId = (value: unknown) => String(value ?? "").trim().toLowerCase();
+
+  return (Array.isArray(stockProducts) ? stockProducts : [])
+    .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+    .map((product) => {
+      const productId = normalizeId(product.id ?? product.productId ?? product.externalId);
+      const authoredModes = [
+        ...configurable
+          .filter((definition: any) => normalizeId(definition?.commercialProductId ?? definition?.baseStockProductId) === productId)
+          .map((definition: any) => ({ ...definition, purchaseMode: "configurable" })),
+        ...parametric
+          .filter((definition: any) => normalizeId(definition?.commercialProductId ?? definition?.baseStockProductId) === productId)
+          .map((definition: any) => ({ ...definition, purchaseMode: "parametric" })),
+      ];
+      const existingModes = Array.isArray(product.purchaseModes) ? product.purchaseModes : [];
+      const modesByName = new Map<string, Record<string, unknown>>();
+      for (const mode of [...existingModes, ...authoredModes]) {
+        if (!mode || typeof mode !== "object") continue;
+        const record = mode as Record<string, unknown>;
+        const modeName = String(record.purchaseMode ?? record.mode ?? "").trim().toLowerCase();
+        if (!modeName) continue;
+        modesByName.set(modeName, { ...record, purchaseMode: modeName });
+      }
+      if (!modesByName.has("standard")) {
+        modesByName.set("standard", { purchaseMode: "standard", id: product.id });
+      }
+
+      return {
+        ...product,
+        purchaseModes: Array.from(modesByName.values()),
+        availablePurchaseModes: Array.from(modesByName.keys()),
+      };
+    });
+}
+
 function normalizeIncomingCollection(
   collection: unknown,
   sourceType: SyncedSourceType,
@@ -126,6 +168,9 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
   const stockProducts = Array.isArray(payload.stockProducts)
     ? payload.stockProducts
     : incomingProductEntries;
+  const configurableProducts = Array.isArray(payload.configurableProducts) ? payload.configurableProducts : [];
+  const parametricProducts = Array.isArray(payload.parametricProducts) ? payload.parametricProducts : [];
+  const enrichedStockProducts = attachPurchaseModeDefinitions(stockProducts, configurableProducts, parametricProducts);
   const stockBuilds = Array.isArray(payload.stockBuilds)
     ? payload.stockBuilds
     : Array.isArray(payload.builds)
@@ -144,7 +189,9 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     bodyType: Array.isArray(req.body) ? "array" : typeof req.body,
     payloadKeys: payload && typeof payload === "object" && !Array.isArray(payload) ? Object.keys(payload).slice(0, 20) : [],
     incomingProducts: incomingProducts.length,
-    stockProducts: Array.isArray(stockProducts) ? stockProducts.length : 0,
+    stockProducts: enrichedStockProducts.length,
+    configurableProducts: configurableProducts.length,
+    parametricProducts: parametricProducts.length,
     stockBuilds: Array.isArray(stockBuilds) ? stockBuilds.length : 0,
     stockServiceProducts: Array.isArray(stockServiceProducts) ? stockServiceProducts.length : 0,
   }, "Received ecommerce stock payload");
@@ -156,7 +203,7 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
   };
 
   const normalizedStockProducts = normalizeIncomingCollection(
-    stockProducts,
+    enrichedStockProducts,
     "product",
     effectiveWebsiteId,
     existingByKey,
@@ -177,7 +224,11 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     nextIdRef,
   );
 
-  if (normalizedStockProducts.length === 0 && normalizedBuildProducts.length === 0 && normalizedServiceProducts.length === 0) {
+  const authoritativeEmptyCatalog = payload.authoritativeWebsiteSync === true
+    && Array.isArray(payload.stockProducts)
+    && Array.isArray(payload.stockBuilds)
+    && Array.isArray(payload.stockServices);
+  if (normalizedStockProducts.length === 0 && normalizedBuildProducts.length === 0 && normalizedServiceProducts.length === 0 && !authoritativeEmptyCatalog) {
     req.log.warn({
       effectiveWebsiteId,
       payloadKeys: payload && typeof payload === "object" && !Array.isArray(payload) ? Object.keys(payload).slice(0, 20) : [],
@@ -213,11 +264,12 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
       const matchesWebsite = websiteIds.some((id) => normalizeWebsiteId(id) === effectiveWebsiteId);
       if (!matchesWebsite) continue;
 
+      const authoritativeWebsiteSync = payload.authoritativeWebsiteSync === true;
       const hasIncomingCollection = existing._sourceType === "product"
-        ? Array.isArray(stockProducts) && stockProducts.length > 0
+        ? (authoritativeWebsiteSync ? Array.isArray(payload.stockProducts) : enrichedStockProducts.length > 0)
         : existing._sourceType === "build"
-          ? Array.isArray(stockBuilds) && stockBuilds.length > 0
-        : Array.isArray(stockServiceProducts) && stockServiceProducts.length > 0;
+          ? (authoritativeWebsiteSync ? Array.isArray(payload.stockBuilds) : Array.isArray(stockBuilds) && stockBuilds.length > 0)
+        : (authoritativeWebsiteSync ? Array.isArray(payload.stockServices) : Array.isArray(stockServiceProducts) && stockServiceProducts.length > 0);
       if (!hasIncomingCollection) continue;
 
       if (!incomingKeysByType.get(existing._sourceType)?.has(key)) {
