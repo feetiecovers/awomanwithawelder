@@ -54,8 +54,9 @@ async function buildCartResponse(cartItems: { productId: number; quantity: numbe
   const total = items.reduce((sum, item) => {
     if (!item) return sum;
     const basePrice = item.product.price;
+    const configAdj = Number(item.configuration?.totalPriceAdjustment || 0);
     const shipping = item.shippingPrice ?? 0;
-    return sum + ((basePrice + shipping) * item.quantity);
+    return sum + ((basePrice + configAdj + shipping) * item.quantity);
   }, 0);
 
   return { items, total };

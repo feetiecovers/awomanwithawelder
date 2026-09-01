@@ -251,10 +251,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const pricing = getPricingBreakdown(activePrice);
   const isAvailable = product.available;
-  const isBackorder = product.fulfillmentMode === 'backorder';
-  const customerMessage = isBackorder 
-    ? String(product.customerMessage || '').trim() 
-    : '';
+  const isBackorder = rawProduct.fulfillmentMode === 'backorder';
+  const customerMessage = String(rawProduct.customerMessage || '').trim();
 
   // --- HANDLers ---
   const handleNextImage = () => setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);

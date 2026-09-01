@@ -775,7 +775,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       {item.description}
                                     </p>
                                   )}
-                                  {item.fulfillmentMode === 'backorder' && item.customerMessage && (
+                                  {item.customerMessage && (
                                     <p className="font-mono text-[11px] text-cyan-100/70 leading-relaxed">
                                       {item.customerMessage}
                                     </p>

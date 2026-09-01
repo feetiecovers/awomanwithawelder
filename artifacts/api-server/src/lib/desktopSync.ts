@@ -1,4 +1,4 @@
-﻿type SyncConfig = {
+type SyncConfig = {
   websiteId: string;
   brandName: string;
   desktopBaseUrl: string;
@@ -16,6 +16,7 @@ export type OrderForwardLineItem = {
   unitPrice: number;
   total: number;
   itemType: "product" | "service";
+  configuration?: any;
 };
 
 export type BookingForwardPayload = {

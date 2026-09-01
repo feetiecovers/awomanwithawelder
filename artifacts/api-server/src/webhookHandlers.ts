@@ -78,7 +78,7 @@ export class WebhookHandlers {
     }
 
     const session = (await stripe.checkout.sessions.retrieve(event.data.object.id, {
-      expand: ["line_items", "payment_intent"],
+      expand: ["line_items", "line_items.data.price.product", "payment_intent"],
     })) as any;
 
     const paymentIntent = typeof session.payment_intent === "object" && session.payment_intent !== null
@@ -94,22 +94,35 @@ export class WebhookHandlers {
     );
 
     const lineItemsFromMetadata = parseMetadataItems(session.metadata?.items);
-    const lineItems = lineItemsFromMetadata.length > 0
-      ? lineItemsFromMetadata
-      : (session.line_items?.data || []).map((lineItem: any, index: number) => {
-          const quantity = Math.max(1, lineItem.quantity || 1);
-          const unitPrice = (lineItem.price?.unit_amount || 0) / 100;
-          return {
-            id: lineItem.id,
-            productId: lineItem.price?.product || lineItem.description || `product-${index}`,
-            description: lineItem.description || `Item ${index + 1}`,
-            quantity,
-            unitPrice,
-            total: unitPrice * quantity,
-            itemType: "product" as const,
-            sku: null,
-          };
-        });
+    const lineItems = (session.line_items?.data || []).map((lineItem: any, index: number) => {
+      const product = lineItem.price?.product;
+      const productMetadata = product?.metadata || {};
+      
+      const quantity = Math.max(1, lineItem.quantity || 1);
+      const unitPrice = (lineItem.price?.unit_amount || 0) / 100;
+      
+      // Fallback to metadata array if needed, but prefer Stripe's native line items
+      const metaItem = lineItemsFromMetadata.find(m => m.id === lineItem.id || m.productId === productMetadata.productId) || lineItemsFromMetadata[index];
+      
+      let configuration: any;
+      try {
+        if (productMetadata.configuration) {
+          configuration = JSON.parse(productMetadata.configuration);
+        }
+      } catch (e) {}
+
+      return {
+        id: lineItem.id,
+        productId: productMetadata.productId || metaItem?.productId || product?.id || lineItem.description || `product-${index}`,
+        description: product?.name || lineItem.description || metaItem?.description || `Item ${index + 1}`,
+        quantity,
+        unitPrice: metaItem?.unitPrice ?? unitPrice,
+        total: metaItem?.total ?? (unitPrice * quantity),
+        itemType: (metaItem?.itemType === "service" || productMetadata.itemType === "service") ? "service" : "product" as const,
+        sku: productMetadata.sku || metaItem?.sku || null,
+        configuration: configuration || metaItem?.configuration,
+      };
+    }).filter((item: any) => item.description !== "Shipping & Delivery");
 
     const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
     const shippingTotal = toNumber(session.metadata?.shippingTotal) || 0;
@@ -181,6 +194,7 @@ export class WebhookHandlers {
         price: item.unitPrice,
         total: item.total,
         sku: item.sku || "",
+        configuration: item.configuration,
       })),
       source: "stripe",
       metadata: session.metadata || {},

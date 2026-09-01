@@ -77,11 +77,12 @@ router.post("/checkout", async (req: any, res) => {
         if (!product) return null;
         const syncedEntry = syncedEntryMap.get(item.productId);
         const itemPrice = Number(product.price);
+        const configAdj = Number((item as any).configuration?.totalPriceAdjustment || 0);
         const itemName = product.name;
         return {
           price_data: {
             currency: "nzd",
-            unit_amount: Math.round(itemPrice * 100),
+            unit_amount: Math.round((itemPrice + configAdj) * 100),
             product_data: {
               name: itemName,
               metadata: {
@@ -129,6 +130,8 @@ router.post("/checkout", async (req: any, res) => {
       const product = productMap.get(item.productId);
       const syncedEntry = syncedEntryMap.get(item.productId);
       const unitPrice = Number(product?.price ?? 0);
+      const configAdj = Number((item as any).configuration?.totalPriceAdjustment || 0);
+      const finalUnitPrice = unitPrice + configAdj;
       const itemName = product?.name ?? `Product ${item.productId}`;
       return {
         id: String(item.productId),
@@ -137,8 +140,8 @@ router.post("/checkout", async (req: any, res) => {
         name: itemName,
         description: product?.description ?? itemName,
         quantity: item.quantity,
-        unitPrice,
-        total: unitPrice * item.quantity,
+        unitPrice: finalUnitPrice,
+        total: finalUnitPrice * item.quantity,
         itemType: product?.type === "service" ? "service" : "product",
         configuration: (item as any).configuration ?? undefined,
       };
