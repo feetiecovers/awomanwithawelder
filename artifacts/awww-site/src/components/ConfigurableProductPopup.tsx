@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
 import { useQueryClient } from "@tanstack/react-query";
+import { QuoteRequestModal } from "./QuoteRequestModal";
 import { useListProducts, useAddToCart, getGetCartQueryKey } from "@workspace/api-client-react";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
@@ -35,17 +36,6 @@ interface ConfigurableProductPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onRequireSignIn?: () => void;
-}
-
-interface QuoteFormState {
-  fullName: string;
-  email: string;
-  phone: string;
-  streetAddress: string;
-  townCity: string;
-  region: string;
-  postcode: string;
-  notes: string;
 }
 
 const GST_RATE = 0.15;
@@ -83,19 +73,6 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
 
   // Quote Modal Overlay state
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
-    fullName: "",
-    email: "",
-    phone: "",
-    streetAddress: "",
-    townCity: "",
-    region: "",
-    postcode: "",
-    notes: "",
-  });
 
   // Initialize default selections
   useEffect(() => {
@@ -222,88 +199,21 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
     );
   };
 
-  const handleSubmitQuote = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (missingRequiredGroups.length > 0) {
-      toast({
-        title: "Required Options Missing",
-        description: `Please select an option for: ${missingRequiredGroups.join(", ")}.`,
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!quoteForm.fullName || !quoteForm.email || !quoteForm.phone) {
-      toast({
-        title: "Required Fields Missing",
-        description: "Please enter your name, email, and phone number.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(buildApiUrl("/api/quote-request"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          source: "quote-request",
-          productId: product.id,
-          configurableProductId: product.id,
-          quantity: 1,
-          fullName: quoteForm.fullName,
-          email: quoteForm.email,
-          phone: quoteForm.phone,
-          address1: quoteForm.streetAddress,
-          city: quoteForm.townCity,
-          suburb: quoteForm.region,
-          zipCode: quoteForm.postcode,
-          notes: quoteForm.notes,
-          selections: selections,
-          selectedOptionIds: selectedOptionIds,
-          configuration: {
-            selections,
-            selectedOptionIds,
-            selectedOptions: optionDetails,
-            totalPriceAdjustment
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error || "Failed to submit quote");
-      }
-
-      setIsSubmitted(true);
-      toast({
-        title: "Quote Submitted Successfully!",
-        description: `Thank you ${quoteForm.fullName}! Our team will contact you shortly.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Quote Submission Failed",
-        description: error?.message || "Please try again in a moment.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const resetQuoteForm = () => {
-    setIsQuoteModalOpen(false);
-    setIsSubmitted(false);
-    setIsSubmitting(false);
-    setQuoteForm({ fullName: "", email: "", phone: "", streetAddress: "", townCity: "", region: "", postcode: "", notes: "" });
-  };
-
   if (!isOpen || !product) return null;
 
   return (
     <AnimatePresence>
+      <QuoteRequestModal
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+        product={product}
+        configuration={{
+          selections,
+          selectedOptionIds,
+          selectedOptions: optionDetails,
+          totalPriceAdjustment,
+        }}
+      />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
         {/* Animated Glow Backdrop */}
         <motion.div
@@ -558,79 +468,17 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
           </div>
         </motion.div>
 
-        {/* Quote Modal */}
-        <AnimatePresence>
-          {isQuoteModalOpen && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 flex items-center justify-center p-4"
-            >
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsQuoteModalOpen(false)} />
-              
-              <motion.div
-                initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 10 }}
-                className="relative w-full max-w-xl bg-[#16061c] border border-[#ff2a8d]/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-full"
-              >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-pink-500/20 bg-black/20">
-                  <h3 className="font-mono text-sm font-bold uppercase tracking-widest text-[#ff2a8d] flex items-center gap-2">
-                    <Send className="w-4 h-4" /> Request Quote
-                  </h3>
-                  <Button variant="ghost" size="icon" onClick={() => setIsQuoteModalOpen(false)} className="h-8 w-8 rounded-full text-pink-200/70 hover:text-white hover:bg-white/10">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="overflow-y-auto p-5 no-scrollbar">
-                  {isSubmitted ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-[#ff2a8d]/20 border border-[#ff2a8d]/50 flex items-center justify-center mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-[#ff2a8d]" />
-                      </div>
-                      <h4 className="text-lg font-bold text-white mb-2">Quote Request Sent!</h4>
-                      <p className="text-sm text-pink-200/70 max-w-sm mb-6">
-                        Thank you for your interest. Our team will review your configuration and contact you shortly.
-                      </p>
-                      <Button onClick={resetQuoteForm} className="bg-[#ff2a8d] text-white hover:bg-[#d92376]">
-                        Close &amp; Return
-                      </Button>
-                    </div>
-                  ) : (
-                    <form id="quote-form" onSubmit={handleSubmitQuote} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono text-pink-200/70 uppercase">Full Name *</label>
-                          <Input required value={quoteForm.fullName} onChange={e => setQuoteForm({...quoteForm, fullName: e.target.value})} className="bg-black/40 border-pink-500/30 text-sm h-10" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono text-pink-200/70 uppercase">Phone *</label>
-                          <Input required type="tel" value={quoteForm.phone} onChange={e => setQuoteForm({...quoteForm, phone: e.target.value})} className="bg-black/40 border-pink-500/30 text-sm h-10" />
-                        </div>
-                        <div className="space-y-1.5 sm:col-span-2">
-                          <label className="text-[10px] font-mono text-pink-200/70 uppercase">Email Address *</label>
-                          <Input required type="email" value={quoteForm.email} onChange={e => setQuoteForm({...quoteForm, email: e.target.value})} className="bg-black/40 border-pink-500/30 text-sm h-10" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-mono text-pink-200/70 uppercase">Additional Notes</label>
-                        <Textarea value={quoteForm.notes} onChange={e => setQuoteForm({...quoteForm, notes: e.target.value})} className="bg-black/40 border-pink-500/30 text-sm min-h-[80px]" placeholder="Any special requests..." />
-                      </div>
-                    </form>
-                  )}
-                </div>
-
-                {!isSubmitted && (
-                  <div className="px-5 py-4 border-t border-pink-500/20 bg-black/30 flex justify-end gap-3">
-                    <Button type="button" variant="ghost" onClick={() => setIsQuoteModalOpen(false)} className="text-pink-200 hover:text-white">Cancel</Button>
-                    <Button form="quote-form" type="submit" disabled={isSubmitting} className="bg-[#ff2a8d] hover:bg-[#d92376] text-white">
-                      {isSubmitting ? "Submitting..." : "Submit Quote Request"}
-                    </Button>
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <QuoteRequestModal 
+          isOpen={isQuoteModalOpen} 
+          onClose={() => setIsQuoteModalOpen(false)} 
+          product={product ? { 
+            id: product.id, 
+            name: product.name, 
+            description: product.description || null, 
+            price: totalIncGst, 
+            image: product.image || (product.images?.[0]) || null 
+          } : null} 
+        />
       </div>
     </AnimatePresence>
   );

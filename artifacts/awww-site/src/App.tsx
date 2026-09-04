@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import BookingConfirmation from "@/pages/BookingConfirmation";
 import RequestQuote from "@/pages/RequestQuote";
+import AboutMe from "@/pages/AboutMe";
 import PasswordGate from "@/components/PasswordGate";
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/booking-confirmation" component={BookingConfirmation} />
       <Route path="/request-quote" component={RequestQuote} />
+      <Route path="/about" component={AboutMe} />
       <Route component={NotFound} />
     </Switch>
   );

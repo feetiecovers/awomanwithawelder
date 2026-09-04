@@ -755,8 +755,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                         backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(26,157,224,0.04) 8px, rgba(26,157,224,0.04) 10px)",
                                       }}
                                     />
-                                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/25 z-10 whitespace-nowrap">
-                                      No Image Available
+                                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/40 z-10 text-center px-4 leading-relaxed">
+                                      Placeholder<br/>Owner Photography Required
                                     </span>
                                   </>
                                 )}

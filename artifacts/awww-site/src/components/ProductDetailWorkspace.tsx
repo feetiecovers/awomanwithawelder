@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { buildApiUrl } from '@/lib/api-base';
+import { QuoteRequestModal } from './QuoteRequestModal';
 
 type ProductCard = {
   id: number;
@@ -98,9 +99,6 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   // --- QUOTE STATE ---
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [quoteForm, setQuoteForm] = useState({ fullName: "", email: "", phone: "", streetAddress: "", townCity: "", region: "", postcode: "", notes: "" });
 
   // --- INITIALIZE CONFIG DEFAULTS ---
   useEffect(() => {
@@ -192,7 +190,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       }
     }
 
-    return baseImages.length > 0 ? baseImages : ['/placeholder-image.png'];
+    return baseImages;
   }, [product, configSelections, parametricValues]);
 
   // When selected images change, clamp index
@@ -283,71 +281,6 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     setIsQuoteModalOpen(true);
   };
 
-  const resetQuoteForm = () => {
-    setIsQuoteModalOpen(false);
-    setIsSubmitted(false);
-    setIsSubmitting(false);
-    setQuoteForm({ fullName: "", email: "", phone: "", streetAddress: "", townCity: "", region: "", postcode: "", notes: "" });
-  };
-
-  const handleSubmitQuote = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quoteForm.fullName || !quoteForm.email || !quoteForm.phone) {
-      toast({
-        title: "Required Fields Missing",
-        description: "Please enter your name, email, and phone number.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(buildApiUrl("/api/quote-request"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          source: "quote-request",
-          productId: product.id,
-          configurableProductId: product.id,
-          quantity: 1,
-          fullName: quoteForm.fullName,
-          email: quoteForm.email,
-          phone: quoteForm.phone,
-          address1: quoteForm.streetAddress,
-          city: quoteForm.townCity,
-          suburb: quoteForm.region,
-          zipCode: quoteForm.postcode,
-          notes: quoteForm.notes,
-          selections: configSelections,
-          values: parametricValues,
-          configuration: configurationPayload
-        }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error || "Failed to submit quote");
-      }
-
-      setIsSubmitted(true);
-      toast({
-        title: "Quote Submitted Successfully!",
-        description: `Thank you ${quoteForm.fullName}! Our team will contact you shortly.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Quote Submission Failed",
-        description: error?.message || "Please try again in a moment.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -371,18 +304,32 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         
         {/* Top: Image Gallery */}
         <div className="relative w-full min-h-[250px] sm:min-h-[350px] bg-black/40 flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/10">
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={activeImage}
-              src={activeImage}
-              alt={product.name}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
-          </AnimatePresence>
+          {galleryImages.length > 0 ? (
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={activeImage}
+                src={activeImage}
+                alt={product.name}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+            </AnimatePresence>
+          ) : (
+            <>
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(26,157,224,0.04) 8px, rgba(26,157,224,0.04) 10px)",
+                }}
+              />
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/40 z-10 text-center px-4 leading-relaxed">
+                Placeholder<br/>Owner Photography Required
+              </span>
+            </>
+          )}
 
           {galleryImages.length > 1 && (
             <>
@@ -598,89 +545,17 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
          </div>
       </div>
 
-    {/* Quote Modal */}
-    <AnimatePresence>
-      {isQuoteModalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="absolute inset-0 z-50 flex items-center justify-center p-4"
-        >
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsQuoteModalOpen(false)} />
-          
-          <motion.div
-            initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 10 }}
-            className="relative w-full max-w-xl bg-[#080d14] border border-primary/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-primary/20 bg-[#0d1520]/80">
-              <h3 className="font-mono text-sm font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                <Send className="w-4 h-4" /> Request Quote
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => setIsQuoteModalOpen(false)} className="h-8 w-8 rounded-full text-primary hover:text-white hover:bg-primary/20">
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="overflow-y-auto p-5 scroll-industrial">
-              {isSubmitted ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-primary" />
-                  </div>
-                  <h4 className="text-lg font-bold text-white mb-2">Quote Request Sent!</h4>
-                  <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                    Thank you for your interest. Our team will review your configuration and contact you shortly.
-                  </p>
-                  <Button onClick={resetQuoteForm} className="bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-10 px-8">
-                    Close &amp; Return
-                  </Button>
-                </div>
-              ) : (
-                <form id="quote-form" onSubmit={handleSubmitQuote} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-mono text-primary/70 uppercase tracking-widest">Full Name *</label>
-                      <Input required value={quoteForm.fullName} onChange={e => setQuoteForm({...quoteForm, fullName: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-mono text-primary/70 uppercase tracking-widest">Phone *</label>
-                      <Input required type="tel" value={quoteForm.phone} onChange={e => setQuoteForm({...quoteForm, phone: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                    </div>
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <label className="text-[10px] font-mono text-primary/70 uppercase tracking-widest">Email Address *</label>
-                      <Input required type="email" value={quoteForm.email} onChange={e => setQuoteForm({...quoteForm, email: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                    </div>
-                    
-                    <div className="space-y-1.5 sm:col-span-2 border-t border-primary/20 pt-4 mt-2">
-                      <label className="text-[10px] font-mono text-primary/70 uppercase tracking-widest">Delivery Address (Optional)</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                         <Input placeholder="Street Address" value={quoteForm.streetAddress} onChange={e => setQuoteForm({...quoteForm, streetAddress: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                         <Input placeholder="City / Town" value={quoteForm.townCity} onChange={e => setQuoteForm({...quoteForm, townCity: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                         <Input placeholder="Region / Suburb" value={quoteForm.region} onChange={e => setQuoteForm({...quoteForm, region: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                         <Input placeholder="Postcode" value={quoteForm.postcode} onChange={e => setQuoteForm({...quoteForm, postcode: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm h-10 font-mono" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 mt-2">
-                    <label className="text-[10px] font-mono text-primary/70 uppercase tracking-widest">Additional Notes</label>
-                    <Textarea value={quoteForm.notes} onChange={e => setQuoteForm({...quoteForm, notes: e.target.value})} className="bg-black/40 border-primary/30 focus:border-primary text-sm min-h-[80px] font-mono" placeholder="Any special requests or structural mods..." />
-                  </div>
-                </form>
-              )}
-            </div>
-
-            {!isSubmitted && (
-              <div className="px-5 py-4 border-t border-primary/20 bg-[#0d1520]/80 flex justify-end gap-3 shrink-0">
-                <Button type="button" variant="ghost" onClick={() => setIsQuoteModalOpen(false)} className="text-primary hover:text-primary/80 font-mono text-xs uppercase tracking-widest h-10">Cancel</Button>
-                <Button form="quote-form" type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-black font-mono text-xs uppercase tracking-widest h-10 px-6">
-                  {isSubmitting ? "Submitting..." : "Submit Quote Request"}
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <QuoteRequestModal 
+      isOpen={isQuoteModalOpen} 
+      onClose={() => setIsQuoteModalOpen(false)} 
+      product={{ 
+        id: product.id, 
+        name: product.name, 
+        description: product.description || null, 
+        price: pricing.total, 
+        image: galleryImages[currentImageIndex] || null 
+      }} 
+    />
 
     </motion.div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,16 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   const [activeMenuTab, setActiveMenuTab] = useState("pages");
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const handleOpenContact = () => {
+      setIsOpen(true);
+      setActiveMenuTab("contact");
+    };
+    window.addEventListener("open-contact", handleOpenContact);
+    return () => window.removeEventListener("open-contact", handleOpenContact);
+  }, []);
 
   useEffect(() => {
     if (isOpen && activeMenuTab === "chat") {
@@ -164,7 +175,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
 
               <div className={`flex-1 ${activeMenuTab !== "chat" ? "overflow-y-auto" : "overflow-hidden"} min-h-[500px] max-h-[620px] flex flex-col`}>
                 <TabsContent value="pages" className="p-4 space-y-2 mt-0">
-                  <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Home</Button>
+                  <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { setLocation("/"); setIsOpen(false); }}>Home</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { onOpenProducts(); setIsOpen(false); }}>Products & Services</Button>
                   {onOpenConfigurator && (
                     <Button
@@ -176,7 +187,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
                     </Button>
                   )}
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { onOpenProducts(); setIsOpen(false); }}>Book Now</Button>
-                  <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>About (Coming Soon)</Button>
+                  <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => { setLocation("/about"); setIsOpen(false); }}>About Me!</Button>
                   <Button variant="ghost" className="w-full justify-start text-left font-mono" onClick={() => setIsOpen(false)}>Gallery (Coming Soon)</Button>
                 </TabsContent>
 
