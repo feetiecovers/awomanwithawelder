@@ -251,6 +251,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const pricing = getPricingBreakdown(activePrice);
   const requiresCalculatedQuote = product.type === "parametric" && activePrice <= 0;
   const isAvailable = product.available;
+  const missingRequiredInputs = inputDefinitions
+    .filter((definition: any) => definition?.required === true)
+    .filter((definition: any) => {
+      const value = parametricValues[getInputKey(definition)];
+      return value === undefined || value === null || value === '';
+    })
+    .map((definition: any) => String(definition?.label || getInputKey(definition)));
+  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0;
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
 
@@ -533,9 +541,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
             {!requiresCalculatedQuote && <Button
               className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
               onClick={handleAddToCart}
-              disabled={!isAvailable}
+              disabled={!canAddConfiguredProductToCart}
             >
-              Add to Cart
+              {missingRequiredInputs.length > 0 ? "Complete Measurements" : "Add to Cart"}
             </Button>}
             <Button
               variant="outline"
@@ -545,6 +553,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               {requiresCalculatedQuote ? "Request Quote" : "Request Quote for Shipping"}
             </Button>
          </div>
+         {missingRequiredInputs.length > 0 && (
+           <p className="font-mono text-[10px] text-amber-200/80">Complete: {missingRequiredInputs.join(", ")}.</p>
+         )}
       </div>
 
     <QuoteRequestModal 
