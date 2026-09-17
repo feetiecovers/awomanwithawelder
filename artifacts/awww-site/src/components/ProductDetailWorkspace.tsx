@@ -237,8 +237,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     }
     
     if (inputDefinitions.length > 0) {
-       // Assuming param calculation is primarily done on backend, but we can send values
-       payload.values = parametricValues;
+      payload.values = parametricValues;
+      payload.parametricProductId = String(rawProduct.parametricProductId ?? rawProduct.definitionId ?? rawProduct.externalId ?? product.id);
+      payload.definitionId = String(rawProduct.definitionId ?? rawProduct.parametricProductId ?? "");
     }
 
     return { 
@@ -248,6 +249,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   }, [product, configSelections, parametricValues]);
 
   const pricing = getPricingBreakdown(activePrice);
+  const requiresCalculatedQuote = product.type === "parametric" && activePrice <= 0;
   const isAvailable = product.available;
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
@@ -525,22 +527,22 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       <div className="shrink-0 bg-[#0d1520] border-t border-primary/20 p-5 flex flex-col gap-3 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
          <div className="flex justify-between items-center px-1">
            <span className="text-muted-foreground text-xs uppercase tracking-widest font-mono">Total (inc. GST)</span>
-           <span className="text-white font-mono text-lg font-medium tracking-tight">NZ${pricing.total.toFixed(2)}</span>
+           <span className="text-white font-mono text-lg font-medium tracking-tight">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
          </div>
          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
+            {!requiresCalculatedQuote && <Button
               className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
               onClick={handleAddToCart}
               disabled={!isAvailable}
             >
               Add to Cart
-            </Button>
+            </Button>}
             <Button
               variant="outline"
               className="flex-1 border-primary/40 text-primary hover:bg-primary/10 font-mono uppercase tracking-widest text-xs h-11"
               onClick={handleRequestQuote}
             >
-              Request Quote for Shipping
+              {requiresCalculatedQuote ? "Request Quote" : "Request Quote for Shipping"}
             </Button>
          </div>
       </div>
@@ -554,7 +556,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         description: product.description || null, 
         price: pricing.total, 
         image: galleryImages[currentImageIndex] || null 
-      }} 
+      }}
+      configuration={configurationPayload}
     />
 
     </motion.div>

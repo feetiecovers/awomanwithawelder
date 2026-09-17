@@ -191,12 +191,15 @@ function normalizeProducts(value: unknown): ProductCard[] {
       if (!item || typeof item !== "object") return null;
       const record = item as Record<string, unknown>;
       const rawType = String(record.type ?? record.productType ?? record.serviceType ?? record.itemType ?? "").trim().toLowerCase();
+      const isParametric = rawType === "parametric_product" || rawType === "parametric"
+        || record.parametricProductType === "parametric_product"
+        || record.purchaseMode === "parametric";
       const type: ProductCard["type"] = (
         rawType === "service"
         || rawType === "stock_service"
         || record.bookingRequired === true
         || record.fulfillmentType === "job"
-      ) ? "service" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : (rawType === "parametric_product" || rawType === "parametric") ? "parametric" : "product";
+      ) ? "service" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : isParametric ? "parametric" : "product";
       const price = Number(record.price ?? record.displayPrice ?? record.sellPrice ?? record.unitPrice ?? record.sell_price ?? record.unit_price);
       const image = getProductImage(record);
       const bookingFields: NonNullable<ProductCard["bookingFields"]> = Array.isArray(record.bookingFields)
@@ -784,20 +787,24 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 
                                 <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
                                   <div className="text-left sm:text-right">
-                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">{formatCurrency(item.price)}</span>
+                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">{item.type === "parametric" && item.price <= 0 ? "Quote required" : formatCurrency(item.price)}</span>
                                   </div>
                                   
                                   <div className="flex flex-col gap-2">
                                     <Button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        if (item.type === "parametric" || item.type === "configurable") {
+                                          setSelectedWorkspaceProduct(item);
+                                          return;
+                                        }
                                         onAddToCartClick(item);
                                       }}
                                       className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
                                       disabled={addToCart.isPending || item.available === false}
                                       data-testid={`button-add-to-cart-${item.id}`}
                                     >
-                                      {item.available === false ? "Unavailable" : "Add to Cart"}
+                                      {item.available === false ? "Unavailable" : item.type === "parametric" ? "Configure & Quote" : item.type === "configurable" ? "Configure" : "Add to Cart"}
                                     </Button>
                                     <Button
                                       variant="outline"

@@ -21,6 +21,9 @@ export interface QuoteRequestConfiguration {
   selectedOptionIds?: string[];
   selectedOptions?: Array<Record<string, unknown>>;
   totalPriceAdjustment?: number;
+  values?: Record<string, unknown>;
+  parametricProductId?: string;
+  definitionId?: string;
 }
 
 interface QuoteRequestModalProps {
