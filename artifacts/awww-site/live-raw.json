@@ -579,5 +579,40 @@
     "_syncKey": "product:pp-1787579267547-b47k",
     "images": [],
     "image": null
+  },
+  {
+    "id": 8,
+    "externalId": "build-1785415507575",
+    "type": "build",
+    "productType": "build",
+    "name": "Utility Trailer",
+    "title": "Utility Trailer",
+    "code": "UTIL01",
+    "sku": "UTIL01",
+    "description": "Build-to-order utility trailer. Select the required deck option, then request a build quote.",
+    "available": true,
+    "inStock": false,
+    "showOnWebsite": true,
+    "websiteIds": ["web-1782561404289"],
+    "websiteId": "web-1782561404289",
+    "fulfilmentIntent": "build_to_order",
+    "commerceActions": {"allowCheckout": false, "allowQuoteRequest": true},
+    "optionGroups": [
+      {
+        "id": "bog-1785415835517-p1op",
+        "name": "Decks",
+        "selectionType": "single",
+        "required": true,
+        "maxSelected": 1,
+        "options": [
+          {"id": "bo-1785415847113-b8nz", "label": "Steel Treadplate Deck", "priceAdjustment": 0, "featureIds": ["bf-1785415728391"], "blockedFeatureIds": ["bf-1785415728391"], "blockedOptionIds": [], "requiredFeatureIds": [], "isDefault": false},
+          {"id": "bo-1785415915587-cw7p", "label": "Alloy Treadplate Deck", "priceAdjustment": 0, "featureIds": ["bf-1785415728391"], "blockedFeatureIds": ["bf-1785415620785"], "blockedOptionIds": [], "requiredFeatureIds": [], "isDefault": false}
+        ]
+      }
+    ],
+    "_sourceType": "build",
+    "_syncKey": "build:build-1785415507575",
+    "images": [],
+    "image": null
   }
 ]

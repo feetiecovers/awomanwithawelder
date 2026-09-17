@@ -61,6 +61,7 @@ interface SyncedBuildRecord {
   description?: string | null;
   image?: string | null;
   imageUrl?: string | null;
+  basePrice?: number;
   price?: number;
   displayPrice?: number;
   optionGroups?: Array<{
@@ -72,9 +73,11 @@ interface SyncedBuildRecord {
     options?: Array<{
       id?: string;
       name?: string;
+      label?: string;
       description?: string | null;
       imageUrl?: string | null;
       price?: number;
+      priceAdjustment?: number;
       isIncluded?: boolean;
       sortOrder?: number;
     }>;
@@ -131,13 +134,15 @@ function mapSyncedBuildCatalog(value: unknown): {
     const buildKey = String(record?.id ?? `build-${buildIndex + 1}`);
     const buildId = hashToNumericId(buildKey, buildIndex + 101);
 
+    const rawBasePrice = record.displayPrice ?? record.price ?? record.basePrice;
     const build: TrailerBuild = {
       id: buildId,
       trailerTypeId: 1,
       name: String(record?.name ?? `Build ${buildIndex + 1}`),
       description: String(record?.description ?? ""),
       imageUrl: normalizeImageUrl(record.imageUrl ?? record.image),
-      basePrice: Number(record.displayPrice ?? record.price ?? 0),
+      basePrice: Number(rawBasePrice ?? 0),
+      priceIsKnown: Number.isFinite(Number(rawBasePrice)),
       sortOrder: buildIndex + 1,
     };
     builds.push(build);
@@ -157,10 +162,10 @@ function mapSyncedBuildCatalog(value: unknown): {
         options: options.map((option, optionIndex) => ({
           id: hashToNumericId(`${groupKey}:${String(option?.id ?? optionIndex)}`, groupId + optionIndex + 1),
           featureGroupId: groupId,
-          name: String(option?.name ?? `Option ${optionIndex + 1}`),
+          name: String(option?.name ?? option?.label ?? `Option ${optionIndex + 1}`),
           description: typeof option?.description === "string" ? option.description : null,
           imageUrl: normalizeImageUrl(option?.imageUrl),
-          price: Number(option?.price ?? 0),
+          price: Number(option?.price ?? option?.priceAdjustment ?? 0),
           isIncluded: option?.isIncluded === true,
           sortOrder: Number(option?.sortOrder ?? optionIndex + 1),
         })),
@@ -321,6 +326,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   }, [activeFeatureGroups, selectedFeatures]);
 
   const basePrice = selectedBuild ? selectedBuild.basePrice : 0;
+  const isQuoteOnly = selectedBuild?.priceIsKnown === false;
   const addonsTotal = selectedAddons.reduce((sum, item) => sum + item.price, 0);
   const totalIncGst = basePrice + addonsTotal;
   const subtotalExGst = totalIncGst / (1 + GST_RATE);
@@ -396,9 +402,11 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
           postcode: quoteForm.postcode,
           notes: quoteForm.notes,
           deliveryRequired,
-          estimatedSubtotal: subtotalExGst,
-          estimatedGst: gstAmount,
-          estimatedTotal: totalIncGst,
+          ...(isQuoteOnly ? {} : {
+            estimatedSubtotal: subtotalExGst,
+            estimatedGst: gstAmount,
+            estimatedTotal: totalIncGst,
+          }),
           selectedAddons,
         }),
       });
@@ -595,7 +603,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                               <div className="mt-3 pt-1.5 border-t border-pink-500/15 flex items-center justify-between">
                                 <span className="text-[9.5px] font-mono uppercase tracking-widest text-pink-200/50">Base Model Price</span>
                                 <span className="font-mono font-black text-xs sm:text-sm text-[#ff2a8d]">
-                                  NZ${build.basePrice.toLocaleString()}
+                                  {build.priceIsKnown === false ? "Quote required" : `NZ$${build.basePrice.toLocaleString()}`}
                                 </span>
                               </div>
                             </div>
@@ -945,7 +953,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between text-pink-200/70 font-semibold">
                       <span className="truncate pr-2">{selectedBuild?.name || "Base Trailer Build"}</span>
-                      <span className="font-mono text-white shrink-0">NZ${basePrice.toLocaleString()}</span>
+                      <span className="font-mono text-white shrink-0">{isQuoteOnly ? "Quote required" : `NZ$${basePrice.toLocaleString()}`}</span>
                     </div>
                     {addonsTotal > 0 && (
                       <div className="flex justify-between text-pink-300 font-semibold">
@@ -958,16 +966,16 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                   <div className="pt-2 border-t border-pink-500/20 space-y-0.5 font-mono">
                     <div className="flex justify-between text-[10.5px] text-pink-200/60">
                       <span>Subtotal (Excl. GST)</span>
-                      <span>NZ${subtotalExGst.toFixed(2)}</span>
+                      <span>{isQuoteOnly ? "Confirmed in quote" : `NZ$${subtotalExGst.toFixed(2)}`}</span>
                     </div>
                     <div className="flex justify-between text-[10.5px] text-pink-200/60">
                       <span>15% GST</span>
-                      <span>NZ${gstAmount.toFixed(2)}</span>
+                      <span>{isQuoteOnly ? "Confirmed in quote" : `NZ$${gstAmount.toFixed(2)}`}</span>
                     </div>
                     <div className="flex justify-between text-xs sm:text-sm font-black text-[#ff2a8d] pt-1.5 border-t border-pink-500/30">
-                      <span>Total Estimated Cost</span>
+                      <span>{isQuoteOnly ? "Build price" : "Total Estimated Cost"}</span>
                       <span className="drop-shadow-[0_0_8px_rgba(255,42,141,0.8)]">
-                        NZ${totalIncGst.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {isQuoteOnly ? "Quote required" : `NZ$${totalIncGst.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                       </span>
                     </div>
                   </div>

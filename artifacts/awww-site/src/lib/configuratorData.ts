@@ -13,6 +13,7 @@ export interface TrailerBuild {
   description: string;
   imageUrl?: string | null;
   basePrice: number;
+  priceIsKnown?: boolean;
   sortOrder: number;
 }
 
