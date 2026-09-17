@@ -16,17 +16,25 @@ export interface QuoteRequestProduct {
   image?: string | null;
 }
 
+export interface QuoteRequestConfiguration {
+  selections?: Record<string, string[]>;
+  selectedOptionIds?: string[];
+  selectedOptions?: Array<Record<string, unknown>>;
+  totalPriceAdjustment?: number;
+}
+
 interface QuoteRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: QuoteRequestProduct | null;
+  configuration?: QuoteRequestConfiguration;
 }
 
 function formatCurrency(value: number) {
   return `NZ$${value.toFixed(2)}`;
 }
 
-export function QuoteRequestModal({ isOpen, onClose, product }: QuoteRequestModalProps) {
+export function QuoteRequestModal({ isOpen, onClose, product, configuration }: QuoteRequestModalProps) {
   const { toast } = useToast();
   const { data: member } = useGetCurrentMember();
 
@@ -86,6 +94,7 @@ export function QuoteRequestModal({ isOpen, onClose, product }: QuoteRequestModa
           notes,
           shippingLabel: "",
           shippingPrice: 0,
+          configuration,
           payment_status: "unpaid",
           paymentStatus: "unpaid"
         }),
