@@ -368,16 +368,12 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       setSelectedService(null);
       setSelectedVariantId(null);
       setBookingForm(emptyBookingForm);
-      setBookingCapacity(null);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (!selectedService) {
-      setBookingCapacity(null);
-      setBookingCapacityLoading(false);
-      return;
-    }
+    if (!isOpen) return;
+    if (bookingCapacity) return;
 
     const controller = new AbortController();
     setBookingCapacityLoading(true);
@@ -399,7 +395,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       });
 
     return () => controller.abort();
-  }, [selectedService]);
+  }, [isOpen, bookingCapacity]);
 
   const goToPage = (next: number) => {
     setSlideDir(next > shopPage ? 1 : -1);

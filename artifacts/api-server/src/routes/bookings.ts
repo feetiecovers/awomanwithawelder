@@ -23,6 +23,10 @@ function getCapacityRejection(error: unknown): string | null {
   }
 }
 
+let cachedBookingAvailability: any = null;
+let cachedBookingAvailabilityTime = 0;
+const AVAILABILITY_TTL = 5 * 60 * 1000; // 5 minutes
+
 // This is deliberately a read-only proxy. The browser receives a public date
 // projection, while the Desktop backend keeps the canonical Settings and
 // booking records private behind its desktop API credentials.
@@ -30,19 +34,34 @@ router.get("/booking-availability", async (req, res) => {
   try {
     const { desktopBaseUrl, websiteId } = getDesktopSyncConfig();
     const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
+    
+    if (cachedBookingAvailability && Date.now() - cachedBookingAvailabilityTime < AVAILABILITY_TTL) {
+      if (requestedDays <= 120) {
+        return res.json(cachedBookingAvailability);
+      }
+    }
+
     const url = new URL(`${desktopBaseUrl}/api/ecommerce/booking-availability`);
     url.searchParams.set("websiteId", websiteId);
-    url.searchParams.set("days", String(requestedDays));
+    
+    const fetchDays = Math.max(120, requestedDays);
+    url.searchParams.set("days", String(fetchDays));
+    
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
         ...getDesktopAuthHeaders(),
       },
     });
+    
     const body = await response.json().catch(() => null);
     if (!response.ok) {
       return res.status(502).json({ error: body?.error || "Booking availability is unavailable" });
     }
+    
+    cachedBookingAvailability = body;
+    cachedBookingAvailabilityTime = Date.now();
+    
     return res.json(body);
   } catch (err) {
     req.log.error({ err }, "Failed to load booking availability from Denver's Desk");
