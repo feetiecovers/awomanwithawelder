@@ -259,29 +259,35 @@ export default function StreamChatWidget({
       )}
 
       {!visitorName ? (
-        <form
-          className="native-chat-messages items-center justify-center"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const name = nameInput.trim();
-            if (name) onVisitorNameChange(name);
-          }}
-        >
-          <label className="w-full max-w-[240px] text-slate-300 text-xs font-medium">
-            What should we call you?
+        <>
+          <div className="native-chat-messages scroll-industrial flex-1">
+            <div className="native-chat-bubble-container operator">
+              <div className="native-chat-bubble">
+                Hi there! Welcome to Live Chat. What should we call you?
+              </div>
+            </div>
+          </div>
+          <form
+            className="native-chat-input-area"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const name = nameInput.trim();
+              if (name) onVisitorNameChange(name);
+            }}
+          >
             <input
               autoFocus
               value={nameInput}
               onChange={(event) => setNameInput(event.target.value)}
-              placeholder="Your name"
+              placeholder="Your name..."
               maxLength={120}
-              className="native-chat-input mt-2 w-full"
+              className="native-chat-input"
             />
-          </label>
-          <button type="submit" disabled={!nameInput.trim()} className="native-chat-send mt-3 w-auto px-4 text-xs">
-            Start chat
-          </button>
-        </form>
+            <button type="submit" disabled={!nameInput.trim()} className="native-chat-send">
+              <Send size={14} />
+            </button>
+          </form>
+        </>
       ) : (
         <>
       {/* Message Thread container */}

@@ -784,7 +784,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 h-full w-full object-contain cursor-pointer hover:scale-[1.02] transition-transform duration-300"
+                                      className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-screen transition-transform duration-500 group-hover:scale-105"
                                       loading="lazy"
                                       onClick={() => setPreviewImage({ url: item.image!, title: item.name })}
                                       onError={() => {
@@ -826,9 +826,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/30 bg-red-500/10'}`}>
                                       {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
                                     </span>
+                                    {(item.type === "parametric" || item.type === "configurable") && (
+                                      <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-fuchsia-300 border-fuchsia-400/30 bg-fuchsia-500/10">
+                                        CONFIGURABLE PRODUCT
+                                      </span>
+                                    )}
                                   </div>
                                   {item.description && (
-                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 mt-1 pr-2">
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 mt-1 pr-2">
                                       {item.description}
                                     </p>
                                   )}
@@ -841,7 +846,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 
                                 <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
                                   <div className="text-left sm:text-right">
-                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">{item.type === "parametric" && item.price <= 0 ? "Quote required" : formatCurrency(item.price)}</span>
+                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">
+                                      {item.type === "parametric" || item.type === "configurable" 
+                                        ? (item.price > 0 ? `From ${formatCurrency(item.price)}` : "Configure for price") 
+                                        : formatCurrency(item.price)}
+                                    </span>
                                   </div>
                                   
                                   <div className="flex flex-col gap-2">

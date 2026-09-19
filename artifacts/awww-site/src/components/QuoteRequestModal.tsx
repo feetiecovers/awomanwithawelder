@@ -289,79 +289,88 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
                       className="bg-primary/5 border-primary/20 focus:border-primary/50 resize-none min-h-[100px] font-mono text-sm"
                     />
                   </div>
-
-                  <div className="pt-3 lg:hidden">
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full font-mono uppercase tracking-widest text-xs h-11 bg-primary hover:bg-primary/80"
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit Quote Request"}
-                    </Button>
-                  </div>
                 </form>
 
                 {/* Right Side - Context */}
-                <div className="space-y-6 bg-[#0a0a0f]/50 p-6 lg:border-l lg:border-primary/10">
-                  <div className="rounded-[28px] border border-primary/20 bg-[#080d14]/95 p-6 shadow-[0_0_60px_rgba(26,157,224,0.18)]">
-                    <div className="flex items-center gap-2">
-                      <Info className="h-4 w-4 text-primary" />
-                      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Quote Request For</p>
-                    </div>
-                    <div className="mt-4">
-                      {product.image && (
-                        <div 
-                          className="w-full h-32 rounded-xl mb-4 bg-center bg-cover bg-no-repeat border border-primary/20" 
-                          style={{ backgroundImage: `url(${product.image})` }} 
-                        />
-                      )}
-                      <p className="text-lg font-bold text-foreground leading-snug">{product.name}</p>
-                      {product.description && (
-                        <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed line-clamp-3">{product.description}</p>
-                      )}
-                      <p className="mt-3 font-mono text-primary font-bold text-base">
-                        Base: {formatCurrency(productPrice)}
-                      </p>
-                    </div>
+                <div className="border-t border-primary/10 bg-[#0d1520]/60 backdrop-blur-md p-6 lg:border-l lg:border-t-0 flex flex-col">
+                  <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Product Info</p>
+                    {product.image && (
+                      <div 
+                        className="w-full h-32 rounded-xl mt-3 mb-3 bg-center bg-contain bg-no-repeat bg-black/40" 
+                        style={{ backgroundImage: `url(${product.image})` }} 
+                      />
+                    )}
+                    <p className="text-lg font-semibold text-foreground">{product.name}</p>
+                    {product.description && (
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground line-clamp-3 whitespace-pre-wrap">{product.description}</p>
+                    )}
                   </div>
 
-                  <div className="rounded-[28px] border border-primary/20 bg-[#080d14]/95 p-6 shadow-[0_0_60px_rgba(26,157,224,0.18)]">
+                  {configuration && (configuration.selectedOptions?.length > 0 || Object.keys(configuration.values || {}).length > 0) && (
+                    <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60 mb-3">Configuration</p>
+                      <div className="space-y-2">
+                        {configuration.selectedOptions?.map((opt: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-start gap-2">
+                            <span className="text-xs font-mono text-muted-foreground">{opt.groupName}:</span>
+                            <span className="text-xs font-mono text-foreground text-right">{opt.optionName}</span>
+                          </div>
+                        ))}
+                        {Object.entries(configuration.values || {}).map(([key, val]) => (
+                          <div key={key} className="flex justify-between items-start gap-2">
+                            <span className="text-xs font-mono text-muted-foreground">{key}:</span>
+                            <span className="text-xs font-mono text-foreground text-right">{String(val)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 rounded-2xl border border-primary/15 bg-[#09111b]/80 p-4">
                     <div className="flex items-center gap-2">
                       <ReceiptText className="h-4 w-4 text-primary" />
-                      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Estimate Breakdown</p>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Estimate</p>
                     </div>
-                    <div className="mt-4 space-y-3 text-xs">
+                    <div className="mt-4 space-y-3 text-sm">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span>Base Product</span>
                         <span>{formatCurrency(productPrice)}</span>
                       </div>
-
-                      <div className="flex items-center justify-between text-muted-foreground border-t border-primary/10 pt-3">
+                      <div className="flex items-center justify-between text-muted-foreground">
                         <span>Subtotal excl. GST</span>
                         <span>{formatCurrency(combinedSubtotal)}</span>
                       </div>
                       <div className="flex items-center justify-between text-muted-foreground">
-                        <span>GST (15%)</span>
+                        <span>GST</span>
                         <span>{formatCurrency(combinedGst)}</span>
                       </div>
-                      <div className="flex items-center justify-between border-t border-primary/15 pt-3 font-semibold text-foreground text-sm">
-                        <span>Estimated total</span>
+                      <div className="flex items-center justify-between border-t border-primary/15 pt-3 font-semibold text-foreground">
+                        <span>Estimated Total</span>
                         <span className="text-primary">{formatCurrency(combinedTotal)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="hidden lg:block">
+                  <p className="mt-4 text-xs leading-6 text-muted-foreground flex-1">
+                    Estimates are based on the selected configuration and may change once final scope and delivery are confirmed. Your request will be synchronised directly to the Desktop app orders queue.
+                  </p>
+
+                  <div className="mt-5 flex gap-3">
                     <Button
                       onClick={handleSubmit}
+                      className="flex-1 font-mono uppercase tracking-widest text-xs h-10"
                       disabled={isSubmitting}
-                      className="w-full font-mono uppercase tracking-widest text-xs h-11 bg-primary hover:bg-primary/80 shadow-[0_0_20px_rgba(26,157,224,0.3)]"
                     >
                       {isSubmitting ? "Submitting..." : "Submit Quote Request"}
                     </Button>
-                    <p className="text-[10px] text-muted-foreground text-center mt-3 leading-relaxed">
-                      Your request will be synchronised directly to the Desktop app orders queue.
-                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={onClose}
+                      className="font-mono uppercase tracking-widest text-xs border-primary/30 h-10"
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
               </div>

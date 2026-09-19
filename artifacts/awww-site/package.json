@@ -75,6 +75,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "isomorphic-dompurify": "^2.15.0",
     "stream-chat": "^9.48.0",
     "stream-chat-react": "^14.6.0"
   }

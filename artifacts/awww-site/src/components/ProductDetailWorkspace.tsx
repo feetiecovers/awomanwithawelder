@@ -7,6 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { buildApiUrl } from '@/lib/api-base';
 import { QuoteRequestModal } from './QuoteRequestModal';
+import DOMPurify from 'isomorphic-dompurify';
+
+DOMPurify.addHook('afterSanitizeAttributes', function (node) {
+  if ('target' in node && node.getAttribute('target') === '_blank') {
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
 
 type ProductCard = {
   id: number;
@@ -361,16 +368,18 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         {/* Middle: Info & Configuration */}
         <div className="p-6 flex flex-col gap-6">
           
-          <div className="flex flex-col gap-2 border-b border-primary/10 pb-4">
+          <div className="flex flex-col gap-3 border-b border-primary/10 pb-5">
              <div className="flex items-center justify-between">
                 <span className="font-mono text-xl sm:text-2xl text-[#f8fafc] font-medium tracking-tight">
-                  NZ${activePrice.toFixed(2)}
+                  {requiresCalculatedQuote ? (rawProduct.price > 0 ? `From NZ$${rawProduct.price.toFixed(2)}` : "Quote required") : `NZ$${activePrice.toFixed(2)}`}
                 </span>
                 <span className={`text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border ${isAvailable ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/40 bg-red-500/10'}`}>
                   {isAvailable ? 'AVAILABLE NOW' : 'OUT OF STOCK'}
                 </span>
              </div>
-             <p className="text-[#94a3b8] text-sm leading-relaxed mt-2" dangerouslySetInnerHTML={{ __html: product.description || "" }} />
+             {product.description ? (
+               <p className="text-[#94a3b8] text-sm leading-relaxed mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'], ALLOWED_ATTR: ['href', 'target', 'rel'] }) }} />
+             ) : null}
              {customerMessage && (
                <p className="font-mono text-xs text-cyan-100/70 leading-relaxed">{customerMessage}</p>
              )}
@@ -393,39 +402,48 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
           )}
 
           {showCustomizer && (
-            <>
+            <div className="mt-2 space-y-6">
               {/* Configurable Product Controls */}
-              {optionGroups.map((group: any) => (
-                <div key={group.id} className="flex flex-col gap-3">
-                  <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{group.name} {group.required && '*'}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {group.options?.map((opt: any) => {
-                      const isSelected = (configSelections[group.id] || []).includes(String(opt.id));
-                      return (
-                        <button
-                          key={opt.id}
-                          onClick={() => handleConfigToggle(group, String(opt.id))}
-                          className={`text-left p-3 rounded-lg border font-mono text-xs transition-all ${
-                            isSelected
-                              ? "border-primary bg-primary/10 text-primary shadow-[inset_0_0_12px_rgba(26,157,224,0.2)]"
-                              : "border-primary/20 text-muted-foreground hover:border-primary/40 hover:bg-primary/5"
-                          }`}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="truncate pr-2">{opt.label || opt.name}</span>
-                            {Number(opt.priceAdjustment || opt.price || 0) > 0 && (
-                              <span className="shrink-0 text-[10px]">+${Number(opt.priceAdjustment || opt.price).toFixed(2)}</span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+              {optionGroups.length > 0 && (
+                <div className="bg-[#09111b]/80 border border-primary/15 rounded-2xl p-5 space-y-5">
+                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary border-b border-primary/10 pb-3">Available Options</h3>
+                  {optionGroups.map((group: any) => (
+                    <div key={group.id} className="flex flex-col gap-3">
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary/60">{group.name} {group.required && '*'}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {group.options?.map((opt: any) => {
+                          const isSelected = (configSelections[group.id] || []).includes(String(opt.id));
+                          return (
+                            <button
+                              key={opt.id}
+                              onClick={() => handleConfigToggle(group, String(opt.id))}
+                              className={`text-left p-3 rounded-lg border font-mono text-xs transition-all ${
+                                isSelected
+                                  ? "border-primary bg-primary/10 text-primary shadow-[inset_0_0_12px_rgba(26,157,224,0.2)]"
+                                  : "border-primary/20 text-muted-foreground hover:border-primary/40 hover:bg-primary/5"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="truncate pr-2">{opt.label || opt.name}</span>
+                                {Number(opt.priceAdjustment || opt.price || 0) > 0 && (
+                                  <span className="shrink-0 text-[10px]">+${Number(opt.priceAdjustment || opt.price).toFixed(2)}</span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
 
               {/* Parametric Product Controls */}
-              {inputDefinitions.map((def: any) => {
+              {inputDefinitions.length > 0 && (
+                <div className="bg-[#09111b]/80 border border-primary/15 rounded-2xl p-5 space-y-6">
+                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary border-b border-primary/10 pb-3">Custom Dimensions & Features</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                  {inputDefinitions.map((def: any) => {
                 const inputKey = getInputKey(def);
                 const controlType = getInputControlType(def);
                 const minimum = getInputMinimum(def);
@@ -523,9 +541,13 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                        className="bg-black/30 border-primary/20 text-white"
                      />
                    )}
+                 </div>
+                  );
+                })}
+                  </div>
                 </div>
-              );})}
-            </>
+              )}
+            </div>
           )}
 
         </div>
