@@ -166,6 +166,8 @@ interface StreamChatWidgetProps {
   messages: ChatMessage[];
   error: string | null;
   apiBaseUrl: string;
+  visitorName: string;
+  onVisitorNameChange: (name: string) => void;
   onRefetch: () => Promise<void>;
 }
 
@@ -174,9 +176,12 @@ export default function StreamChatWidget({
   messages,
   error,
   apiBaseUrl,
+  visitorName,
+  onVisitorNameChange,
   onRefetch
 }: StreamChatWidgetProps) {
   const [inputText, setInputText] = useState('');
+  const [nameInput, setNameInput] = useState(visitorName);
   const [submitting, setSubmitting] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -209,7 +214,8 @@ export default function StreamChatWidget({
           chatId: visitorId,
           sender: 'visitor',
           text: textToSend,
-          visitorName: `Visitor ${visitorId.substring(8, 12)}`,
+          visitorName,
+          brand: 'A Woman With a Welder',
         }),
       });
 
@@ -252,6 +258,32 @@ export default function StreamChatWidget({
         </div>
       )}
 
+      {!visitorName ? (
+        <form
+          className="native-chat-messages items-center justify-center"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const name = nameInput.trim();
+            if (name) onVisitorNameChange(name);
+          }}
+        >
+          <label className="w-full max-w-[240px] text-slate-300 text-xs font-medium">
+            What should we call you?
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={(event) => setNameInput(event.target.value)}
+              placeholder="Your name"
+              maxLength={120}
+              className="native-chat-input mt-2 w-full"
+            />
+          </label>
+          <button type="submit" disabled={!nameInput.trim()} className="native-chat-send mt-3 w-auto px-4 text-xs">
+            Start chat
+          </button>
+        </form>
+      ) : (
+        <>
       {/* Message Thread container */}
       <div className="native-chat-messages scroll-industrial flex-1">
         {messages.length === 0 ? (
@@ -294,6 +326,8 @@ export default function StreamChatWidget({
           <Send size={14} />
         </button>
       </form>
+        </>
+      )}
     </div>
   );
 }

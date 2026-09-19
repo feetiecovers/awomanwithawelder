@@ -3,10 +3,52 @@ import { db, bookingsTable, membersTable, productsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { CreateBookingBody, GetBookingParams } from "@workspace/api-zod";
 import { mapEntryToCatalogProduct, readStockStore, refreshStockProducts } from "../lib/syncedStock";
-import { forwardBookingToDesktop, forwardOrderToDesktop, getDesktopSyncConfig, postToDesktop } from "../lib/desktopSync";
+import { forwardBookingToDesktop, forwardOrderToDesktop, getDesktopAuthHeaders, getDesktopSyncConfig, postToDesktop } from "../lib/desktopSync";
 
 const router = Router();
 const hasDatabase = Boolean(process.env.DATABASE_URL);
+
+function getCapacityRejection(error: unknown): string | null {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  if (!message.includes("bookingUnavailable")) return null;
+  const jsonStart = message.indexOf("{");
+  if (jsonStart < 0) return "That booking date is no longer available. Please choose another date.";
+  try {
+    const payload = JSON.parse(message.slice(jsonStart));
+    return typeof payload?.error === "string" && payload.error.trim()
+      ? payload.error
+      : "That booking date is no longer available. Please choose another date.";
+  } catch {
+    return "That booking date is no longer available. Please choose another date.";
+  }
+}
+
+// This is deliberately a read-only proxy. The browser receives a public date
+// projection, while the Desktop backend keeps the canonical Settings and
+// booking records private behind its desktop API credentials.
+router.get("/booking-availability", async (req, res) => {
+  try {
+    const { desktopBaseUrl, websiteId } = getDesktopSyncConfig();
+    const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
+    const url = new URL(`${desktopBaseUrl}/api/ecommerce/booking-availability`);
+    url.searchParams.set("websiteId", websiteId);
+    url.searchParams.set("days", String(requestedDays));
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        ...getDesktopAuthHeaders(),
+      },
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+      return res.status(502).json({ error: body?.error || "Booking availability is unavailable" });
+    }
+    return res.json(body);
+  } catch (err) {
+    req.log.error({ err }, "Failed to load booking availability from Denver's Desk");
+    return res.status(502).json({ error: "Booking availability is unavailable" });
+  }
+});
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.session?.memberId) {
@@ -232,7 +274,22 @@ router.post("/bookings", async (req, res) => {
         });
       } catch (syncErr) {
         desktopSyncError = syncErr instanceof Error ? syncErr.message : "Failed to forward booking to desktop";
+        const capacityRejection = getCapacityRejection(syncErr);
+        
+        if (hasDatabase) {
+          try {
+            await db.delete(bookingsTable).where(eq(bookingsTable.id, booking.id));
+          } catch (cleanupErr) {
+            req.log.error({ err: cleanupErr, bookingId: booking.id }, "Failed to remove website booking after sync failure");
+          }
+        }
+        
+        if (capacityRejection) {
+          return res.status(409).json({ error: capacityRejection, bookingUnavailable: true });
+        }
+        
         req.log.error({ err: syncErr, bookingId: booking.id }, "Failed to forward booking to desktop");
+        return res.status(502).json({ error: "Booking could not be confirmed with the desk. Please try again later.", desktopSyncError });
       }
     }
 

@@ -45,6 +45,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", message: "" });
   
   const [visitorId, setVisitorId] = useState('');
+  const [visitorName, setVisitorName] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [operatorCount, setOperatorCount] = useState<number | null>(null);
@@ -59,7 +60,14 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
       localStorage.setItem('awww_chat_visitor_id', id);
     }
     setVisitorId(id);
+    setVisitorName(localStorage.getItem('awww_chat_visitor_name') || '');
   }, []);
+
+  const handleVisitorNameChange = (name: string) => {
+    const normalizedName = name.trim().slice(0, 120);
+    localStorage.setItem('awww_chat_visitor_name', normalizedName);
+    setVisitorName(normalizedName);
+  };
 
   // Load chat messages from the desktop application
   const fetchMessages = async () => {
@@ -197,6 +205,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
                     messages={messages}
                     error={error}
                     apiBaseUrl={apiBaseUrl}
+                    visitorName={visitorName}
+                    onVisitorNameChange={handleVisitorNameChange}
                     onRefetch={fetchMessages}
                   />
                 </TabsContent>

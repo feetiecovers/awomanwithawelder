@@ -46,6 +46,26 @@ const PRODUCT_GRADIENTS = [
 ];
 
 const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
+type WebsiteBookingCapacityProjection = {
+  configured: boolean;
+  timezone: "Pacific/Auckland";
+  minimumLeadDays: number;
+  weeklyBookingCap: number;
+  days: Array<{
+    date: string;
+    available: boolean;
+    reason?: string;
+  }>;
+};
+
+function formatBookingDate(value: string) {
+  return new Intl.DateTimeFormat("en-NZ", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${value}T12:00:00`));
+}
 
 type ProductCard = {
   id: number;
@@ -316,6 +336,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [failedImages, setFailedImages] = useState<Record<number, boolean>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [selectedWorkspaceProduct, setSelectedWorkspaceProduct] = useState<ProductCard | null>(null);
+  const [bookingCapacity, setBookingCapacity] = useState<WebsiteBookingCapacityProjection | null>(null);
+  const [bookingCapacityLoading, setBookingCapacityLoading] = useState(false);
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
@@ -346,8 +368,38 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       setSelectedService(null);
       setSelectedVariantId(null);
       setBookingForm(emptyBookingForm);
+      setBookingCapacity(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!selectedService) {
+      setBookingCapacity(null);
+      setBookingCapacityLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setBookingCapacityLoading(true);
+    void fetch(buildApiUrl("/booking-availability?days=120"), {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Availability request failed: ${response.status}`);
+        return response.json() as Promise<WebsiteBookingCapacityProjection>;
+      })
+      .then((projection) => {
+        if (!controller.signal.aborted) setBookingCapacity(projection);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setBookingCapacity(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setBookingCapacityLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [selectedService]);
 
   const goToPage = (next: number) => {
     setSlideDir(next > shopPage ? 1 : -1);
@@ -412,6 +464,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const handleBookService = () => {
     if (!selectedService || !pricing) return;
     const serviceBookingFields = selectedService.bookingFields ?? [];
+
+    if (bookingCapacity?.configured && !bookingCapacity.days.some((day) => day.date === bookingForm.bookingDate && day.available)) {
+      toast({ title: "Choose an available date", description: "That date is no longer available. Please choose another date from the list.", variant: "destructive" });
+      return;
+    }
 
     const requiredFields: Array<keyof BookingFormState> = [
       "fullName",
@@ -501,8 +558,9 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
         });
         closeBookingModal();
       },
-      onError: () => {
-        toast({ title: "Booking failed", description: "We couldn't submit your booking right now.", variant: "destructive" });
+      onError: (error) => {
+        const bookingError = error as { data?: { error?: string } };
+        toast({ title: "Booking failed", description: bookingError.data?.error || "We couldn't submit your booking right now.", variant: "destructive" });
       },
     });
   };
@@ -1033,14 +1091,38 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                         <label className="font-mono text-[10px] uppercase tracking-widest text-primary/60 flex items-center gap-1">
                           <Calendar className="h-3 w-3" /> Preferred Date <span className="text-destructive">*</span>
                         </label>
-                        <Input
-                          required
-                          type="date"
-                          value={bookingForm.bookingDate}
-                          onChange={(e) => updateBookingField("bookingDate", e.target.value)}
-                          className="bg-primary/5 border-primary/20 focus:border-primary/50 font-mono text-sm h-10"
-                          data-testid={`input-booking-date-${selectedService.id}`}
-                        />
+                        {bookingCapacityLoading ? (
+                          <div className="flex h-10 items-center rounded-md border border-primary/20 bg-primary/5 px-3 font-mono text-xs text-muted-foreground">
+                            Checking available dates...
+                          </div>
+                        ) : bookingCapacity?.configured ? (
+                          <>
+                            <select
+                              required
+                              value={bookingForm.bookingDate}
+                              onChange={(e) => updateBookingField("bookingDate", e.target.value)}
+                              className="flex h-10 w-full rounded-md border border-primary/20 bg-primary/5 px-3 font-mono text-sm text-foreground focus:border-primary/50 focus:outline-none"
+                              data-testid={`input-booking-date-${selectedService.id}`}
+                            >
+                              <option value="">Choose an available date</option>
+                              {bookingCapacity.days.filter((day) => day.available).map((day) => (
+                                <option key={day.date} value={day.date}>{formatBookingDate(day.date)}</option>
+                              ))}
+                            </select>
+                            {bookingCapacity.days.every((day) => !day.available) && (
+                              <p className="font-mono text-[10px] leading-4 text-muted-foreground">There are no available service dates in the next 120 days. Please contact us.</p>
+                            )}
+                          </>
+                        ) : (
+                          <Input
+                            required
+                            type="date"
+                            value={bookingForm.bookingDate}
+                            onChange={(e) => updateBookingField("bookingDate", e.target.value)}
+                            className="bg-primary/5 border-primary/20 focus:border-primary/50 font-mono text-sm h-10"
+                            data-testid={`input-booking-date-${selectedService.id}`}
+                          />
+                        )}
                       </div>
                     </div>
 
