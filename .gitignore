@@ -57,3 +57,4 @@ artifacts/api-server/.env
 artifacts/awww-site/.env
 
 *.bak.tsx
+ecommerce-stock-store.json
