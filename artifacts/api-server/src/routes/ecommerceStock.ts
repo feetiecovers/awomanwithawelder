@@ -58,6 +58,7 @@ function pickIncomingProducts(payload: Record<string, unknown>): Record<string, 
     payload.stockServices,
     payload.stockServiceProducts,
     payload.serviceProducts,
+    payload.parametricProducts,
     payload.items,
     payload.stock_items,
     data?.products,
@@ -170,7 +171,17 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     : incomingProductEntries;
   const configurableProducts = Array.isArray(payload.configurableProducts) ? payload.configurableProducts : [];
   const parametricProducts = Array.isArray(payload.parametricProducts) ? payload.parametricProducts : [];
-  const enrichedStockProducts = attachPurchaseModeDefinitions(stockProducts, configurableProducts, parametricProducts);
+  // Standalone parametric definitions are sellable catalog entries in their
+  // own right. Keep them alongside Stock Products instead of only attaching
+  // them as a purchase mode to a parent Stock Product.
+  const standaloneParametricProducts = parametricProducts.filter((definition: any) => !String(
+    definition?.commercialProductId ?? definition?.baseStockProductId ?? "",
+  ).trim());
+  const enrichedStockProducts = attachPurchaseModeDefinitions(
+    [...stockProducts, ...standaloneParametricProducts],
+    configurableProducts,
+    parametricProducts,
+  );
   const stockBuilds = Array.isArray(payload.stockBuilds)
     ? payload.stockBuilds
     : Array.isArray(payload.builds)

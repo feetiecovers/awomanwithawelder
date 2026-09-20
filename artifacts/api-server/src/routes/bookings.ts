@@ -23,10 +23,6 @@ function getCapacityRejection(error: unknown): string | null {
   }
 }
 
-let cachedBookingAvailability: any = null;
-let cachedBookingAvailabilityTime = 0;
-const AVAILABILITY_TTL = 5 * 60 * 1000; // 5 minutes
-
 // This is deliberately a read-only proxy. The browser receives a public date
 // projection, while the Desktop backend keeps the canonical Settings and
 // booking records private behind its desktop API credentials.
@@ -34,34 +30,19 @@ router.get("/booking-availability", async (req, res) => {
   try {
     const { desktopBaseUrl, websiteId } = getDesktopSyncConfig();
     const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
-    
-    if (cachedBookingAvailability && Date.now() - cachedBookingAvailabilityTime < AVAILABILITY_TTL) {
-      if (requestedDays <= 120) {
-        return res.json(cachedBookingAvailability);
-      }
-    }
-
     const url = new URL(`${desktopBaseUrl}/api/ecommerce/booking-availability`);
     url.searchParams.set("websiteId", websiteId);
-    
-    const fetchDays = Math.max(120, requestedDays);
-    url.searchParams.set("days", String(fetchDays));
-    
+    url.searchParams.set("days", String(requestedDays));
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
         ...getDesktopAuthHeaders(),
       },
     });
-    
-    const body = await response.json().catch(() => null);
+    const body = await response.json().catch(() => null) as { error?: string } | null;
     if (!response.ok) {
       return res.status(502).json({ error: body?.error || "Booking availability is unavailable" });
     }
-    
-    cachedBookingAvailability = body;
-    cachedBookingAvailabilityTime = Date.now();
-    
     return res.json(body);
   } catch (err) {
     req.log.error({ err }, "Failed to load booking availability from Denver's Desk");
@@ -294,21 +275,17 @@ router.post("/bookings", async (req, res) => {
       } catch (syncErr) {
         desktopSyncError = syncErr instanceof Error ? syncErr.message : "Failed to forward booking to desktop";
         const capacityRejection = getCapacityRejection(syncErr);
-        
-        if (hasDatabase) {
-          try {
-            await db.delete(bookingsTable).where(eq(bookingsTable.id, booking.id));
-          } catch (cleanupErr) {
-            req.log.error({ err: cleanupErr, bookingId: booking.id }, "Failed to remove website booking after sync failure");
-          }
-        }
-        
         if (capacityRejection) {
+          if (hasDatabase) {
+            try {
+              await db.delete(bookingsTable).where(eq(bookingsTable.id, booking.id));
+            } catch (cleanupErr) {
+              req.log.error({ err: cleanupErr, bookingId: booking.id }, "Failed to remove website booking after canonical capacity rejection");
+            }
+          }
           return res.status(409).json({ error: capacityRejection, bookingUnavailable: true });
         }
-        
         req.log.error({ err: syncErr, bookingId: booking.id }, "Failed to forward booking to desktop");
-        return res.status(502).json({ error: "Booking could not be confirmed with the desk. Please try again later.", desktopSyncError });
       }
     }
 
@@ -406,6 +383,10 @@ router.post("/quote-request", async (req, res) => {
       shippingLabel = "",
       shippingPrice = 0,
       configurableProductId,
+      parametricProductId,
+      definitionId,
+      inputValues,
+      measurementInput,
       selections,
       selectedOptionIds,
       configuration
@@ -558,6 +539,24 @@ router.post("/quote-request", async (req, res) => {
         selectedOptionIds,
         configuration,
         selections
+      } : parametricProductId ? {
+        source: "quote-request",
+        quoteRequested: true,
+        productId: String(parametricProductId),
+        parametricProductId: String(parametricProductId),
+        definitionId: String(definitionId ?? parametricProductId),
+        quantity,
+        fullName,
+        email,
+        phone,
+        address1,
+        address2,
+        suburb,
+        city,
+        zipCode,
+        notes,
+        inputValues: inputValues ?? measurementInput ?? {},
+        measurementInput: measurementInput ?? inputValues ?? {},
       } : undefined,
       deferStockDeduction: true
     };

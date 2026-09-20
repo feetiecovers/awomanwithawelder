@@ -371,6 +371,8 @@ export function mapEntryToCatalogProduct(entry: SyncedStockEntry): CatalogProduc
 }
 
 export function mapEntryToStockResponse(entry: SyncedStockEntry, websiteId?: string) {
+  const declaredType = String(entry.type ?? entry.productType ?? "").trim().toLowerCase();
+  const publicType = declaredType === "parametric_product" ? "parametric_product" : entry._sourceType;
   const websiteImages = getWebsiteImageCandidates(entry.websiteImageMap, websiteId);
 
   const rawImages = Array.isArray(entry.images) && entry.images.length > 0
@@ -401,8 +403,8 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry, websiteId?: str
   return {
     ...entry,
     id: entry.id,
-    productType: entry._sourceType,
-    type: entry._sourceType,
+    productType: publicType,
+    type: publicType,
     price: toFiniteNumber(
       entry.displayPrice
       ?? entry.price

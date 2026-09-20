@@ -150,6 +150,19 @@ export async function postToDesktop(url: string, payload: unknown) {
 
 export async function forwardOrderToDesktop(orderObject: Record<string, unknown>) {
   const { ordersUrl } = getDesktopSyncConfig();
+  const websiteRequest = orderObject.websiteRequest;
+  if (websiteRequest && typeof websiteRequest === "object" && !Array.isArray(websiteRequest)) {
+    // Quote requests are a first-class desktop endpoint contract. Sending
+    // them inside an `orders` envelope bypasses the configurable/parametric
+    // quote handlers and turns a configured request into an ordinary order.
+    return postToDesktop(ordersUrl, {
+      ...orderObject,
+      ...(websiteRequest as Record<string, unknown>),
+      source: "quote-request",
+      quoteRequested: true,
+      websiteRequest,
+    });
+  }
   return postToDesktop(ordersUrl, { orders: [orderObject] });
 }
 

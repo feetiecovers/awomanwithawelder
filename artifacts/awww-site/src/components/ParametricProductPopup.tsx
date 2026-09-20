@@ -253,6 +253,13 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
   }, [rawProducts, productId]);
 
   const rules = useMemo(() => Array.isArray(product?.rules) ? product.rules : [], [product]);
+  const parametricDefinitionId = String(
+    (product as any)?.parametricProductId
+    ?? (product as any)?.definitionId
+    ?? (product as any)?.externalId
+    ?? product?.id
+    ?? "",
+  );
 
   useEffect(() => {
     if (!product) return;
@@ -332,7 +339,9 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
           source: "quote-request",
           quoteRequested: true,
           productId: product.id,
-          parametricProductId: product.id,
+          parametricProductId: parametricDefinitionId,
+          definitionId: parametricDefinitionId,
+          inputValues: measurementInput,
           quantity: 1,
           fullName: quoteForm.fullName,
           email: quoteForm.email,
@@ -347,8 +356,9 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
           calculatedPrice: pricing.totalSellPrice,
           websiteRequest: {
             source: "quote-request",
-            parametricProductId: product.id,
-            productId: product.id,
+            parametricProductId: parametricDefinitionId,
+            definitionId: parametricDefinitionId,
+            productId: parametricDefinitionId,
             quantity: 1,
             fullName: quoteForm.fullName,
             email: quoteForm.email,
@@ -359,6 +369,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
             zipCode: quoteForm.postcode,
             notes: quoteForm.notes,
             measurementInput,
+            inputValues: measurementInput,
             pricingSnapshot: pricing,
             calculationSnapshot: pricing,
             calculatedPrice: pricing.totalSellPrice,
