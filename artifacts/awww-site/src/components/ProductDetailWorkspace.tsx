@@ -306,6 +306,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   };
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -595,6 +596,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
          )}
       </div>
 
+    </motion.div>
+
     <QuoteRequestModal 
       isOpen={isQuoteModalOpen} 
       onClose={() => setIsQuoteModalOpen(false)} 
@@ -607,7 +610,6 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       }}
       configuration={configurationPayload}
     />
-
-    </motion.div>
+    </>
   );
 }
