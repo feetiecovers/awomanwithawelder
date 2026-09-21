@@ -177,3 +177,14 @@
   scrollbar-width: none !important;
 }
 
+@media (max-width: 640px) {
+  .mobile-no-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  .mobile-no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}

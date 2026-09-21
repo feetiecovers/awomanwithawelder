@@ -22,6 +22,7 @@ export interface QuoteRequestConfiguration {
   selectedOptions?: Array<Record<string, unknown>>;
   totalPriceAdjustment?: number;
   values?: Record<string, unknown>;
+  valueLabels?: Record<string, string>;
   parametricProductId?: string;
   definitionId?: string;
 }
@@ -159,15 +160,15 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 18 }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
+              className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial mobile-no-scrollbar max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
             >
-              <div className="flex items-center justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0 relative gap-3 sm:gap-0">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto text-center sm:text-left">
                   <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-2 sm:px-3 py-1 rounded-full font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] whitespace-nowrap shrink-0">
                     <FileText className="h-3 w-3 shrink-0" />
                     <span>Quote Request</span>
                   </div>
-                  <h3 className="font-mono text-xs sm:text-lg font-bold uppercase tracking-[0.12em] text-primary truncate">
+                  <h3 className="font-mono text-[13px] sm:text-lg font-bold uppercase tracking-[0.12em] text-primary truncate w-full sm:w-auto">
                     Request a Quote
                   </h3>
                 </div>
@@ -175,7 +176,7 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="h-8 w-8 rounded-full hover:bg-destructive/20 hover:text-destructive flex-shrink-0"
+                  className="absolute right-4 top-4 sm:static sm:right-auto sm:top-auto h-8 w-8 rounded-full hover:bg-destructive/20 hover:text-destructive flex-shrink-0"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -319,7 +320,7 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
                         ))}
                         {Object.entries(configuration.values || {}).map(([key, val]) => (
                           <div key={key} className="flex justify-between items-start gap-2">
-                            <span className="text-xs font-mono text-muted-foreground">{key}:</span>
+                            <span className="text-xs font-mono text-muted-foreground">{configuration.valueLabels?.[key] || key}:</span>
                             <span className="text-xs font-mono text-foreground text-right">{String(val)}</span>
                           </div>
                         ))}

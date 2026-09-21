@@ -247,6 +247,11 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     
     if (inputDefinitions.length > 0) {
       payload.values = parametricValues;
+      const labels: Record<string, string> = {};
+      inputDefinitions.forEach((def: any) => {
+        labels[getInputKey(def)] = def.name || def.label || getInputKey(def);
+      });
+      payload.valueLabels = labels;
       payload.parametricProductId = String(rawProduct.parametricProductId ?? rawProduct.definitionId ?? rawProduct.externalId ?? product.id);
       payload.definitionId = String(rawProduct.definitionId ?? rawProduct.parametricProductId ?? "");
     }
