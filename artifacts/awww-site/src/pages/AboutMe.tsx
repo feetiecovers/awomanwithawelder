@@ -67,15 +67,9 @@ export default function AboutMe() {
               </p>
             </div>
             
-            {/* Image Placeholder 1 */}
-            <div className="rounded-[28px] border-2 border-dashed border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[4/5] flex items-center justify-center p-6 text-center shadow-[0_0_30px_rgba(26,157,224,0.05)]">
-              <div className="space-y-2">
-                <div className="w-12 h-12 rounded-full bg-primary/10 mx-auto flex items-center justify-center border border-primary/20">
-                  <span className="font-mono text-primary/60">IMG</span>
-                </div>
-                <p className="font-mono text-xs uppercase tracking-widest text-primary/70">Placeholder</p>
-                <p className="text-[10px] text-muted-foreground font-mono">Suggested: Portrait of Charlotte in the workshop</p>
-              </div>
+            {/* Image 1 */}
+            <div className="rounded-[28px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[4/5] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden">
+              <img src="/about-portrait.jpg" alt="Portrait of Charlotte in the workshop" className="w-full h-full object-cover" />
             </div>
           </motion.section>
 
@@ -112,15 +106,9 @@ export default function AboutMe() {
             viewport={{ once: true }}
             className="grid gap-8 md:grid-cols-[0.9fr_1.1fr] items-center"
           >
-            {/* Image Placeholder 2 */}
-            <div className="rounded-[28px] border-2 border-dashed border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-square flex items-center justify-center p-6 text-center shadow-[0_0_30px_rgba(26,157,224,0.05)] md:order-1 order-2">
-              <div className="space-y-2">
-                <div className="w-12 h-12 rounded-full bg-primary/10 mx-auto flex items-center justify-center border border-primary/20">
-                  <span className="font-mono text-primary/60">IMG</span>
-                </div>
-                <p className="font-mono text-xs uppercase tracking-widest text-primary/70">Placeholder</p>
-                <p className="text-[10px] text-muted-foreground font-mono">Suggested: Trailer manufacturing or repair work</p>
-              </div>
+            {/* Image 2 */}
+            <div className="rounded-[28px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-square flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] md:order-1 order-2 overflow-hidden">
+              <img src="/about-trailer.jpg" alt="Trailer manufacturing or repair work" className="w-full h-full object-cover" />
             </div>
 
             <div className="md:order-2 order-1">
@@ -141,20 +129,14 @@ export default function AboutMe() {
             </div>
           </motion.section>
 
-          {/* Image Placeholder 3 (Wide) */}
+          {/* Image 3 (Wide) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="w-full rounded-[32px] border-2 border-dashed border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[21/9] sm:aspect-[3/1] flex items-center justify-center p-6 text-center shadow-[0_0_30px_rgba(26,157,224,0.05)]"
+            className="w-full rounded-[32px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[21/9] sm:aspect-[3/1] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden"
           >
-            <div className="space-y-2">
-              <div className="w-12 h-12 rounded-full bg-primary/10 mx-auto flex items-center justify-center border border-primary/20">
-                <span className="font-mono text-primary/60">IMG</span>
-              </div>
-              <p className="font-mono text-xs uppercase tracking-widest text-primary/70">Placeholder</p>
-              <p className="text-[10px] text-muted-foreground font-mono">Suggested: Wide shot of the workshop or a completed project</p>
-            </div>
+            <img src="/about-wide.jpg" alt="Wide shot of the workshop or a completed project" className="w-full h-full object-cover" />
           </motion.div>
 
           {/* CTA Section */}
