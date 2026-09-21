@@ -603,7 +603,13 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 Offerings
               </h2>
               <div className="hidden xs:flex items-center gap-1.5 opacity-60 ml-2 border-l border-primary/20 pl-3">
-                <img src={ddIcon} alt="Denver's Desk" className="w-3.5 h-3.5 object-contain" />
+                <motion.img 
+                  src={ddIcon} 
+                  alt="Denver's Desk" 
+                  className="w-3.5 h-3.5 object-contain"
+                  animate={{ y: [-1, 1, -1] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
                 <span className="font-mono text-[9px] tracking-wider uppercase text-primary/80">Powered by Denver's Desk</span>
               </div>
             </div>
@@ -932,7 +938,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
             )}
 
             {activeTab === "services" && (
-              <div className="flex-1 scroll-industrial px-5 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto scroll-industrial px-5 py-4 space-y-4">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-8 font-mono text-muted-foreground text-sm">
                     Loading services...
@@ -955,9 +961,9 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           </span>
                         </div>
                       )}
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-base text-foreground">{item.name}</h3>
-                        <span className="font-mono text-primary font-bold text-base ml-2 shrink-0">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-1 sm:gap-2">
+                        <h3 className="font-bold text-sm sm:text-base text-foreground leading-tight">{item.name}</h3>
+                        <span className="font-mono text-primary font-bold text-sm sm:text-base shrink-0">
                           From {formatCurrency(item.price)}
                         </span>
                       </div>
@@ -1001,12 +1007,12 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
               >
                 <div className="flex items-center justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-[0.2em]">
-                      <Wrench className="h-3 w-3" />
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-2 sm:px-3 py-1 rounded-full font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] whitespace-nowrap shrink-0">
+                      <Wrench className="h-3 w-3 shrink-0" />
                       <span>Service Booking</span>
                     </div>
-                    <h3 className="font-mono text-base sm:text-lg font-bold uppercase tracking-[0.12em] text-primary">
+                    <h3 className="font-mono text-xs sm:text-lg font-bold uppercase tracking-[0.12em] text-primary truncate">
                       {selectedService.name}
                     </h3>
                   </div>

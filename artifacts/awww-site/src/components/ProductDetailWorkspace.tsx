@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowLeft, Send, CheckCircle2, X, Settings2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Send, CheckCircle2, X, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,6 +88,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   
   // Parametric State: record of input name -> value
   const [parametricValues, setParametricValues] = useState<Record<string, any>>({});
+  
+  const [isParametricOpen, setIsParametricOpen] = useState(false);
 
   // --- STOREFRONT PRODUCT MODEL STATE ---
   const purchaseModes = Array.isArray(rawProduct.purchaseModes) ? rawProduct.purchaseModes : [];
@@ -441,8 +443,15 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               {/* Parametric Product Controls */}
               {inputDefinitions.length > 0 && (
                 <div className="bg-[#09111b]/80 border border-primary/15 rounded-2xl p-5 space-y-6">
-                  <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary border-b border-primary/10 pb-3">Custom Dimensions & Features</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
+                    onClick={() => setIsParametricOpen(!isParametricOpen)}
+                  >
+                    <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Custom Dimensions & Features</h3>
+                    {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
+                  </div>
+                  {isParametricOpen && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
                   {inputDefinitions.map((def: any) => {
                 const inputKey = getInputKey(def);
                 const controlType = getInputControlType(def);
@@ -545,6 +554,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                   );
                 })}
                   </div>
+                  )}
                 </div>
               )}
             </div>
@@ -556,8 +566,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       {/* Bottom: Action Area */}
       <div className="shrink-0 bg-[#0d1520] border-t border-primary/20 p-5 flex flex-col gap-3 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
          <div className="flex justify-between items-center px-1">
-           <span className="text-muted-foreground text-xs uppercase tracking-widest font-mono">Total (inc. GST)</span>
-           <span className="text-white font-mono text-lg font-medium tracking-tight">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
+           <span className="text-muted-foreground text-xs uppercase tracking-widest font-mono shrink-0">Total (inc. GST)</span>
+           <span className="text-white font-mono text-sm sm:text-lg font-medium tracking-tight whitespace-nowrap ml-2 overflow-hidden text-ellipsis text-right">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
          </div>
          <div className="flex flex-col sm:flex-row gap-3">
             {!requiresCalculatedQuote && <Button

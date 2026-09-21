@@ -162,12 +162,12 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
               className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
             >
               <div className="flex items-center justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-[0.2em]">
-                    <FileText className="h-3 w-3" />
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-2 sm:px-3 py-1 rounded-full font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.2em] whitespace-nowrap shrink-0">
+                    <FileText className="h-3 w-3 shrink-0" />
                     <span>Quote Request</span>
                   </div>
-                  <h3 className="font-mono text-base sm:text-lg font-bold uppercase tracking-[0.12em] text-primary">
+                  <h3 className="font-mono text-xs sm:text-lg font-bold uppercase tracking-[0.12em] text-primary truncate">
                     Request a Quote
                   </h3>
                 </div>

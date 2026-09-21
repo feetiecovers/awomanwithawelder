@@ -193,7 +193,7 @@ export default function AboutMe() {
                   // We'll dispatch a custom event to open the contact tab in BottomRightMenu
                   window.dispatchEvent(new CustomEvent('open-contact'));
                 }}
-                className="h-14 px-8 rounded-full font-mono uppercase tracking-[0.2em] text-sm bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_30px_rgba(26,157,224,0.6)] transition-all flex items-center gap-3"
+                className="h-12 sm:h-14 px-4 sm:px-8 rounded-full font-mono uppercase tracking-widest sm:tracking-[0.2em] text-xs sm:text-sm bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_30px_rgba(26,157,224,0.6)] transition-all flex items-center gap-2 sm:gap-3 whitespace-nowrap"
               >
                 <MessageSquare className="w-5 h-5" />
                 Tell Me About Your Project

@@ -102,7 +102,7 @@ export function FloatingSocials() {
               }}
               whileTap={{ scale: 0.92 }}
               transition={{ type: "spring", stiffness: 280, damping: 18 }}
-              className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center cursor-pointer transition-all duration-300"
+              className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-40 sm:opacity-100 hover:opacity-100"
               style={{
                 filter: `drop-shadow(0 0 14px ${social.glowColor})`,
               }}
