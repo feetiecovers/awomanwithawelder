@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { buildApiUrl } from '@/lib/api-base';
 import { QuoteRequestModal } from './QuoteRequestModal';
+import { PARAMETRIC_CATEGORIES_CONFIG } from '@/content/parametricCategories';
+import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
@@ -90,6 +92,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const [parametricValues, setParametricValues] = useState<Record<string, any>>({});
   
   const [isParametricOpen, setIsParametricOpen] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+  const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
 
   // --- STOREFRONT PRODUCT MODEL STATE ---
   const purchaseModes = Array.isArray(rawProduct.purchaseModes) ? rawProduct.purchaseModes : [];
@@ -127,7 +131,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       });
     }
     setConfigSelections(defaults);
-  }, [product]);
+  }, [product.id]);
 
   // --- INITIALIZE PARAMETRIC DEFAULTS ---
   useEffect(() => {
@@ -143,7 +147,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       else if (controlType === 'checkbox') defaults[key] = false;
     });
     setParametricValues(defaults);
-  }, [product]);
+  }, [product.id]);
 
   // --- IMAGE GALLERY RESOLUTION ---
   const galleryImages = useMemo(() => {
@@ -257,10 +261,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     }
 
     return { 
-      activePrice: basePrice + adjustment,
+      activePrice: resolvedPrice !== null ? resolvedPrice : basePrice + adjustment,
       configurationPayload: payload
     };
-  }, [product, configSelections, parametricValues]);
+  }, [product, configSelections, parametricValues, resolvedPrice]);
 
   const pricing = getPricingBreakdown(activePrice);
   const requiresCalculatedQuote = product.type === "parametric" && activePrice <= 0;
@@ -272,6 +276,53 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       return value === undefined || value === null || value === '';
     })
     .map((definition: any) => String(definition?.label || getInputKey(definition)));
+
+  // --- PARAMETRIC PRICING RESOLUTION ---
+  useEffect(() => {
+    if (inputDefinitions.length === 0 || missingRequiredInputs.length > 0) {
+      setResolvedPrice(null);
+      return;
+    }
+    
+    const controller = new AbortController();
+    setIsResolving(true);
+    
+    const activeDefinitionId = parametricMode?.definitionId || rawProduct.definitionId || rawProduct.parametricProductId || rawProduct.externalId || String(product.id);
+    const activeDefinitionVersion = parametricMode?.definitionVersion || rawProduct.definitionVersion || '';
+
+    const resolverUrl = buildApiUrl('/api/ecommerce/configuration/resolve');
+    fetch(resolverUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1779707521643',
+        commercialProductId: product.type === 'parametric' ? (parametricMode?.commercialProductId || rawProduct.commercialProductId || undefined) : product.id,
+        purchaseMode: 'parametric',
+        definitionId: activeDefinitionId,
+        definitionVersion: activeDefinitionVersion,
+        inputValues: parametricValues,
+        quantity: 1,
+      }),
+      signal: controller.signal
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (!controller.signal.aborted && result?.valid && result?.sellPrice !== undefined) {
+          setResolvedPrice(Number(result.sellPrice));
+        } else if (!controller.signal.aborted) {
+          setResolvedPrice(null);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setResolvedPrice(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsResolving(false);
+      });
+      
+    return () => controller.abort();
+  }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
+
   const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0;
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
@@ -298,7 +349,21 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   };
 
   const handleAddToCart = () => {
-    onAddToCart({ product, options: configurationPayload });
+    const payloads = [{ product, options: configurationPayload }];
+    
+    // Check for bundled background products
+    const bundleFn = BUNDLED_PRODUCTS_CONFIG[String(product.id)] || BUNDLED_PRODUCTS_CONFIG[rawProduct.sku];
+    if (bundleFn) {
+      const bundledIds = bundleFn(configurationPayload);
+      bundledIds.forEach(id => {
+        payloads.push({ 
+           product: { id, type: 'product', name: `Bundled Product #${id}`, price: 0, available: true } as any, 
+           options: null 
+        });
+      });
+    }
+    
+    onAddToCart(payloads);
   };
 
   const handleRequestQuote = () => {
@@ -449,16 +514,29 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               {/* Parametric Product Controls */}
               {inputDefinitions.length > 0 && (
                 <div className="bg-[#09111b]/80 border border-primary/15 rounded-2xl p-5 space-y-6">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
-                    onClick={() => setIsParametricOpen(!isParametricOpen)}
-                  >
-                    <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Custom Dimensions & Features</h3>
-                    {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
-                  </div>
-                  {isParametricOpen && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
-                  {inputDefinitions.map((def: any) => {
+                  {(() => {
+                    const categoriesMap = PARAMETRIC_CATEGORIES_CONFIG[String(product.id)] || PARAMETRIC_CATEGORIES_CONFIG[rawProduct.sku] || {};
+                    const categorizedInputs: Record<string, any[]> = {};
+                    
+                    inputDefinitions.forEach((def: any) => {
+                      const inputKey = getInputKey(def);
+                      const category = categoriesMap[inputKey] || "Configuration";
+                      if (!categorizedInputs[category]) categorizedInputs[category] = [];
+                      categorizedInputs[category].push(def);
+                    });
+                    
+                    return Object.entries(categorizedInputs).map(([category, defs]) => (
+                      <div key={category} className="space-y-4">
+                        <div 
+                          className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
+                          onClick={() => setIsParametricOpen(!isParametricOpen)}
+                        >
+                          <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{category}</h3>
+                          {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
+                        </div>
+                        {isParametricOpen && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                            {defs.map((def: any) => {
                 const inputKey = getInputKey(def);
                 const controlType = getInputControlType(def);
                 const minimum = getInputMinimum(def);
@@ -518,6 +596,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                            return (
                              <button
                                key={choice.id ?? choice.value}
+                               type="button"
                                onClick={() => handleParametricChange(inputKey, choice.value)}
                                className={`text-left p-3 rounded-lg border font-mono text-xs transition-all ${
                                  isSelected
@@ -561,6 +640,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 })}
                   </div>
                   )}
+                  </div>
+                    ));
+                  })()}
                 </div>
               )}
             </div>
@@ -575,13 +657,13 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
            <span className="text-muted-foreground text-xs uppercase tracking-widest font-mono shrink-0">Total (inc. GST)</span>
            <span className="text-white font-mono text-sm sm:text-lg font-medium tracking-tight whitespace-nowrap ml-2 overflow-hidden text-ellipsis text-right">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
          </div>
-         <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {!requiresCalculatedQuote && <Button
               className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
               onClick={handleAddToCart}
-              disabled={!canAddConfiguredProductToCart}
+              disabled={!canAddConfiguredProductToCart || isResolving}
             >
-              {missingRequiredInputs.length > 0 ? "Complete Measurements" : "Add to Cart"}
+              {isResolving ? "Resolving..." : (missingRequiredInputs.length > 0 ? "Complete Measurements" : "Add to Cart")}
             </Button>}
             <Button
               variant="outline"

@@ -582,7 +582,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
               product={selectedWorkspaceProduct}
               onClose={() => setSelectedWorkspaceProduct(null)}
               onAddToCart={(payload) => {
-                onAddToCartClick(payload.product, payload.options);
+                if (Array.isArray(payload)) {
+                  payload.forEach(p => onAddToCartClick(p.product, p.options));
+                } else {
+                  onAddToCartClick(payload.product, payload.options);
+                }
               }}
               onRequestQuote={(payload) => {
                 // Now handled internally inside ProductDetailWorkspace
