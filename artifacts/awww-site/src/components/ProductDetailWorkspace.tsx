@@ -215,66 +215,6 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const activeImage = galleryImages[currentImageIndex];
 
-  // --- PARAMETRIC PRICING RESOLUTION ---
-  const [resolution, setResolution] = useState<any>(null);
-  const [isResolving, setIsResolving] = useState(false);
-
-  useEffect(() => {
-    if (inputDefinitions.length === 0) {
-      setResolution(null);
-      return;
-    }
-    
-    const missing = inputDefinitions
-      .filter((definition: any) => definition?.required === true)
-      .filter((definition: any) => {
-        const value = parametricValues[getInputKey(definition)];
-        return value === undefined || value === null || value === '';
-      });
-      
-    if (missing.length > 0) {
-      setResolution(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    setIsResolving(true);
-    
-    // Website 1 logic: POST to /api/ecommerce/configuration/resolve
-    const resolverUrl = buildApiUrl("/api/ecommerce/configuration/resolve");
-    const payload = {
-      websiteId: import.meta.env.VITE_WEBSITE_ID || "web-1779707521643",
-      commercialProductId: rawProduct.commercialProductId || product.id,
-      purchaseMode: "parametric",
-      definitionId: rawProduct.definitionId ?? rawProduct.parametricProductId ?? "",
-      definitionVersion: rawProduct.definitionVersion,
-      inputValues: parametricValues,
-      quantity: 1,
-    };
-
-    fetch(resolverUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (result?.valid) {
-          setResolution(result);
-        } else {
-          setResolution(null);
-        }
-      })
-      .catch(err => {
-        if (err.name !== 'AbortError') setResolution(null);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsResolving(false);
-      });
-      
-    return () => controller.abort();
-  }, [parametricValues, inputDefinitions, product.id, rawProduct]);
 
   // --- PRICING CALCULATION ---
   const { activePrice, configurationPayload } = useMemo(() => {
