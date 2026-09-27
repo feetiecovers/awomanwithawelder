@@ -259,13 +259,6 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       payload.valueLabels = labels;
       payload.parametricProductId = String(rawProduct.parametricProductId ?? rawProduct.definitionId ?? rawProduct.externalId ?? product.id);
       payload.definitionId = String(rawProduct.definitionId ?? rawProduct.parametricProductId ?? "");
-      
-      if (resolution && typeof resolution.price === 'number') {
-        return {
-          activePrice: resolution.price,
-          configurationPayload: { ...payload, resolution }
-        };
-      }
     }
 
     return { 
