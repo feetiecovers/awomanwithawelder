@@ -143,9 +143,15 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       if (!key) return;
       const controlType = getInputControlType(def);
       const defaultChoice = getInputChoices(def).find((choice: any) => choice?.isDefault === true);
-      if (def.defaultValue !== undefined) defaults[key] = def.defaultValue;
-      else if (defaultChoice) defaults[key] = defaultChoice.value;
-      else if (controlType === 'checkbox') defaults[key] = false;
+      if (def.defaultValue !== undefined && def.defaultValue !== null && def.defaultValue !== "") {
+        defaults[key] = def.defaultValue;
+      } else if (defaultChoice) {
+        defaults[key] = defaultChoice.value || defaultChoice.label || defaultChoice.name || defaultChoice.id;
+      } else if (controlType === 'checkbox') {
+        defaults[key] = false;
+      } else if ((controlType === 'number' || controlType === 'slider') && def.minimum !== undefined) {
+        defaults[key] = def.minimum;
+      }
     });
     setParametricValues(defaults);
   }, [product.id]);
@@ -297,7 +303,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1779707521643',
+        websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289',
         commercialProductId: product.type === 'parametric' ? (parametricMode?.commercialProductId || rawProduct.commercialProductId || undefined) : product.id,
         purchaseMode: 'parametric',
         definitionId: activeDefinitionId,
