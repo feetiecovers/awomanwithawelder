@@ -215,6 +215,67 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   const activeImage = galleryImages[currentImageIndex];
 
+  // --- PARAMETRIC PRICING RESOLUTION ---
+  const [resolution, setResolution] = useState<any>(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  useEffect(() => {
+    if (inputDefinitions.length === 0) {
+      setResolution(null);
+      return;
+    }
+    
+    const missing = inputDefinitions
+      .filter((definition: any) => definition?.required === true)
+      .filter((definition: any) => {
+        const value = parametricValues[getInputKey(definition)];
+        return value === undefined || value === null || value === '';
+      });
+      
+    if (missing.length > 0) {
+      setResolution(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsResolving(true);
+    
+    // Website 1 logic: POST to /api/ecommerce/configuration/resolve
+    const resolverUrl = buildApiUrl("/api/ecommerce/configuration/resolve");
+    const payload = {
+      websiteId: import.meta.env.VITE_WEBSITE_ID || "web-1779707521643",
+      commercialProductId: rawProduct.commercialProductId || product.id,
+      purchaseMode: "parametric",
+      definitionId: rawProduct.definitionId ?? rawProduct.parametricProductId ?? "",
+      definitionVersion: rawProduct.definitionVersion,
+      inputValues: parametricValues,
+      quantity: 1,
+    };
+
+    fetch(resolverUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result?.valid) {
+          setResolution(result);
+        } else {
+          setResolution(null);
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') setResolution(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsResolving(false);
+      });
+      
+    return () => controller.abort();
+  }, [parametricValues, inputDefinitions, product.id, rawProduct]);
+
   // --- PRICING CALCULATION ---
   const { activePrice, configurationPayload } = useMemo(() => {
     let basePrice = Number(product.price || rawProduct.sellPrice || rawProduct.basePrice || 0);
@@ -258,6 +319,13 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       payload.valueLabels = labels;
       payload.parametricProductId = String(rawProduct.parametricProductId ?? rawProduct.definitionId ?? rawProduct.externalId ?? product.id);
       payload.definitionId = String(rawProduct.definitionId ?? rawProduct.parametricProductId ?? "");
+      
+      if (resolution && typeof resolution.price === 'number') {
+        return {
+          activePrice: resolution.price,
+          configurationPayload: { ...payload, resolution }
+        };
+      }
     }
 
     return { 
@@ -585,19 +653,23 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                        className="h-10 rounded-md border border-primary/20 bg-black/30 px-3 font-mono text-xs text-white"
                      >
                        <option value="">Choose an option</option>
-                       {choices.map((choice: any) => <option key={choice.id ?? choice.value} value={choice.value}>{choice.label || choice.value}</option>)}
+                       {choices.map((choice: any) => {
+                           const val = choice.value ?? choice.name ?? choice.id;
+                           return <option key={val} value={val}>{choice.label || choice.name || val}</option>
+                       })}
                      </select>
                    )}
 
                    {controlType === 'choice' && choices.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {choices.map((choice: any) => {
-                           const isSelected = parametricValues[inputKey] === choice.value;
+                           const val = choice.value ?? choice.name ?? choice.id;
+                           const isSelected = String(parametricValues[inputKey]) === String(val);
                            return (
                              <button
-                               key={choice.id ?? choice.value}
+                               key={val}
                                type="button"
-                               onClick={() => handleParametricChange(inputKey, choice.value)}
+                               onClick={() => handleParametricChange(inputKey, val)}
                                className={`text-left p-3 rounded-lg border font-mono text-xs transition-all ${
                                  isSelected
                                    ? "border-primary bg-primary/10 text-primary shadow-[inset_0_0_12px_rgba(26,157,224,0.2)]"
@@ -605,9 +677,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                                }`}
                              >
                                <div className="flex justify-between items-center">
-                                 <span className="truncate">{choice.label || choice.value}</span>
+                                 <span className="truncate">{choice.label || choice.name || val}</span>
                                  {Number(choice.priceAdjustment || 0) > 0 && (
-                                   <span className="shrink-0 text-[10px]">+${Number(choice.priceAdjustment).toFixed(2)}</span>
+                                   <span className="shrink-0 text-[10px]">+{Number(choice.priceAdjustment).toFixed(2)}</span>
                                  )}
                                </div>
                              </button>

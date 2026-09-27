@@ -886,7 +886,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <Button
                                       variant="outline"
                                       onClick={() => setSelectedWorkspaceProduct(item)}
-                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/20 text-primary hover:bg-primary/10 hover:text-primary transition-colors"
+                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
                                       data-testid={`button-view-product-${item.id}`}
                                     >
                                       View Product
