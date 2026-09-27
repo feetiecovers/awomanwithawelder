@@ -45,11 +45,12 @@ function getInputControlType(definition: any): 'slider' | 'number' | 'dropdown' 
   if (authored === 'slider' || authored === 'number' || authored === 'dropdown' || authored === 'choice' || authored === 'checkbox') {
     return authored;
   }
+  if (authored === 'stepped_slider') return 'number';
   const legacy = String(definition?.inputType ?? definition?.type ?? '').trim().toLowerCase();
   if (legacy === 'discrete' || legacy === 'select' || legacy === 'dropdown') return 'dropdown';
   if (legacy === 'boolean' || legacy === 'checkbox') return 'checkbox';
   if (legacy === 'number' && definition?.min !== undefined && definition?.max !== undefined) return 'slider';
-  if (legacy === 'number') return 'number';
+  if (legacy === 'number' || ['length', 'width', 'height', 'depth', 'weight'].includes(legacy)) return 'number';
   return 'text';
 }
 
@@ -568,15 +569,22 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                    )}
 
                    {controlType === 'number' && (
-                     <Input
-                       type="number"
-                       min={minimum}
-                       max={maximum}
-                       step={def.step || 1}
-                       value={parametricValues[inputKey] ?? ''}
-                       onChange={(event) => handleParametricChange(inputKey, event.target.value === '' ? undefined : Number(event.target.value))}
-                       className="bg-black/30 border-primary/20 text-white"
-                     />
+                     <div className="flex flex-col gap-1">
+                       <Input
+                         type="number"
+                         min={minimum}
+                         max={maximum}
+                         step={def.step || 1}
+                         value={parametricValues[inputKey] ?? ''}
+                         onChange={(event) => handleParametricChange(inputKey, event.target.value === '' ? undefined : Number(event.target.value))}
+                         className="bg-black/30 border-primary/20 text-white"
+                       />
+                       {parametricValues[inputKey] !== undefined && def.step && ((parametricValues[inputKey] - (minimum || 0)) % def.step !== 0) && (
+                         <span className="text-[10px] text-pink-400 font-mono">
+                           Must be in increments of {def.step}{unit}
+                         </span>
+                       )}
+                     </div>
                    )}
 
                    {controlType === 'dropdown' && (
