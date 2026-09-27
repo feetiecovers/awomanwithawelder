@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSubmitContact } from "@workspace/api-client-react";
+
 import { Send, Menu, MessageSquare, MousePointer2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StreamChatWidget from "./StreamChatWidget";
@@ -41,8 +41,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     }
   }, [isOpen, activeMenuTab]);
   
-  const submitContact = useSubmitContact();
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [visitorId, setVisitorId] = useState('');
   const [visitorName, setVisitorName] = useState('');
@@ -138,17 +138,29 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     };
   }, [visitorId]);
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    submitContact.mutate({ data: contactForm }, {
-      onSuccess: () => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('https://formsubmit.co/ajax/charlotte@awomanwithawelder.co.nz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(contactForm)
+      });
+      if (res.ok) {
         toast({ title: "Message sent", description: "We'll get back to you soon." });
         setContactForm({ name: "", email: "", phone: "", message: "" });
-      },
-      onError: () => {
-        toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
+      } else {
+        throw new Error("Failed");
       }
-    });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -258,9 +270,9 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
                     <Button 
                       type="submit" 
                       className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/80 transition-all"
-                      disabled={submitContact.isPending}
+                      disabled={isSubmitting}
                     >
-                      {submitContact.isPending ? "Sending..." : "Send Message"}
+                      {isSubmitting ? "Sending..." : "Send Message"}
                     </Button>
                   </form>
                 </TabsContent>
