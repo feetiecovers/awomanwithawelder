@@ -587,7 +587,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                      >
                        <option value="">Choose an option</option>
                        {choices.map((choice: any) => {
-                           const val = choice.value ?? choice.name ?? choice.id;
+                           const val = choice.value || choice.label || choice.name || choice.id;
                            return <option key={val} value={val}>{choice.label || choice.name || val}</option>
                        })}
                      </select>
@@ -596,7 +596,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                    {controlType === 'choice' && choices.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {choices.map((choice: any) => {
-                           const val = choice.value ?? choice.name ?? choice.id;
+                           const val = choice.value || choice.label || choice.name || choice.id;
                            const isSelected = String(parametricValues[inputKey]) === String(val);
                            return (
                              <button
