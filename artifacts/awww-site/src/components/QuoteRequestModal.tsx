@@ -308,7 +308,7 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
                     )}
                   </div>
 
-                  {configuration && (configuration.selectedOptions?.length > 0 || Object.keys(configuration.values || {}).length > 0) && (
+                  {configuration && ((configuration.selectedOptions?.length ?? 0) > 0 || Object.keys(configuration.values || {}).length > 0) && (
                     <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-4">
                       <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60 mb-3">Configuration</p>
                       <div className="space-y-2">

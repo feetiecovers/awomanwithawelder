@@ -52,11 +52,68 @@ type SyncedParametricProduct = {
   measurementUnit?: string;
   pricingMode?: "linear" | "tiered" | "formula";
   rules?: SyncedParametricRule[];
+  definitionId?: string;
+  parametricProductId?: string;
+  commercialProductId?: string;
+  definitionVersion?: number;
+  inputDefinitions?: SyncedInputDefinition[];
   available?: boolean;
   showOnWebsite?: boolean;
 };
 
-type MeasurementInput = Partial<Record<"value" | "quantity" | "length" | "area" | "step" | "formula", number>>;
+type InputChoice = { id?: string; value?: string | number | boolean; label?: string; isDefault?: boolean };
+type SyncedInputDefinition = {
+  id?: string;
+  key?: string;
+  inputType?: string;
+  controlType?: "dropdown" | "button_group" | "checkboxes" | "toggle" | "colour_swatch" | "quantity" | "number" | "slider" | "stepped_slider";
+  label?: string;
+  minimum?: number;
+  maximum?: number;
+  step?: number;
+  precision?: number;
+  defaultValue?: string | number | boolean;
+  required?: boolean;
+  unit?: string;
+  helperText?: string;
+  choices?: InputChoice[];
+};
+
+type MeasurementInput = Record<string, string | number | boolean | string[] | undefined>;
+type ParametricResolution = {
+  valid: boolean;
+  sellPrice?: number;
+  definitionId?: string;
+  definitionVersion?: number;
+  configurationHash?: string;
+  selectedConfiguration?: Record<string, unknown>;
+  summary?: Array<{ inputKey?: string; label?: string; displayValue?: string }>;
+};
+
+function inputKey(definition: SyncedInputDefinition): string {
+  return String(definition.key || definition.inputType || definition.id || "").trim();
+}
+
+function controlType(definition: SyncedInputDefinition) {
+  if (definition.controlType) return definition.controlType;
+  if (definition.inputType === "toggle") return "toggle";
+  return Array.isArray(definition.choices) && definition.choices.length > 0 ? "dropdown" : "number";
+}
+
+function choiceValue(choice: InputChoice): string | number | boolean {
+  if (choice.value !== undefined && choice.value !== null && String(choice.value).trim()) return choice.value;
+  return choice.label || choice.id || "";
+}
+
+function defaultValue(definition: SyncedInputDefinition): string | number | boolean | string[] {
+  if (definition.defaultValue !== undefined && definition.defaultValue !== null && String(definition.defaultValue).trim()) return definition.defaultValue;
+  const defaultChoice = definition.choices?.find((choice) => choice.isDefault);
+  if (defaultChoice) return choiceValue(defaultChoice);
+  if (controlType(definition) === "toggle") return false;
+  if (controlType(definition) === "checkboxes") return [];
+  if ((controlType(definition) === "slider" || controlType(definition) === "stepped_slider") && Number.isFinite(Number(definition.minimum))) return Number(definition.minimum);
+  return "";
+}
 
 const GST_RATE = 0.15;
 
@@ -235,6 +292,9 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
   const [measurementInput, setMeasurementInput] = useState<MeasurementInput>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [resolution, setResolution] = useState<ParametricResolution | null>(null);
+  const [resolverError, setResolverError] = useState("");
+  const [isResolving, setIsResolving] = useState(false);
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
     fullName: "",
     email: "",
@@ -264,13 +324,49 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
   useEffect(() => {
     if (!product) return;
     const next: MeasurementInput = {};
+    for (const input of (product.inputDefinitions ?? [])) {
+      const key = inputKey(input);
+      if (key) next[key] = defaultValue(input);
+    }
     for (const rule of rules) {
       const key = rule.basis === "formula" ? "formula" : rule.basis === "step" ? "step" : rule.basis;
       if (next[key] === undefined) next[key] = undefined;
     }
     setMeasurementInput(next);
     setIsSubmitted(false);
+    setResolution(null);
+    setResolverError("");
   }, [product, rules]);
+
+  useEffect(() => {
+    if (!isOpen || !product || !parametricDefinitionId) return;
+    const definitions = product.inputDefinitions ?? [];
+    if (definitions.length === 0) return;
+    const missing = definitions.filter((input) => {
+      if (input.required === false) return false;
+      const value = measurementInput[inputKey(input)];
+      return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+    });
+    if (missing.length > 0) {
+      setResolution(null);
+      setResolverError(`Choose ${missing.map((input) => input.label || inputKey(input)).join(", ")}`);
+      setIsResolving(false);
+      return;
+    }
+    const controller = new AbortController();
+    setIsResolving(true);
+    setResolverError("");
+    fetch(buildApiUrl('/api/ecommerce/configuration/resolve'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null) as ParametricResolution | null;
+        if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) throw new Error((result as any)?.error || "These inputs could not be resolved");
+        return result;
+      })
+      .then((result) => { if (!controller.signal.aborted) setResolution(result); })
+      .catch((error: Error) => { if (!controller.signal.aborted) { setResolution(null); setResolverError(error.message || "These inputs could not be resolved"); } })
+      .finally(() => { if (!controller.signal.aborted) setIsResolving(false); });
+    return () => controller.abort();
+  }, [isOpen, product, parametricDefinitionId, measurementInput]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -281,16 +377,26 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     };
   }, [isOpen]);
 
-  const pricing = useMemo(() => evaluateParametricPricing(product ?? { id: 0, name: "", price: 0, rules: [] }, measurementInput), [product, measurementInput]);
+  const pricing = useMemo(() => {
+    const local = evaluateParametricPricing(product ?? { id: 0, name: "", price: 0, rules: [] }, measurementInput);
+    return resolution?.valid && Number.isFinite(Number(resolution.sellPrice)) ? { ...local, totalSellPrice: Number(resolution.sellPrice) } : local;
+  }, [product, measurementInput, resolution]);
   const measurementSummary = useMemo(() => product ? formatMeasurementSummary(product, measurementInput) : "", [product, measurementInput]);
   const missingRequiredMeasurements = useMemo(() => {
     if (!product) return [];
+    const definitions = product.inputDefinitions ?? [];
+    if (definitions.length > 0) return definitions.filter((input) => {
+      const value = measurementInput[inputKey(input)];
+      return input.required !== false && (value === undefined || value === "" || (Array.isArray(value) && value.length === 0));
+    }).map((input) => input.label || inputKey(input));
     return rules
       .filter((rule) => resolveMeasurementInput(rule, measurementInput) === null)
       .map((rule) => rule.label || rule.id);
   }, [measurementInput, product, rules]);
 
   const measurementFieldGroups = useMemo(() => {
+    const definitions = product?.inputDefinitions ?? [];
+    if (definitions.length) return definitions;
     const groups: SyncedParametricRule[] = [];
     const seen = new Set<string>();
     for (const rule of rules) {
@@ -301,12 +407,12 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     return groups;
   }, [rules]);
 
-  const updateMeasurement = (basis: SyncedParametricRule["basis"], value: string) => {
-    setMeasurementInput((prev) => ({
-      ...prev,
-      [basis === "formula" ? "formula" : basis === "step" ? "step" : basis]: value === "" ? undefined : Number(value),
-    }));
-  };
+  const setValue = (key: string, value: MeasurementInput[string]) => setMeasurementInput((previous) => ({ ...previous, [key]: value }));
+  const toggleChoice = (key: string, value: string | number | boolean) => setMeasurementInput((previous) => {
+    const selected = Array.isArray(previous[key]) ? previous[key] as string[] : [];
+    const normalised = String(value);
+    return { ...previous, [key]: selected.includes(normalised) ? selected.filter((entry) => entry !== normalised) : [...selected, normalised] };
+  });
 
   const handleSubmitQuote = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -318,6 +424,10 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
         description: `Please enter: ${missingRequiredMeasurements.join(", ")}.`,
         variant: "destructive",
       });
+      return;
+    }
+    if ((product.inputDefinitions?.length ?? 0) > 0 && (!resolution?.valid || !Number.isFinite(Number(resolution.sellPrice)))) {
+      toast({ title: "Configuration Required", description: resolverError || "Please wait for your configuration to be resolved.", variant: "destructive" });
       return;
     }
     if (!quoteForm.fullName || !quoteForm.email || !quoteForm.phone) {
@@ -342,6 +452,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
           parametricProductId: parametricDefinitionId,
           definitionId: parametricDefinitionId,
           inputValues: measurementInput,
+          resolvedConfiguration: resolution,
           quantity: 1,
           fullName: quoteForm.fullName,
           email: quoteForm.email,
@@ -370,6 +481,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
             notes: quoteForm.notes,
             measurementInput,
             inputValues: measurementInput,
+            resolvedConfiguration: resolution,
             pricingSnapshot: pricing,
             calculationSnapshot: pricing,
             calculatedPrice: pricing.totalSellPrice,
@@ -495,41 +607,48 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
 
                     {measurementFieldGroups.length > 0 ? (
                       <div className="grid gap-3 md:grid-cols-2">
-                        {measurementFieldGroups.map((rule) => {
-                          const inputKey = rule.basis === "formula" ? "formula" : rule.basis === "step" ? "step" : rule.basis;
-                          const currentValue = measurementInput[inputKey];
-                          const unit = rule.unitLabel || product.measurementLabel || "ea";
+                        {measurementFieldGroups.map((rule: SyncedParametricRule | SyncedInputDefinition) => {
+                          const definition = rule as SyncedInputDefinition;
+                          const legacyRule = rule as SyncedParametricRule;
+                          const key = inputKey(definition) || legacyRule.basis;
+                          const type = inputKey(definition) ? controlType(definition) : "number";
+                          const currentValue = measurementInput[key];
+                          const unit = definition.unit || legacyRule.unitLabel || product.measurementLabel || "ea";
                           return (
-                            <label key={rule.id} className="space-y-2 rounded-xl border border-cyan-400/10 bg-black/20 p-3">
+                            <fieldset key={definition.id || key} className="space-y-2 rounded-xl border border-cyan-400/10 bg-black/20 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <div className="text-sm font-semibold text-white">{rule.label || rule.basis}</div>
+                                  <div className="text-sm font-semibold text-white">{definition.label || legacyRule.label || key}{definition.required === false ? "" : " *"}</div>
                                   <div className="text-[11px] text-cyan-100/60">
-                                    {product.measurementLabel || "Measurement"}
+                                    {definition.helperText || product.measurementLabel || "Measurement"}
                                     {unit ? ` • ${unit}` : ""}
                                   </div>
                                 </div>
                                 <span className="rounded-full border border-cyan-400/20 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.2em] text-cyan-200/70">
-                                  {rule.basis}
+                                  {type}
                                 </span>
                               </div>
-                              <Input
-                                type="number"
-                                step={rule.step || 0.01}
-                                min={rule.minimum ?? 0}
-                                max={rule.maximum || undefined}
-                                value={currentValue ?? ""}
-                                onChange={(event) => updateMeasurement(rule.basis, event.target.value)}
-                                placeholder={`Enter ${rule.basis}`}
+                              {(type === "number" || type === "quantity" || type === "slider" || type === "stepped_slider") && <Input
+                                type={type === "slider" || type === "stepped_slider" ? "range" : "number"}
+                                step={definition.step ?? definition.precision ?? legacyRule.step ?? 0.01}
+                                min={definition.minimum ?? legacyRule.minimum ?? 0}
+                                max={(definition.maximum ?? legacyRule.maximum) || undefined}
+                                value={typeof currentValue === "string" || typeof currentValue === "number" ? currentValue : ""}
+                                onChange={(event) => setValue(key, event.target.value === '' ? "" : Number(event.target.value))}
+                                placeholder={`Enter ${key}`}
                                 className="bg-black/30 border-cyan-400/15 text-white placeholder:text-cyan-100/35"
-                                data-testid={`input-parametric-${rule.id}`}
-                              />
+                                data-testid={`input-parametric-${definition.id || key}`}
+                              />}
+                              {type === "dropdown" && <select value={typeof currentValue === "string" || typeof currentValue === "number" ? currentValue : ""} onChange={(event) => setValue(key, event.target.value)} className="w-full rounded-md border border-cyan-400/15 bg-black/30 px-3 py-2 text-white"><option value="">Choose an option</option>{(definition.choices ?? []).map((choice) => <option key={choice.id || String(choiceValue(choice))} value={String(choiceValue(choice))}>{choice.label || String(choiceValue(choice))}</option>)}</select>}
+                              {(type === "button_group" || type === "colour_swatch") && <div className="grid grid-cols-2 gap-2">{(definition.choices ?? []).map((choice) => { const value = choiceValue(choice); return <Button key={choice.id || String(value)} type="button" variant="outline" onClick={() => setValue(key, value)} className={String(currentValue) === String(value) ? "border-cyan-300 bg-cyan-500/20" : "border-cyan-400/15"}>{choice.label || String(value)}</Button>; })}</div>}
+                              {type === "checkboxes" && <div className="space-y-2">{(definition.choices ?? []).map((choice) => { const value = choiceValue(choice); return <label key={choice.id || String(value)} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Array.isArray(currentValue) && currentValue.includes(String(value))} onChange={() => toggleChoice(key, value)} />{choice.label || String(value)}</label>; })}</div>}
+                              {type === "toggle" && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(currentValue)} onChange={(event) => setValue(key, event.target.checked)} />{definition.label || key}</label>}
                               <div className="text-[11px] text-cyan-100/55">
                                 {rule.minimum ? `Min ${rule.minimum}` : "No minimum"}
                                 {rule.maximum ? ` • Max ${rule.maximum}` : ""}
                                 {rule.step ? ` • Step ${rule.step}` : ""}
                               </div>
-                            </label>
+                            </fieldset>
                           );
                         })}
                       </div>
@@ -619,7 +738,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                   </div>
                   <Button
                     type="submit"
-                    disabled={isSubmitting || missingRequiredMeasurements.length > 0}
+                    disabled={isSubmitting || isResolving || missingRequiredMeasurements.length > 0 || ((product.inputDefinitions?.length ?? 0) > 0 && !resolution?.valid)}
                     className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest"
                     data-testid="button-submit-parametric-quote"
                   >
