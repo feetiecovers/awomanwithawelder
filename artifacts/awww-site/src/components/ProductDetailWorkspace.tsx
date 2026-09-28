@@ -37,7 +37,7 @@ function getPricingBreakdown(price: number) {
 }
 
 function getInputKey(definition: any): string {
-  return String(definition?.key ?? definition?.name ?? definition?.id ?? '').trim();
+  return String(definition?.key || definition?.inputType || definition?.id || '').trim();
 }
 
 function getInputControlType(definition: any): 'slider' | 'number' | 'dropdown' | 'choice' | 'checkbox' | 'text' {
