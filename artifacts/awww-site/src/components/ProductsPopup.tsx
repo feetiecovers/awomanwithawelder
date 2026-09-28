@@ -283,11 +283,11 @@ function normalizeProducts(value: unknown): ProductCard[] {
 
 const getProductShippingPresets = (product: ProductCard) => {
   const rawProduct = product as any;
-  if (rawProduct.shippingPresets && Array.isArray(rawProduct.shippingPresets)) {
+  if (rawProduct.shippingPresets && Array.isArray(rawProduct.shippingPresets) && rawProduct.shippingPresets.length > 0) {
     return rawProduct.shippingPresets;
   }
   
-  if (product.type === "product") {
+  if (product.type === "product" || product.type === "parametric" || product.type === "configurable") {
     if (product.name.toLowerCase().includes("custom") || product.name.toLowerCase().includes("special")) {
       return [{ label: "Flat Rate Shipping", price: 15.00 }];
     }

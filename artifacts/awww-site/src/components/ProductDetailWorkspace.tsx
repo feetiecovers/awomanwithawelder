@@ -285,6 +285,18 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     })
     .map((definition: any) => String(definition?.label || getInputKey(definition)));
 
+  const outOfBoundsInputs = inputDefinitions
+    .filter((definition: any) => {
+      const value = parametricValues[getInputKey(definition)];
+      if (value === undefined || value === null || value === '') return false;
+      const min = getInputMinimum(definition);
+      const max = getInputMaximum(definition);
+      if (min !== undefined && Number(value) < min) return true;
+      if (max !== undefined && Number(value) > max) return true;
+      return false;
+    })
+    .map((definition: any) => String(definition?.label || getInputKey(definition)));
+
   // --- PARAMETRIC PRICING RESOLUTION ---
   useEffect(() => {
     if (inputDefinitions.length === 0 || missingRequiredInputs.length > 0) {
@@ -331,7 +343,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     return () => controller.abort();
   }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
 
-  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0;
+  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0;
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
 
@@ -357,7 +369,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   };
 
   const handleAddToCart = () => {
-    const payloads = [{ product, options: configurationPayload }];
+    const payloadProduct = { ...product, price: activePrice, image: activeImage || product.image };
+    const payloads = [{ product: payloadProduct, options: configurationPayload }];
     
     // Check for bundled background products
     const bundleFn = BUNDLED_PRODUCTS_CONFIG[String(product.id)] || BUNDLED_PRODUCTS_CONFIG[rawProduct.sku];
@@ -590,6 +603,16 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                            Must be in increments of {def.step}{unit}
                          </span>
                        )}
+                       {parametricValues[inputKey] !== undefined && minimum !== undefined && Number(parametricValues[inputKey]) < minimum && (
+                         <span className="text-[10px] text-pink-400 font-mono">
+                           Must be at least {minimum}{unit}
+                         </span>
+                       )}
+                       {parametricValues[inputKey] !== undefined && maximum !== undefined && Number(parametricValues[inputKey]) > maximum && (
+                         <span className="text-[10px] text-pink-400 font-mono">
+                           Cannot exceed {maximum}{unit}
+                         </span>
+                       )}
                      </div>
                    )}
 
@@ -682,7 +705,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               onClick={handleAddToCart}
               disabled={!canAddConfiguredProductToCart || isResolving}
             >
-              {isResolving ? "Resolving..." : (missingRequiredInputs.length > 0 ? "Complete Measurements" : "Add to Cart")}
+              {isResolving ? "Resolving..." : (missingRequiredInputs.length > 0 ? "Complete Measurements" : (outOfBoundsInputs.length > 0 ? "Invalid Measurements" : "Add to Cart"))}
             </Button>}
             <Button
               variant="outline"
@@ -694,6 +717,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
          </div>
          {missingRequiredInputs.length > 0 && (
            <p className="font-mono text-[10px] text-amber-200/80">Complete: {missingRequiredInputs.join(", ")}.</p>
+         )}
+         {outOfBoundsInputs.length > 0 && (
+           <p className="font-mono text-[10px] text-pink-400/80">Invalid limits on: {outOfBoundsInputs.join(", ")}.</p>
          )}
       </div>
 
