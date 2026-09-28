@@ -298,7 +298,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     const activeDefinitionId = parametricMode?.definitionId || rawProduct.definitionId || rawProduct.parametricProductId || rawProduct.externalId || String(product.id);
     const activeDefinitionVersion = parametricMode?.definitionVersion || rawProduct.definitionVersion || '';
 
-    const resolverUrl = buildApiUrl('/api/ecommerce/configuration/resolve');
+    const resolverUrl = rawProduct.configurationResolver?.url || parametricMode?.resolver?.url || rawProduct.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
     fetch(resolverUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

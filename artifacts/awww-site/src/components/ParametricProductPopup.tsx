@@ -356,7 +356,8 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     const controller = new AbortController();
     setIsResolving(true);
     setResolverError("");
-    fetch(buildApiUrl('/api/ecommerce/configuration/resolve'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
+    const resolverUrl = product.configurationResolver?.url || product.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
+    fetch(resolverUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
       .then(async (response) => {
         const result = await response.json().catch(() => null) as ParametricResolution | null;
         if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) throw new Error((result as any)?.error || "These inputs could not be resolved");
