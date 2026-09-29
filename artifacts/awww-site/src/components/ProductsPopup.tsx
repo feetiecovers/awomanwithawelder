@@ -419,13 +419,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
 
   const onAddToCartClick = (item: ProductCard, configuration?: any) => {
     const presets = getProductShippingPresets(item);
+    const enrichedConfig = {
+      ...configuration,
+      resolvedPrice: item.price,
+      resolvedImage: item.image,
+    };
     if (presets.length > 1) {
       setShippingSelectProduct(item);
-      setShippingSelectConfig(configuration || null);
+      setShippingSelectConfig(enrichedConfig);
       setSelectedShippingPresetIndex(0);
     } else {
       const singlePreset = presets[0];
-      handleAddToCartWithShipping(item.id, singlePreset?.label, singlePreset?.price, configuration);
+      handleAddToCartWithShipping(item.id, singlePreset?.label, singlePreset?.price, enrichedConfig);
     }
   };
 

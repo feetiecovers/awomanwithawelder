@@ -149,7 +149,12 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
             ) : (
               <div className="flex-1 scroll-industrial px-4 py-3 space-y-3">
                 <AnimatePresence initial={false}>
-                  {items.map((item, idx) => (
+                  {items.map((item, idx) => {
+                    const itemConfig = (item as any).configuration || {};
+                    const itemPrice = itemConfig.resolvedPrice ?? (item as any).price ?? (itemConfig.totalPriceAdjustment ? item.product.price + itemConfig.totalPriceAdjustment : item.product.price);
+                    const itemImage = itemConfig.resolvedImage ?? (item as any).image ?? (item.product as any).image;
+                    
+                    return (
                     <motion.div
                       key={item.productId}
                       layout
@@ -161,20 +166,26 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
                       style={{ height: "88px" }}
                     >
                       {/* Image strip */}
-                      <div
-                        className="w-20 shrink-0 flex items-center justify-center relative overflow-hidden"
-                        style={{ background: PRODUCT_GRADIENTS[idx % PRODUCT_GRADIENTS.length] }}
-                      >
+                      {itemImage ? (
+                        <div className="w-20 shrink-0 relative overflow-hidden bg-[#05080e] flex items-center justify-center p-2 border-r border-primary/15">
+                           <img src={itemImage} className="w-full h-full object-contain mix-blend-screen" alt={item.product.name} />
+                        </div>
+                      ) : (
                         <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
-                          }}
-                        />
-                        <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
-                          Image
-                        </span>
-                      </div>
+                          className="w-20 shrink-0 flex items-center justify-center relative overflow-hidden"
+                          style={{ background: PRODUCT_GRADIENTS[idx % PRODUCT_GRADIENTS.length] }}
+                        >
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(26,157,224,0.06) 4px, rgba(26,157,224,0.06) 5px)",
+                            }}
+                          />
+                          <span className="font-mono text-[7px] tracking-[0.2em] uppercase text-primary/25 z-10 rotate-90 whitespace-nowrap">
+                            Image
+                          </span>
+                        </div>
+                      )}
 
                       {/* Content */}
                       <div className="flex-1 flex flex-col justify-between p-3 min-w-0">
@@ -202,12 +213,12 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
                             Qty: {item.quantity}
                           </span>
                           <span className="font-mono text-primary font-bold text-sm">
-                            NZ${((item.product.price + (item.shippingPrice ?? 0)) * item.quantity).toFixed(2)}
+                            NZ${((itemPrice + (item.shippingPrice ?? 0)) * item.quantity).toFixed(2)}
                           </span>
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                  )})}
                 </AnimatePresence>
               </div>
             )}
