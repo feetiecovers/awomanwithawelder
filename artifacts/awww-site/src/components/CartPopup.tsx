@@ -37,7 +37,13 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
   const removeFromCart = useRemoveFromCart();
 
   const items = (cart?.items as Array<{ productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; product: { name: string; price: number; description?: string | null } }>) ?? [];
-  const total = cart?.total ?? 0;
+  const calculatedTotal = items.reduce((sum, item) => {
+    const itemConfig = (item as any).configuration || {};
+    const itemPrice = itemConfig.resolvedPrice ?? (item as any).price ?? (itemConfig.totalPriceAdjustment ? item.product.price + itemConfig.totalPriceAdjustment : item.product.price);
+    const shipping = item.shippingPrice ?? 0;
+    return sum + (itemPrice + shipping) * item.quantity;
+  }, 0);
+  const total = items.length > 0 ? calculatedTotal : (cart?.total ?? 0);
 
   const handleRemove = (productId: number) => {
     removeFromCart.mutate({ productId }, {

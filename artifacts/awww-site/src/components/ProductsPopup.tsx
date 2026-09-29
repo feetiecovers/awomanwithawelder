@@ -355,6 +355,16 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   })();
   const pricing = selectedService ? getPricingBreakdown(activePrice) : null;
 
+  const cartTotal = (() => {
+    if (!cart?.items || (cart.items as any[]).length === 0) return cart?.total ?? 0;
+    return (cart.items as any[]).reduce((sum, item) => {
+      const itemConfig = item.configuration || {};
+      const itemPrice = itemConfig.resolvedPrice ?? item.price ?? (itemConfig.totalPriceAdjustment ? (item.product?.price ?? 0) + itemConfig.totalPriceAdjustment : (item.product?.price ?? 0));
+      const shipping = item.shippingPrice ?? 0;
+      return sum + (itemPrice + shipping) * item.quantity;
+    }, 0);
+  })();
+
   useEffect(() => {
     setBookingForm((current) => ({
       ...current,
@@ -632,7 +642,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground bg-primary/8 px-2.5 py-1 rounded-full border border-primary/20 hover:border-primary/40 hover:text-primary transition-colors"
               >
                 <ShoppingCart className="h-3.5 w-3.5 text-primary" />
-                <span>{formatCurrency(cart?.total ?? 0)}</span>
+                <span>{formatCurrency(cartTotal)}</span>
               </button>
               <Button
                 variant="ghost"

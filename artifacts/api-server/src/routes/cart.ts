@@ -55,8 +55,10 @@ async function buildCartResponse(cartItems: { productId: number; quantity: numbe
     if (!item) return sum;
     const basePrice = item.product.price;
     const configAdj = Number(item.configuration?.totalPriceAdjustment || 0);
+    const resolvedPrice = item.configuration?.resolvedPrice;
+    const itemPrice = resolvedPrice !== undefined && resolvedPrice !== null ? Number(resolvedPrice) : (basePrice + configAdj);
     const shipping = item.shippingPrice ?? 0;
-    return sum + ((basePrice + configAdj + shipping) * item.quantity);
+    return sum + ((itemPrice + shipping) * item.quantity);
   }, 0);
 
   return { items, total };
