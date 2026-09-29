@@ -122,7 +122,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
     // Performance Fix (Option 1 & 4): Debounced resize and slower interval on mobile.
     // If you need to rollback, change intervalTime back to 130 and remove the clearTimeout/setTimeout logic above.
     const isMobile = window.innerWidth < 640;
-    const intervalTime = isMobile ? 400 : 130;
+    const intervalTime = isMobile ? 400 : 250;
     const iv = setInterval(() => setTick(t => t + 1), intervalTime);
     
     return () => { 

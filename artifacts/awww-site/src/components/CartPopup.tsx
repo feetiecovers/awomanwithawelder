@@ -52,8 +52,6 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
-    setShowMaintenanceModal(true);
-    return;
     setIsCheckingOut(true);
     try {
       const res = await fetch(buildApiUrl("/api/checkout"), {
@@ -93,10 +91,10 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <motion.div
           key="cart-panel"
-          initial={{ opacity: 0, scale: 0.92, y: 16 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 16 }}
-          transition={{ type: "spring", stiffness: 320, damping: 34 }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
           className="w-full max-w-md flex flex-col bg-[#080d14]/95 backdrop-blur-xl border border-primary/25 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)] overflow-hidden"
         >
           {/* Header */}

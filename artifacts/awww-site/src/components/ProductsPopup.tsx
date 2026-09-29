@@ -604,10 +604,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
           ) : (
             <motion.div
               key="offerings"
-              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 16 }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
               className="w-full max-w-2xl flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] max-h-[calc(100dvh-32px)]"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
@@ -786,7 +786,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           initial="enter"
                           animate="center"
                           exit="exit"
-                          transition={{ type: "spring", stiffness: 380, damping: 36 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 32 }}
                           className="flex flex-col gap-3 h-full"
                         >
                           {currentShopItems.map((item, idx) => (
