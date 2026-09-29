@@ -10,6 +10,7 @@ import {
   getGetCartQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 
 interface CartPopupProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
 
   const { data: cart, isLoading } = useGetCart();
   const removeFromCart = useRemoveFromCart();
@@ -50,6 +52,8 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+    setShowMaintenanceModal(true);
+    return;
     setIsCheckingOut(true);
     try {
       const res = await fetch(buildApiUrl("/api/checkout"), {
@@ -250,6 +254,44 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
           )}
         </motion.div>
       </div>
+
+      {/* Maintenance Modal Overlay */}
+      {showMaintenanceModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm pointer-events-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md bg-[#080d14]/95 backdrop-blur-xl border border-primary/25 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18)] p-6 sm:p-8 flex flex-col items-center text-center relative"
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowMaintenanceModal(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-2.5 border border-[#8B5CF6]/30 bg-[#8B5CF6]/5 rounded-full px-4 py-2 mb-6 shadow-sm">
+              <img src={denversDeskLogo} alt="Denver's Desk" className="w-[16px] h-[16px] object-contain opacity-90 mix-blend-screen brightness-150" />
+              <span className="text-xs text-primary/90 font-mono tracking-wide">Powered by Denver's Desk</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-foreground mb-4">Checkout Under Maintenance</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+              Sorry! Our checkout is currently under maintenance and will be back soon. In the mean time you can purchase some of our products on TradeMe for another secure way of payment while we get our site back up and running properly.
+            </p>
+            
+            <Button
+              onClick={() => setShowMaintenanceModal(false)}
+              className="w-full font-mono uppercase tracking-widest text-[12px] h-12 bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(26,157,224,0.35)] text-primary-foreground font-bold"
+            >
+              Close
+            </Button>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
 }

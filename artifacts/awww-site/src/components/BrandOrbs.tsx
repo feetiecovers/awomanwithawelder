@@ -14,7 +14,7 @@ const BRANDS = [
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
   { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
 ];
 
 /** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
@@ -110,10 +110,26 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
+    let resizeTimer: NodeJS.Timeout;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setSize({ w: window.innerWidth, h: window.innerHeight });
+      }, 150);
+    };
     window.addEventListener("resize", onResize);
-    const iv = setInterval(() => setTick(t => t + 1), 130);
-    return () => { window.removeEventListener("resize", onResize); clearInterval(iv); };
+    
+    // Performance Fix (Option 1 & 4): Debounced resize and slower interval on mobile.
+    // If you need to rollback, change intervalTime back to 130 and remove the clearTimeout/setTimeout logic above.
+    const isMobile = window.innerWidth < 640;
+    const intervalTime = isMobile ? 400 : 130;
+    const iv = setInterval(() => setTick(t => t + 1), intervalTime);
+    
+    return () => { 
+      window.removeEventListener("resize", onResize); 
+      clearTimeout(resizeTimer);
+      clearInterval(iv); 
+    };
   }, []);
 
   const cx = size.w / 2;
