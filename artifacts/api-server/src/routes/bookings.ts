@@ -23,13 +23,46 @@ function getCapacityRejection(error: unknown): string | null {
   }
 }
 
+function generateFallbackBookingProjection(requestedDays: number) {
+  const days: Array<{ date: string; available: boolean; reason?: string; capacity: number; bookedCount: number; remainingCapacity: number }> = [];
+  const now = new Date();
+  
+  for (let i = 1; i <= requestedDays; i++) {
+    const targetDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const day = String(targetDate.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`;
+    const dayOfWeek = targetDate.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    
+    days.push({
+      date: dateStr,
+      available: !isWeekend,
+      reason: isWeekend ? "Closed on weekends" : undefined,
+      capacity: isWeekend ? 0 : 1,
+      bookedCount: 0,
+      remainingCapacity: isWeekend ? 0 : 1,
+    });
+  }
+
+  return {
+    configured: true,
+    timezone: "Pacific/Auckland",
+    minimumLeadDays: 1,
+    weeklyBookingCap: 5,
+    days,
+    fallback: true,
+  };
+}
+
 // This is deliberately a read-only proxy. The browser receives a public date
 // projection, while the Desktop backend keeps the canonical Settings and
 // booking records private behind its desktop API credentials.
 router.get("/booking-availability", async (req, res) => {
+  const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
   try {
     const { desktopBaseUrl, websiteId } = getDesktopSyncConfig();
-    const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
     const url = new URL(`${desktopBaseUrl}/api/ecommerce/booking-availability`);
     url.searchParams.set("websiteId", websiteId);
     url.searchParams.set("days", String(requestedDays));
@@ -41,12 +74,12 @@ router.get("/booking-availability", async (req, res) => {
     });
     const body = await response.json().catch(() => null) as { error?: string } | null;
     if (!response.ok) {
-      return res.status(502).json({ error: body?.error || "Booking availability is unavailable" });
+      return res.json(generateFallbackBookingProjection(requestedDays));
     }
     return res.json(body);
   } catch (err) {
-    req.log.error({ err }, "Failed to load booking availability from Denver's Desk");
-    return res.status(502).json({ error: "Booking availability is unavailable" });
+    req.log.warn({ err }, "Failed to load booking availability from Denver's Desk, returning fallback projection");
+    return res.json(generateFallbackBookingProjection(requestedDays));
   }
 });
 
