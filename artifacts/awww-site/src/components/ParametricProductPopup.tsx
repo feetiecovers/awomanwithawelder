@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
-import { useListProducts } from "@workspace/api-client-react";
+import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 
 interface ParametricProductPopupProps {
@@ -288,7 +288,15 @@ function ParametricPricingCard({
 
 export function ParametricProductPopup({ isOpen, onClose, productId }: ParametricProductPopupProps) {
   const { toast } = useToast();
-  const { data: rawProducts } = useListProducts();
+  const { data: rawProducts } = useListProducts({
+    query: {
+      queryKey: getListProductsQueryKey(),
+      enabled: isOpen && productId !== null,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  });
   const [measurementInput, setMeasurementInput] = useState<MeasurementInput>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);

@@ -310,7 +310,15 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  const { data: productsData, isLoading } = useListProducts();
+  const { data: productsData, isLoading } = useListProducts({
+    query: {
+      queryKey: getListProductsQueryKey(),
+      enabled: isOpen,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  });
   const { data: cart } = useGetCart();
   const { data: member } = useGetCurrentMember();
   const addToCart = useAddToCart();

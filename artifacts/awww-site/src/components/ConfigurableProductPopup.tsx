@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuoteRequestModal } from "./QuoteRequestModal";
-import { useListProducts, useAddToCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import { useListProducts, useAddToCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
@@ -43,7 +43,15 @@ const GST_RATE = 0.15;
 export function ConfigurableProductPopup({ isOpen, onClose, productId }: ConfigurableProductPopupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: rawProducts } = useListProducts();
+  const { data: rawProducts } = useListProducts({
+    query: {
+      queryKey: getListProductsQueryKey(),
+      enabled: isOpen && productId !== null,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  });
   const addToCart = useAddToCart();
 
   const product = useMemo(() => {

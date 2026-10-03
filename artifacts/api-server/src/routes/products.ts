@@ -10,6 +10,10 @@ const defaultWebsiteId = process.env.WEBSITE_ID || "web-1782561404289";
 
 router.get("/products", async (req, res) => {
   try {
+    // Catalog data is public and changes through the stock sync rather than per visitor.
+    // A short browser/CDN cache prevents repeated navigation and focus refreshes from
+    // re-reading the stock store (or the database fallback).
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     const websiteId = normalizeWebsiteId(
       req.query.websiteId ?? req.query.website ?? req.query.siteId ?? req.query.site ?? defaultWebsiteId,
     );
@@ -39,6 +43,7 @@ router.get("/products", async (req, res) => {
 
 router.get("/products/:id", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     const parsed = GetProductParams.safeParse({ id: parseInt(req.params.id) });
     if (!parsed.success) return res.status(400).json({ error: "Invalid ID" });
     const websiteId = normalizeWebsiteId(

@@ -61,6 +61,9 @@ function generateFallbackBookingProjection(requestedDays: number) {
 // booking records private behind its desktop API credentials.
 router.get("/booking-availability", async (req, res) => {
   const requestedDays = Math.min(180, Math.max(1, Number(req.query.days) || 120));
+  // This projection is advisory only; the Desktop backend still performs the
+  // canonical capacity check when a booking is submitted.
+  res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=30");
   try {
     const { desktopBaseUrl, websiteId } = getDesktopSyncConfig();
     const url = new URL(`${desktopBaseUrl}/api/ecommerce/booking-availability`);
@@ -243,8 +246,11 @@ router.post("/bookings", async (req, res) => {
           createdAt,
         };
 
-    const [member] = hasDatabase && memberId
-      ? await db.select().from(membersTable).where(eq(membersTable.id, memberId))
+    const needsMemberDetails = Boolean(
+      hasDatabase && memberId && (!bookingCustomer.fullName || !bookingCustomer.email),
+    );
+    const [member] = needsMemberDetails
+      ? await db.select().from(membersTable).where(eq(membersTable.id, memberId!))
       : [];
     const servicePayload = syncedService
       ? {

@@ -39,11 +39,6 @@ export default function Home() {
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
 
-  // Pre-warm backend API immediately on page load to spin up Render free instance
-  useEffect(() => {
-    queryClient.prefetchQuery({ queryKey: getListProductsQueryKey() }).catch(() => {});
-  }, [queryClient]);
-
   // Show welcome notification when site opens
   useEffect(() => {
     const timer = setTimeout(() => {
