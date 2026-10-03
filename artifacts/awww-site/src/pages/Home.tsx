@@ -33,6 +33,14 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+  // Keep each workspace alive after its first use so its close/reopen behavior
+  // is unchanged, but avoid mounting closed modal trees during the initial load.
+  const [hasMountedProducts, setHasMountedProducts] = useState(false);
+  const [hasMountedConfigurator, setHasMountedConfigurator] = useState(false);
+  const [hasMountedConfigurableProduct, setHasMountedConfigurableProduct] = useState(false);
+  const [hasMountedParametricProduct, setHasMountedParametricProduct] = useState(false);
+  const [hasMountedCart, setHasMountedCart] = useState(false);
+  const [hasMountedMembers, setHasMountedMembers] = useState(false);
 
   const { toast } = useToast();
   const { data: cart } = useGetCart();
@@ -76,19 +84,36 @@ export default function Home() {
   };
 
   const handleOpenCart = () => {
+    setHasMountedCart(true);
     setIsProductsOpen(false);
     setIsCartOpen(true);
   };
 
   const handleContinueShopping = () => {
+    setHasMountedProducts(true);
     setIsCartOpen(false);
     setIsProductsOpen(true);
+  };
+
+  const handleOpenProducts = () => {
+    setHasMountedProducts(true);
+    setIsProductsOpen(true);
+  };
+
+  const handleOpenConfigurator = () => {
+    setHasMountedConfigurator(true);
+    setIsConfiguratorOpen(true);
+  };
+
+  const handleOpenMembers = () => {
+    setHasMountedMembers(true);
+    setIsMembersOpen(true);
   };
 
   return (
     <div className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
       <ParticleBackground />
-      <BrandOrbs onOpenConfigurator={() => setIsConfiguratorOpen(true)} />
+      <BrandOrbs onOpenConfigurator={handleOpenConfigurator} />
       <SmokeEffect />
       <FloatingSocials />
 
@@ -105,7 +130,7 @@ export default function Home() {
           }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="pointer-events-auto cursor-pointer"
-          onClick={() => setIsProductsOpen(true)}
+          onClick={handleOpenProducts}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           data-testid="button-center-logo"
@@ -157,59 +182,61 @@ export default function Home() {
       </AnimatePresence>
 
       <BottomRightMenu
-        onOpenMembers={() => setIsMembersOpen(true)}
-        onOpenProducts={() => setIsProductsOpen(true)}
-        onOpenConfigurator={() => setIsConfiguratorOpen(true)}
+        onOpenMembers={handleOpenMembers}
+        onOpenProducts={handleOpenProducts}
+        onOpenConfigurator={handleOpenConfigurator}
       />
 
-      <ProductsPopup
+      {hasMountedProducts && <ProductsPopup
         isOpen={isProductsOpen}
         onClose={() => setIsProductsOpen(false)}
         onOpenCart={handleOpenCart}
-        onRequireSignIn={() => setIsMembersOpen(true)}
+        onRequireSignIn={handleOpenMembers}
         onBookingSuccess={handleBookingSuccess}
-        onOpenConfigurator={() => setIsConfiguratorOpen(true)}
+        onOpenConfigurator={handleOpenConfigurator}
         onOpenConfigurableProduct={(id) => {
           setConfigurableProductId(id);
+          setHasMountedConfigurableProduct(true);
           setIsConfigurableProductOpen(true);
         }}
         onOpenParametricProduct={(id) => {
           setParametricProductId(id);
+          setHasMountedParametricProduct(true);
           setIsParametricProductOpen(true);
         }}
-      />
+      />}
 
-      <TrailerConfiguratorPopup
+      {hasMountedConfigurator && <TrailerConfiguratorPopup
         isOpen={isConfiguratorOpen}
         onClose={() => setIsConfiguratorOpen(false)}
-        onRequireSignIn={() => setIsMembersOpen(true)}
-      />
+        onRequireSignIn={handleOpenMembers}
+      />}
 
-      <ConfigurableProductPopup
+      {hasMountedConfigurableProduct && <ConfigurableProductPopup
         isOpen={isConfigurableProductOpen}
         onClose={() => setIsConfigurableProductOpen(false)}
         productId={configurableProductId}
-        onRequireSignIn={() => setIsMembersOpen(true)}
-      />
+        onRequireSignIn={handleOpenMembers}
+      />}
 
-      <ParametricProductPopup
+      {hasMountedParametricProduct && <ParametricProductPopup
         isOpen={isParametricProductOpen}
         onClose={() => setIsParametricProductOpen(false)}
         productId={parametricProductId}
-        onRequireSignIn={() => setIsMembersOpen(true)}
-      />
+        onRequireSignIn={handleOpenMembers}
+      />}
 
-      <CartPopup
+      {hasMountedCart && <CartPopup
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onContinueShopping={handleContinueShopping}
         onOrderSuccess={() => setIsOrderSuccessOpen(true)}
-      />
+      />}
 
-      <MembersModal
+      {hasMountedMembers && <MembersModal
         isOpen={isMembersOpen}
         onClose={() => setIsMembersOpen(false)}
-      />
+      />}
 
       <OrderSuccessModal
         isOpen={isOrderSuccessOpen}

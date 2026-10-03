@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -197,6 +197,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryRequired, setDeliveryRequired] = useState<string>("no");
+  const hasLoadedBuildCatalog = useRef(false);
 
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
     fullName: "",
@@ -210,6 +211,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   });
 
   useEffect(() => {
+    if (!isOpen || hasLoadedBuildCatalog.current) return;
     let cancelled = false;
 
     const loadBuildCatalog = async () => {
@@ -224,6 +226,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
         if (mapped.builds.length > 0) {
           setSyncedBuilds(mapped.builds);
           setSyncedFeatureGroupsByBuildId(mapped.featureGroupsByBuildId);
+          hasLoadedBuildCatalog.current = true;
         }
       } catch {
         // Fall back to bundled demo catalog if offline
@@ -234,7 +237,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isOpen]);
 
   const selectedCategory = TRAILER_CATEGORIES.find((c) => c.id === selectedCategoryId) || TRAILER_CATEGORIES[0];
   const availableBuilds = syncedBuilds.filter((b) => 

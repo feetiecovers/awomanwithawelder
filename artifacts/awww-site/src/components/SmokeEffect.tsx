@@ -25,7 +25,7 @@ export function SmokeEffect() {
 
     let smoke: SmokeParticle[] = [];
     let spatters: Spatter[] = [];
-    let animId: number;
+    let animId: number | null = null;
     let frame = 0;
 
     const resize = () => {
@@ -162,9 +162,27 @@ export function SmokeEffect() {
       });
     };
 
-    animate();
+    const stop = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    const start = () => {
+      if (animId === null) animate();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") stop();
+      else start();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (document.visibilityState === "visible") start();
     return () => {
-      cancelAnimationFrame(animId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stop();
       window.removeEventListener("resize", resize);
     };
   }, []);

@@ -11,7 +11,7 @@ export function ParticleBackground() {
     if (!ctx) return;
 
     let particles: { x: number; y: number; size: number; speedX: number; speedY: number; opacity: number }[] = [];
-    let animationFrameId: number;
+    let animationFrameId: number | null = null;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -75,13 +75,31 @@ export function ParticleBackground() {
       animationFrameId = requestAnimationFrame(draw);
     };
 
+    const stop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const start = () => {
+      if (animationFrameId === null) draw();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") stop();
+      else start();
+    };
+
     window.addEventListener("resize", init);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     init();
-    draw();
+    if (document.visibilityState === "visible") start();
 
     return () => {
       window.removeEventListener("resize", init);
-      cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stop();
     };
   }, []);
 
