@@ -83,6 +83,10 @@ type MeasurementInput = Record<string, string | number | boolean | string[] | un
 type ParametricResolution = {
   valid: boolean;
   sellPrice?: number;
+  promise?: {
+    message?: string;
+    promiseDate?: string;
+  };
   definitionId?: string;
   definitionVersion?: number;
   configurationHash?: string;
@@ -123,6 +127,13 @@ function formatCurrency(value: number) {
 
 function roundCurrency(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function formatPromise(promise?: ParametricResolution["promise"]): string {
+  const message = promise?.message?.trim();
+  if (message) return message;
+  if (promise?.promiseDate) return `Expected availability: ${promise.promiseDate}`;
+  return "Availability will be confirmed with your quote";
 }
 
 function normalizeMeasurementValue(value: unknown): number | null {
@@ -391,6 +402,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     return resolution?.valid && Number.isFinite(Number(resolution.sellPrice)) ? { ...local, totalSellPrice: Number(resolution.sellPrice) } : local;
   }, [product, measurementInput, resolution]);
   const measurementSummary = useMemo(() => product ? formatMeasurementSummary(product, measurementInput) : "", [product, measurementInput]);
+  const promiseSummary = useMemo(() => formatPromise(resolution?.promise), [resolution?.promise]);
   const missingRequiredMeasurements = useMemo(() => {
     if (!product) return [];
     const definitions = product.inputDefinitions ?? [];
@@ -584,7 +596,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
             <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_380px]">
               <form onSubmit={handleSubmitQuote} className="flex flex-col border-r border-cyan-400/10">
                 <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <ParametricPricingCard
                       title="Base Price"
                       value={formatCurrency(pricing.baseSellPrice)}
@@ -605,6 +617,11 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                       value={formatCurrency(pricing.totalSellPrice)}
                       description={pricing.warnings.length > 0 ? pricing.warnings[0] : "Authoritative server price will be recalculated"}
                       highlight
+                    />
+                    <ParametricPricingCard
+                      title="Expected Availability"
+                      value={isResolving ? "Checking..." : promiseSummary}
+                      description="Based on current Denver's Desk capacity"
                     />
                   </div>
 
