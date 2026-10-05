@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
+import { evaluateParametricValidation } from "@/lib/parametric-validation";
 
 interface ParametricProductPopupProps {
   productId: number | null;
@@ -125,19 +126,6 @@ function defaultValue(definition: SyncedInputDefinition): string | number | bool
   return "";
 }
 
-function evaluateValidation(rules: ValidationRule[] | undefined, values: MeasurementInput) {
-  const result = { blockers: [] as ValidationMessage[], warnings: [] as ValidationMessage[], info: [] as ValidationMessage[] };
-  for (const rule of rules ?? []) {
-    const left = Number(values[rule.left]);
-    const right = typeof rule.right === "number" ? rule.right : Number(values[rule.right]);
-    if (!Number.isFinite(left) || !Number.isFinite(right)) continue;
-    const valid = rule.operator === "<" ? left < right : rule.operator === "<=" ? left <= right : rule.operator === ">" ? left > right : rule.operator === ">=" ? left >= right : rule.operator === "=" ? left === right : left !== right;
-    if (valid) continue;
-    const entry: ValidationMessage = { ruleId: rule.id, severity: rule.severity, message: rule.message, left: rule.left, right: rule.right };
-    result[rule.severity === "blocker" ? "blockers" : rule.severity === "warning" ? "warnings" : "info"].push(entry);
-  }
-  return result;
-}
 
 const GST_RATE = 0.15;
 
@@ -425,7 +413,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     return resolution?.valid && Number.isFinite(Number(resolution.sellPrice)) ? { ...local, totalSellPrice: Number(resolution.sellPrice) } : local;
   }, [product, measurementInput, resolution]);
   const measurementSummary = useMemo(() => product ? formatMeasurementSummary(product, measurementInput) : "", [product, measurementInput]);
-  const localValidation = useMemo(() => evaluateValidation(product?.validationRules, measurementInput), [product?.validationRules, measurementInput]);
+  const localValidation = useMemo(() => evaluateParametricValidation(product?.validationRules, measurementInput), [product?.validationRules, measurementInput]);
   const promiseSummary = useMemo(() => formatPromise(resolution?.promise), [resolution?.promise]);
   const missingRequiredMeasurements = useMemo(() => {
     if (!product) return [];

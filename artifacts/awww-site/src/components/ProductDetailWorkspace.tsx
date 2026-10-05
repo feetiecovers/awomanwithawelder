@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowLeft, Send, CheckCircle2, X, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Send, CheckCircle2, X, Settings2, ChevronDown, ChevronUp, CircleHelp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import { QuoteRequestModal } from './QuoteRequestModal';
 import { PARAMETRIC_CATEGORIES_CONFIG } from '@/content/parametricCategories';
 import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
+import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
   if ('target' in node && node.getAttribute('target') === '_blank') {
@@ -95,6 +96,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const [isParametricOpen, setIsParametricOpen] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
+  const [resolverValidation, setResolverValidation] = useState<{ blockers: ParametricValidationMessage[]; warnings: ParametricValidationMessage[]; info: ParametricValidationMessage[] } | null>(null);
+  const [openMeasurementHelp, setOpenMeasurementHelp] = useState<string | null>(null);
 
   // --- STOREFRONT PRODUCT MODEL STATE ---
   const purchaseModes = Array.isArray(rawProduct.purchaseModes) ? rawProduct.purchaseModes : [];
@@ -296,11 +299,13 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       return false;
     })
     .map((definition: any) => String(definition?.label || getInputKey(definition)));
+  const localValidation = useMemo(() => evaluateParametricValidation(parametricMode?.validationRules || rawProduct.validationRules, parametricValues), [parametricMode?.validationRules, rawProduct.validationRules, parametricValues]);
 
   // --- PARAMETRIC PRICING RESOLUTION ---
   useEffect(() => {
     if (inputDefinitions.length === 0 || missingRequiredInputs.length > 0) {
       setResolvedPrice(null);
+      setResolverValidation(null);
       return;
     }
     
@@ -325,16 +330,18 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       }),
       signal: controller.signal
     })
-      .then(res => res.json())
-      .then(result => {
-        if (!controller.signal.aborted && result?.valid && result?.sellPrice !== undefined) {
+      .then(async (res) => ({ ok: res.ok, result: await res.json().catch(() => null) }))
+      .then(({ ok, result }) => {
+        if (controller.signal.aborted) return;
+        setResolverValidation(result?.validation ?? null);
+        if (ok && result?.valid && result?.sellPrice !== undefined) {
           setResolvedPrice(Number(result.sellPrice));
-        } else if (!controller.signal.aborted) {
+        } else {
           setResolvedPrice(null);
         }
       })
       .catch(() => {
-        if (!controller.signal.aborted) setResolvedPrice(null);
+        if (!controller.signal.aborted) { setResolvedPrice(null); setResolverValidation(null); }
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsResolving(false);
@@ -343,7 +350,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     return () => controller.abort();
   }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
 
-  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0;
+  const hasParametricBlocker = localValidation.blockers.length > 0 || (resolverValidation?.blockers.length ?? 0) > 0;
+  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker && !(inputDefinitions.length > 0 && resolvedPrice === null);
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
 
@@ -566,7 +574,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 const unit = def.unit || def.units || '';
                 return (
                 <div key={inputKey} className="flex flex-col gap-3">
-                   <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || inputKey}</h4>
+                   <div className="flex items-center gap-1"><h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || inputKey}</h4>{(def.helperTitle || def.helperText || def.helperImage) && <button type="button" onClick={() => setOpenMeasurementHelp(openMeasurementHelp === inputKey ? null : inputKey)} aria-label={`How to measure ${def.label || inputKey}`} className="text-primary hover:text-white"><CircleHelp className="h-4 w-4" /></button>}</div>
 
                    {controlType === 'slider' && minimum !== undefined && maximum !== undefined && (
                       <div className="flex flex-col gap-2 p-4 border border-primary/20 rounded-lg bg-[#0d1520]/50">
@@ -677,6 +685,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                        className="bg-black/30 border-primary/20 text-white"
                      />
                    )}
+                   {openMeasurementHelp === inputKey && <div className="rounded-lg border border-primary/30 bg-[#09111b]/95 p-3 text-xs text-cyan-50 shadow-xl">{def.helperImage && <img src={def.helperImage} alt="Measurement guide" className="mb-2 max-h-40 w-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}{def.helperTitle && <p className="font-bold text-primary">{def.helperTitle}</p>}{def.helperText && <p className="mt-1 text-cyan-50/80">{def.helperText}</p>}</div>}
                  </div>
                   );
                 })}
@@ -687,6 +696,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                   })()}
                 </div>
               )}
+              {localValidation.blockers.map((entry) => <p key={entry.ruleId} className="font-mono text-[11px] text-pink-300">{entry.message}</p>)}
+              {localValidation.warnings.map((entry) => <p key={entry.ruleId} className="font-mono text-[11px] text-amber-200">{entry.message}</p>)}
+              {localValidation.info.map((entry) => <p key={entry.ruleId} className="font-mono text-[11px] text-cyan-100/70">{entry.message}</p>)}
+              {(resolverValidation?.blockers ?? []).filter((entry) => !localValidation.blockers.some((local) => local.ruleId === entry.ruleId)).map((entry) => <p key={`server-${entry.ruleId}`} className="font-mono text-[11px] text-pink-300">{entry.message}</p>)}
             </div>
           )}
 
@@ -711,6 +724,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               variant="outline"
               className="flex-1 border-primary/40 text-primary hover:bg-primary/10 font-mono uppercase tracking-widest text-xs h-11"
               onClick={handleRequestQuote}
+              disabled={product.type === 'parametric' && (!canAddConfiguredProductToCart || isResolving)}
             >
               {requiresCalculatedQuote ? "Request Quote" : "Request Quote for Shipping"}
             </Button>
