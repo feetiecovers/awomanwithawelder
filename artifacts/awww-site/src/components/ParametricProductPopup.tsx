@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calculator, CheckCircle2, Ruler, Send, Sparkles, User, X } from "lucide-react";
+import { Calculator, CheckCircle2, CircleHelp, Ruler, Send, Sparkles, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,7 @@ type SyncedParametricProduct = {
   commercialProductId?: string;
   definitionVersion?: number;
   inputDefinitions?: SyncedInputDefinition[];
+  validationRules?: ValidationRule[];
   available?: boolean;
   showOnWebsite?: boolean;
 };
@@ -76,6 +77,8 @@ type SyncedInputDefinition = {
   required?: boolean;
   unit?: string;
   helperText?: string;
+  helperTitle?: string;
+  helperImage?: string;
   choices?: InputChoice[];
 };
 
@@ -92,7 +95,10 @@ type ParametricResolution = {
   configurationHash?: string;
   selectedConfiguration?: Record<string, unknown>;
   summary?: Array<{ inputKey?: string; label?: string; displayValue?: string }>;
+  validation?: { valid: boolean; blockers: ValidationMessage[]; warnings: ValidationMessage[]; info: ValidationMessage[] };
 };
+type ValidationMessage = { ruleId: string; severity: "blocker" | "warning" | "info"; message: string; left: string; right: string | number };
+type ValidationRule = { id: string; left: string; operator: "<" | "<=" | ">" | ">=" | "=" | "!="; right: string | number; severity: "blocker" | "warning" | "info"; message: string };
 
 function inputKey(definition: SyncedInputDefinition): string {
   return String(definition.key || definition.inputType || definition.id || "").trim();
@@ -117,6 +123,20 @@ function defaultValue(definition: SyncedInputDefinition): string | number | bool
   if (controlType(definition) === "checkboxes") return [];
   if ((controlType(definition) === "slider" || controlType(definition) === "stepped_slider") && Number.isFinite(Number(definition.minimum))) return Number(definition.minimum);
   return "";
+}
+
+function evaluateValidation(rules: ValidationRule[] | undefined, values: MeasurementInput) {
+  const result = { blockers: [] as ValidationMessage[], warnings: [] as ValidationMessage[], info: [] as ValidationMessage[] };
+  for (const rule of rules ?? []) {
+    const left = Number(values[rule.left]);
+    const right = typeof rule.right === "number" ? rule.right : Number(values[rule.right]);
+    if (!Number.isFinite(left) || !Number.isFinite(right)) continue;
+    const valid = rule.operator === "<" ? left < right : rule.operator === "<=" ? left <= right : rule.operator === ">" ? left > right : rule.operator === ">=" ? left >= right : rule.operator === "=" ? left === right : left !== right;
+    if (valid) continue;
+    const entry: ValidationMessage = { ruleId: rule.id, severity: rule.severity, message: rule.message, left: rule.left, right: rule.right };
+    result[rule.severity === "blocker" ? "blockers" : rule.severity === "warning" ? "warnings" : "info"].push(entry);
+  }
+  return result;
 }
 
 const GST_RATE = 0.15;
@@ -312,6 +332,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resolution, setResolution] = useState<ParametricResolution | null>(null);
+  const [openHelp, setOpenHelp] = useState<string | null>(null);
   const [resolverError, setResolverError] = useState("");
   const [isResolving, setIsResolving] = useState(false);
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
@@ -379,11 +400,13 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     fetch(resolverUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
       .then(async (response) => {
         const result = await response.json().catch(() => null) as ParametricResolution | null;
-        if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) throw new Error((result as any)?.error || "These inputs could not be resolved");
+        if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) {
+          return Promise.reject({ message: (result as any)?.error || result?.validation?.blockers?.map((entry) => entry.message).join(" ") || "These inputs could not be resolved", result });
+        }
         return result;
       })
       .then((result) => { if (!controller.signal.aborted) setResolution(result); })
-      .catch((error: Error) => { if (!controller.signal.aborted) { setResolution(null); setResolverError(error.message || "These inputs could not be resolved"); } })
+      .catch((error: { message?: string; result?: ParametricResolution }) => { if (!controller.signal.aborted) { setResolution(error.result ?? null); setResolverError(error.message || "These inputs could not be resolved"); } })
       .finally(() => { if (!controller.signal.aborted) setIsResolving(false); });
     return () => controller.abort();
   }, [isOpen, product, parametricDefinitionId, measurementInput]);
@@ -402,6 +425,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
     return resolution?.valid && Number.isFinite(Number(resolution.sellPrice)) ? { ...local, totalSellPrice: Number(resolution.sellPrice) } : local;
   }, [product, measurementInput, resolution]);
   const measurementSummary = useMemo(() => product ? formatMeasurementSummary(product, measurementInput) : "", [product, measurementInput]);
+  const localValidation = useMemo(() => evaluateValidation(product?.validationRules, measurementInput), [product?.validationRules, measurementInput]);
   const promiseSummary = useMemo(() => formatPromise(resolution?.promise), [resolution?.promise]);
   const missingRequiredMeasurements = useMemo(() => {
     if (!product) return [];
@@ -644,7 +668,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                             <fieldset key={definition.id || key} className="space-y-2 rounded-xl border border-cyan-400/10 bg-black/20 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <div className="text-sm font-semibold text-white">{definition.label || legacyRule.label || key}{definition.required === false ? "" : " *"}</div>
+                                  <div className="flex items-center gap-1 text-sm font-semibold text-white">{definition.label || legacyRule.label || key}{definition.required === false ? "" : " *"}{(definition.helperTitle || definition.helperText || definition.helperImage) && <button type="button" onClick={() => setOpenHelp(openHelp === key ? null : key)} className="rounded-full text-cyan-200 hover:text-white" aria-label={`How to measure ${definition.label || key}`}><CircleHelp className="h-4 w-4" /></button>}</div>
                                   <div className="text-[11px] text-cyan-100/60">
                                     {definition.helperText || product.measurementLabel || "Measurement"}
                                     {unit ? ` • ${unit}` : ""}
@@ -674,6 +698,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                                 {rule.maximum ? ` • Max ${rule.maximum}` : ""}
                                 {rule.step ? ` • Step ${rule.step}` : ""}
                               </div>
+                              {openHelp === key && <div className="rounded-lg border border-cyan-300/25 bg-slate-950/95 p-3 text-xs text-cyan-50 shadow-xl">{definition.helperImage && <img src={definition.helperImage} alt="Measurement guide" className="mb-2 max-h-40 w-full rounded object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />}{definition.helperTitle && <p className="font-bold text-cyan-200">{definition.helperTitle}</p>}{definition.helperText && <p className="mt-1 text-cyan-50/80">{definition.helperText}</p>}</div>}
                             </fieldset>
                           );
                         })}
@@ -689,6 +714,10 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                         {pricing.warnings.join(" ")}
                       </div>
                     )}
+                    {localValidation.blockers.map((entry) => <p key={entry.ruleId} className="rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">{entry.message}</p>)}
+                    {localValidation.warnings.map((entry) => <p key={entry.ruleId} className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-100">{entry.message}</p>)}
+                    {localValidation.info.map((entry) => <p key={entry.ruleId} className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 p-3 text-sm text-cyan-100">{entry.message}</p>)}
+                    {(resolution?.validation?.blockers ?? []).filter((entry) => !localValidation.blockers.some((local) => local.ruleId === entry.ruleId)).map((entry) => <p key={`server-${entry.ruleId}`} className="rounded-xl border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">{entry.message}</p>)}
                   </section>
 
                   <section className="rounded-2xl border border-cyan-400/15 bg-white/5 p-4 space-y-4">
@@ -764,7 +793,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                   </div>
                   <Button
                     type="submit"
-                    disabled={isSubmitting || isResolving || missingRequiredMeasurements.length > 0 || ((product.inputDefinitions?.length ?? 0) > 0 && !resolution?.valid)}
+                    disabled={isSubmitting || isResolving || localValidation.blockers.length > 0 || missingRequiredMeasurements.length > 0 || ((product.inputDefinitions?.length ?? 0) > 0 && !resolution?.valid)}
                     className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest"
                     data-testid="button-submit-parametric-quote"
                   >
