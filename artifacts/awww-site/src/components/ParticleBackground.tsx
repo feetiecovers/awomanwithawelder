@@ -1,7 +1,14 @@
 import { useEffect, useRef } from "react";
+import { useBackgroundSuspended } from "@/lib/backgroundSuspension";
 
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isSuspended = useBackgroundSuspended();
+  const isSuspendedRef = useRef(isSuspended);
+  isSuspendedRef.current = isSuspended;
+
+  const stopRef = useRef<(() => void) | null>(null);
+  const startRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,6 +43,11 @@ export function ParticleBackground() {
     };
 
     const draw = () => {
+      if (isSuspendedRef.current || document.visibilityState === "hidden") {
+        animationFrameId = null;
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Draw grid
@@ -83,25 +95,41 @@ export function ParticleBackground() {
     };
 
     const start = () => {
+      if (isSuspendedRef.current || document.visibilityState === "hidden") return;
       if (animationFrameId === null) draw();
     };
 
+    stopRef.current = stop;
+    startRef.current = start;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") stop();
-      else start();
+      else if (!isSuspendedRef.current) start();
     };
 
     window.addEventListener("resize", init);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     init();
-    if (document.visibilityState === "visible") start();
+    if (document.visibilityState === "visible" && !isSuspendedRef.current) start();
 
     return () => {
       window.removeEventListener("resize", init);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       stop();
+      stopRef.current = null;
+      startRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (isSuspended) {
+      stopRef.current?.();
+    } else {
+      if (document.visibilityState === "visible") {
+        startRef.current?.();
+      }
+    }
+  }, [isSuspended]);
 
   return (
     <canvas

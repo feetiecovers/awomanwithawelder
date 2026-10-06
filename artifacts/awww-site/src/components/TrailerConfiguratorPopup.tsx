@@ -30,6 +30,7 @@ import {
   type FeatureOption
 } from "@/lib/configuratorData";
 import { buildApiUrl } from "@/lib/api-base";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 import { getTrailerIcon } from "./TrailerIcons";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo_Cropped.png";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
@@ -420,6 +421,7 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
       }
 
       setIsSubmitted(true);
+      void trackDenverDeskEvent("quote_requested", { quote_type: "trailer" });
       toast({
         title: "Quote Submitted Successfully!",
         description: `Thank you ${quoteForm.fullName}! Our team will contact you shortly regarding your custom build.`,

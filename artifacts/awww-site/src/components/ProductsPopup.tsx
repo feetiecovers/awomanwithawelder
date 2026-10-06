@@ -24,6 +24,8 @@ import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { BookingCalendar } from "./BookingCalendar";
 import { recordLocalBooking, getDateAvailability, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -339,6 +341,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [bookingCapacity, setBookingCapacity] = useState<WebsiteBookingCapacityProjection | null>(null);
   const [bookingCapacityLoading, setBookingCapacityLoading] = useState(false);
 
+  useRegisterOverlaySuspension("product-workspace", Boolean(isOpen && selectedWorkspaceProduct));
+  useRegisterOverlaySuspension("booking-service", Boolean(isOpen && selectedService));
+  useRegisterOverlaySuspension("shipping-selector", Boolean(isOpen && shippingSelectProduct));
+
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
   const serviceItems = products.filter((p) => p.type === "service");
@@ -421,11 +427,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       onSuccess: () => {
         toast({ title: "Added to cart" });
         queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        void trackDenverDeskEvent("add_to_cart", { product_id: String(productId), product_type: "product" });
         setShippingSelectProduct(null);
         setShippingSelectConfig(null);
       },
     });
   };
+
+  const openProductWorkspace = (item: ProductCard) => {
+    setSelectedWorkspaceProduct(item);
+    void trackDenverDeskEvent("product_viewed", { product_id: String(item.id), product_type: item.type });
+  };
+
 
   const onAddToCartClick = (item: ProductCard, configuration?: any) => {
     const presets = getProductShippingPresets(item);
@@ -889,7 +902,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (item.type === "parametric" || item.type === "configurable") {
-                                          setSelectedWorkspaceProduct(item);
+                                          openProductWorkspace(item);
                                           return;
                                         }
                                         onAddToCartClick(item);
@@ -902,7 +915,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     </Button>
                                     <Button
                                       variant="outline"
-                                      onClick={() => setSelectedWorkspaceProduct(item)}
+                                      onClick={() => openProductWorkspace(item)}
                                       className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
                                       data-testid={`button-view-product-${item.id}`}
                                     >

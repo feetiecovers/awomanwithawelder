@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useBackgroundSuspended } from "@/lib/backgroundSuspension";
 import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
 import feetieCoversLogo from "@assets/Feetie_Covers_Logo_Black.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo.png";
 import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
+
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40 },
@@ -105,6 +107,7 @@ interface BrandOrbsProps {
 
 export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const { toast } = useToast();
+  const isSuspended = useBackgroundSuspended();
   const processedLogos = useProcessedLogos();
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [tick, setTick] = useState(0);
@@ -119,18 +122,19 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
     };
     window.addEventListener("resize", onResize);
     
-    // Performance Fix (Option 1 & 4): Debounced resize and slower interval on mobile.
-    // If you need to rollback, change intervalTime back to 130 and remove the clearTimeout/setTimeout logic above.
-    const isMobile = window.innerWidth < 640;
-    const intervalTime = isMobile ? 400 : 250;
-    const iv = setInterval(() => setTick(t => t + 1), intervalTime);
-    
     return () => { 
       window.removeEventListener("resize", onResize); 
       clearTimeout(resizeTimer);
-      clearInterval(iv); 
     };
   }, []);
+
+  useEffect(() => {
+    if (isSuspended) return;
+    const isMobile = window.innerWidth < 640;
+    const intervalTime = isMobile ? 400 : 250;
+    const iv = setInterval(() => setTick(t => t + 1), intervalTime);
+    return () => clearInterval(iv);
+  }, [isSuspended]);
 
   const cx = size.w / 2;
   const cy = size.h / 2;
@@ -275,7 +279,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             data-testid={`orb-brand-${brand.id}`}
           >
             <motion.div
-              animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
+              animate={isSuspended ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
               transition={{
                 y: { duration: 4 + brand.id * 0.3, repeat: Infinity, ease: "easeInOut", delay: brand.delay },
                 x: { duration: 5 + brand.id * 0.4, repeat: Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },

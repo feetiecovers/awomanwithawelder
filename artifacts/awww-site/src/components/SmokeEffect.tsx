@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useBackgroundSuspended } from "@/lib/backgroundSuspension";
 
 interface SmokeParticle {
   x: number; y: number;
@@ -16,6 +17,12 @@ interface Spatter {
 
 export function SmokeEffect() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isSuspended = useBackgroundSuspended();
+  const isSuspendedRef = useRef(isSuspended);
+  isSuspendedRef.current = isSuspended;
+
+  const stopRef = useRef<(() => void) | null>(null);
+  const startRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,6 +57,11 @@ export function SmokeEffect() {
     let arcNextFlip   = 0;
 
     const animate = () => {
+      if (isSuspendedRef.current || document.visibilityState === "hidden") {
+        animId = null;
+        return;
+      }
+
       animId = requestAnimationFrame(animate);
       frame++;
 
@@ -64,7 +76,6 @@ export function SmokeEffect() {
         arcBrightness = Math.random() > 0.35 ? 0.7 + Math.random() * 0.3 : 0.1 + Math.random() * 0.25;
         arcNextFlip   = frame + 2 + Math.floor(Math.random() * 5);
 
-        // Occasionally fire a spatter particle
         // Occasionally fire a spatter particle
         if (Math.random() < 0.70 && spatters.length < 40) {
           const angle = -Math.PI * 0.65 + Math.random() * Math.PI * 1.3;
@@ -170,22 +181,38 @@ export function SmokeEffect() {
     };
 
     const start = () => {
+      if (isSuspendedRef.current || document.visibilityState === "hidden") return;
       if (animId === null) animate();
     };
 
+    stopRef.current = stop;
+    startRef.current = start;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") stop();
-      else start();
+      else if (!isSuspendedRef.current) start();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    if (document.visibilityState === "visible") start();
+    if (document.visibilityState === "visible" && !isSuspendedRef.current) start();
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       stop();
+      stopRef.current = null;
+      startRef.current = null;
       window.removeEventListener("resize", resize);
     };
   }, []);
+
+  useEffect(() => {
+    if (isSuspended) {
+      stopRef.current?.();
+    } else {
+      if (document.visibilityState === "visible") {
+        startRef.current?.();
+      }
+    }
+  }, [isSuspended]);
 
   return (
     <canvas

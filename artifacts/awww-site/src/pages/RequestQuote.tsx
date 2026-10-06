@@ -11,6 +11,7 @@ import { ParticleBackground } from "@/components/ParticleBackground";
 import { BrandOrbs } from "@/components/BrandOrbs";
 import { SmokeEffect } from "@/components/SmokeEffect";
 import { buildApiUrl } from "@/lib/api-base";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 import { useListProducts, useGetCurrentMember } from "@workspace/api-client-react";
 
 interface ProductCard {
@@ -144,6 +145,13 @@ export default function RequestQuote() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Failed to submit quote request");
       }
+
+      trackDenverDeskEvent("quote_requested", {
+        product_id: product.id,
+        product_name: product.name,
+        quote_type: "standard",
+        price: product.price,
+      });
 
       toast({
         title: "Quote Request Sent!",

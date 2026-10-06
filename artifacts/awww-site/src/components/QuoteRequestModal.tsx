@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCurrentMember } from "@workspace/api-client-react";
 import { buildApiUrl } from "@/lib/api-base";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 
 export interface QuoteRequestProduct {
   id: number;
@@ -39,6 +41,7 @@ function formatCurrency(value: number) {
 }
 
 export function QuoteRequestModal({ isOpen, onClose, product, configuration }: QuoteRequestModalProps) {
+  useRegisterOverlaySuspension("quote-request-modal", isOpen);
   const { toast } = useToast();
   const { data: member } = useGetCurrentMember();
 
@@ -108,6 +111,17 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Failed to submit quote request");
       }
+
+      trackDenverDeskEvent("quote_requested", {
+        product_id: product.id,
+        product_name: product.name,
+        quote_type: configuration?.parametricProductId
+          ? "parametric"
+          : configuration?.selectedOptionIds
+            ? "configurable"
+            : "standard",
+        price: product.price,
+      });
 
       toast({
         title: "Quote Request Sent!",

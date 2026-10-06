@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,12 @@ import { Send, Menu, MessageSquare, MousePointer2, FileText } from "lucide-react
 import { motion, AnimatePresence } from "framer-motion";
 import StreamChatWidget from "./StreamChatWidget";
 import { getConfiguredApiBaseUrl } from "@/lib/api-base";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 
-const CHAT_POLL_INTERVAL_MS = 15000;
+const OPEN_CHAT_POLL_INTERVAL_MS = 15000;
+const CLOSED_CHAT_POLL_INTERVAL_MS = 60000;
+const REFRESH_DEDUPLICATION_MS = 1000;
 
 interface BottomRightMenuProps {
   onOpenMembers: () => void;
@@ -25,6 +29,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  useRegisterOverlaySuspension("bottom-right-menu", isOpen);
 
   useEffect(() => {
     const handleOpenContact = () => {
@@ -49,6 +55,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   const [messages, setMessages] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [operatorCount, setOperatorCount] = useState<number | null>(null);
+  const isFetchingRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
 
   const apiBaseUrl = getConfiguredApiBaseUrl();
 
@@ -72,6 +80,9 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   // Load chat messages from the desktop application
   const fetchMessages = async () => {
     if (!visitorId) return;
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    lastFetchAtRef.current = Date.now();
     try {
       const res = await fetch(`${apiBaseUrl}/api/chat?chatId=${encodeURIComponent(visitorId)}`);
       if (res.ok) {
@@ -103,6 +114,8 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     } catch (err) {
       console.warn("Chat service offline:", err);
       setError('Chat offline. Please ensure desktop app is running.');
+    } finally {
+      isFetchingRef.current = false;
     }
   };
 
@@ -111,13 +124,14 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     if (!visitorId) return;
 
     const shouldPoll = () => document.visibilityState === "visible" && document.hasFocus();
-    const pollIfVisible = () => {
+    const pollIfVisible = (force = false) => {
       if (!shouldPoll()) return;
+      if (!force && Date.now() - lastFetchAtRef.current < REFRESH_DEDUPLICATION_MS) return;
       void fetchMessages();
     };
 
-    pollIfVisible();
-    const interval = setInterval(pollIfVisible, CHAT_POLL_INTERVAL_MS);
+    pollIfVisible(true);
+    const interval = setInterval(pollIfVisible, isOpen && activeMenuTab === "chat" ? OPEN_CHAT_POLL_INTERVAL_MS : CLOSED_CHAT_POLL_INTERVAL_MS);
 
     const handleFocus = () => {
       pollIfVisible();
@@ -136,7 +150,7 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [visitorId]);
+  }, [activeMenuTab, isOpen, visitorId]);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,6 +165,10 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
         body: JSON.stringify(contactForm)
       });
       if (res.ok) {
+        trackDenverDeskEvent("contact_submitted", {
+          form_id: "charlotte_contact",
+          has_phone: Boolean(contactForm.phone),
+        });
         toast({ title: "Message sent", description: "We'll get back to you soon." });
         setContactForm({ name: "", email: "", phone: "", message: "" });
       } else {

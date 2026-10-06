@@ -8,8 +8,19 @@ import BookingConfirmation from "@/pages/BookingConfirmation";
 import RequestQuote from "@/pages/RequestQuote";
 import AboutMe from "@/pages/AboutMe";
 import PasswordGate from "@/components/PasswordGate";
+import { BackgroundSuspensionProvider } from "@/lib/backgroundSuspension";
+import DenverDeskAnalyticsConsent from "@/components/DenverDeskAnalyticsConsent";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
 
 function Router() {
   return (
@@ -26,18 +37,22 @@ function Router() {
 function App() {
   return (
     <PasswordGate>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <div className="dark">
-              <Router />
-            </div>
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <BackgroundSuspensionProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <div className="dark">
+                <Router />
+                <DenverDeskAnalyticsConsent />
+              </div>
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </BackgroundSuspensionProvider>
     </PasswordGate>
   );
 }
 
 export default App;
+

@@ -21,6 +21,8 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useGetCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useBackgroundSuspended, useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -33,6 +35,18 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+
+  // Foreground overlay suspension hooks
+  useRegisterOverlaySuspension("offerings", isProductsOpen);
+  useRegisterOverlaySuspension("trailer-configurator", isConfiguratorOpen);
+  useRegisterOverlaySuspension("configurable-product", isConfigurableProductOpen);
+  useRegisterOverlaySuspension("parametric-product", isParametricProductOpen);
+  useRegisterOverlaySuspension("cart", isCartOpen);
+  useRegisterOverlaySuspension("members", isMembersOpen);
+  useRegisterOverlaySuspension("order-success", isOrderSuccessOpen);
+
+  const isSuspended = useBackgroundSuspended();
+
   // Keep each workspace alive after its first use so its close/reopen behavior
   // is unchanged, but avoid mounting closed modal trees during the initial load.
   const [hasMountedProducts, setHasMountedProducts] = useState(false);
@@ -71,6 +85,7 @@ export default function Home() {
           queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
         });
       setIsOrderSuccessOpen(true);
+      void trackDenverDeskEvent("purchase_completed");
       // Clean URL without reloading
       window.history.replaceState({}, "", window.location.pathname);
     } else if (payment === "cancel") {
@@ -120,14 +135,18 @@ export default function Home() {
       {/* Center logo — uninverted original colors, enlarged for desktop */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
-          animate={{
-            scale: [1, 1.02, 1],
-            filter: [
-              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-              "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
-              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-            ],
-          }}
+          animate={
+            isSuspended
+              ? { scale: 1, filter: "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))" }
+              : {
+                  scale: [1, 1.02, 1],
+                  filter: [
+                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
+                    "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
+                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
+                  ],
+                }
+          }
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="pointer-events-auto cursor-pointer"
           onClick={handleOpenProducts}

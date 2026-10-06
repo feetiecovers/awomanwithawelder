@@ -4,6 +4,8 @@ import { X, Trash2, ShoppingBag, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent, startCheckoutAttribution } from "@/lib/denversDeskAnalytics";
 import {
   useGetCart,
   useRemoveFromCart,
@@ -28,6 +30,7 @@ const PRODUCT_GRADIENTS = [
 ];
 
 export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess }: CartPopupProps) {
+  useRegisterOverlaySuspension("cart-popup", isOpen);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -60,10 +63,15 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
     if (items.length === 0) return;
     setIsCheckingOut(true);
     try {
+      const analyticsPayload = startCheckoutAttribution(items.length, total);
       const res = await fetch(buildApiUrl("/api/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({
+          currency: "NZD",
+          analytics: analyticsPayload,
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

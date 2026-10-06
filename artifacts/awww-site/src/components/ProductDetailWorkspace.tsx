@@ -11,6 +11,8 @@ import { PARAMETRIC_CATEGORIES_CONFIG } from '@/content/parametricCategories';
 import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
+import { useRegisterOverlaySuspension } from '@/lib/backgroundSuspension';
+import { trackDenverDeskEvent } from '@/lib/denversDeskAnalytics';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
   if ('target' in node && node.getAttribute('target') === '_blank') {
@@ -116,6 +118,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
   // --- QUOTE STATE ---
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  useRegisterOverlaySuspension('workspace-quote-modal', isQuoteModalOpen);
+
+  useEffect(() => {
+    void trackDenverDeskEvent('product_viewed', {
+      product_id: String(product.id),
+      product_type: product.type,
+    });
+  }, [product.id, product.type]);
 
   // --- INITIALIZE CONFIG DEFAULTS ---
   useEffect(() => {
@@ -310,44 +320,49 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     }
     
     const controller = new AbortController();
-    setIsResolving(true);
-    
-    const activeDefinitionId = parametricMode?.definitionId || rawProduct.definitionId || rawProduct.parametricProductId || rawProduct.externalId || String(product.id);
-    const activeDefinitionVersion = parametricMode?.definitionVersion || rawProduct.definitionVersion || '';
-
-    const resolverUrl = rawProduct.configurationResolver?.url || parametricMode?.resolver?.url || rawProduct.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
-    fetch(resolverUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289',
-        commercialProductId: product.type === 'parametric' ? (parametricMode?.commercialProductId || rawProduct.commercialProductId || undefined) : product.id,
-        purchaseMode: 'parametric',
-        definitionId: activeDefinitionId,
-        definitionVersion: activeDefinitionVersion,
-        inputValues: parametricValues,
-        quantity: 1,
-      }),
-      signal: controller.signal
-    })
-      .then(async (res) => ({ ok: res.ok, result: await res.json().catch(() => null) }))
-      .then(({ ok, result }) => {
-        if (controller.signal.aborted) return;
-        setResolverValidation(result?.validation ?? null);
-        if (ok && result?.valid && result?.sellPrice !== undefined) {
-          setResolvedPrice(Number(result.sellPrice));
-        } else {
-          setResolvedPrice(null);
-        }
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) { setResolvedPrice(null); setResolverValidation(null); }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsResolving(false);
-      });
+    const timer = setTimeout(() => {
+      setIsResolving(true);
       
-    return () => controller.abort();
+      const activeDefinitionId = parametricMode?.definitionId || rawProduct.definitionId || rawProduct.parametricProductId || rawProduct.externalId || String(product.id);
+      const activeDefinitionVersion = parametricMode?.definitionVersion || rawProduct.definitionVersion || '';
+
+      const resolverUrl = rawProduct.configurationResolver?.url || parametricMode?.resolver?.url || rawProduct.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
+      fetch(resolverUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289',
+          commercialProductId: product.type === 'parametric' ? (parametricMode?.commercialProductId || rawProduct.commercialProductId || undefined) : product.id,
+          purchaseMode: 'parametric',
+          definitionId: activeDefinitionId,
+          definitionVersion: activeDefinitionVersion,
+          inputValues: parametricValues,
+          quantity: 1,
+        }),
+        signal: controller.signal
+      })
+        .then(async (res) => ({ ok: res.ok, result: await res.json().catch(() => null) }))
+        .then(({ ok, result }) => {
+          if (controller.signal.aborted) return;
+          setResolverValidation(result?.validation ?? null);
+          if (ok && result?.valid && result?.sellPrice !== undefined) {
+            setResolvedPrice(Number(result.sellPrice));
+          } else {
+            setResolvedPrice(null);
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) { setResolvedPrice(null); setResolverValidation(null); }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsResolving(false);
+        });
+    }, 150);
+      
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
 
   const hasParametricBlocker = localValidation.blockers.length > 0 || (resolverValidation?.blockers.length ?? 0) > 0;
@@ -393,6 +408,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     }
     
     onAddToCart(payloads);
+    void trackDenverDeskEvent('add_to_cart', {
+      product_id: String(product.id),
+      product_type: product.type,
+    });
   };
 
   const handleRequestQuote = () => {

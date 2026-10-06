@@ -7,7 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { buildApiUrl } from "@/lib/api-base";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
+
 import { evaluateParametricValidation } from "@/lib/parametric-validation";
 
 interface ParametricProductPopupProps {
@@ -367,6 +370,15 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
   }, [product, rules]);
 
   useEffect(() => {
+    if (isOpen && product) {
+      void trackDenverDeskEvent("product_viewed", {
+        product_id: String(product.id),
+        product_type: "parametric",
+      });
+    }
+  }, [isOpen, product]);
+
+  useEffect(() => {
     if (!isOpen || !product || !parametricDefinitionId) return;
     const definitions = product.inputDefinitions ?? [];
     if (definitions.length === 0) return;
@@ -382,21 +394,27 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
       return;
     }
     const controller = new AbortController();
-    setIsResolving(true);
-    setResolverError("");
-    const resolverUrl = (product as any)?.configurationResolver?.url || (product as any)?.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
-    fetch(resolverUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
-      .then(async (response) => {
-        const result = await response.json().catch(() => null) as ParametricResolution | null;
-        if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) {
-          return Promise.reject({ message: (result as any)?.error || result?.validation?.blockers?.map((entry) => entry.message).join(" ") || "These inputs could not be resolved", result });
-        }
-        return result;
-      })
-      .then((result) => { if (!controller.signal.aborted) setResolution(result); })
-      .catch((error: { message?: string; result?: ParametricResolution }) => { if (!controller.signal.aborted) { setResolution(error.result ?? null); setResolverError(error.message || "These inputs could not be resolved"); } })
-      .finally(() => { if (!controller.signal.aborted) setIsResolving(false); });
-    return () => controller.abort();
+    const timer = setTimeout(() => {
+      setIsResolving(true);
+      setResolverError("");
+      const resolverUrl = (product as any)?.configurationResolver?.url || (product as any)?.resolver?.url || buildApiUrl('/api/ecommerce/configuration/resolve');
+      fetch(resolverUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ websiteId: import.meta.env.VITE_WEBSITE_ID || 'web-1782561404289', commercialProductId: product.commercialProductId, purchaseMode: 'parametric', definitionId: parametricDefinitionId, definitionVersion: product.definitionVersion, inputValues: measurementInput, quantity: 1 }) })
+        .then(async (response) => {
+          const result = await response.json().catch(() => null) as ParametricResolution | null;
+          if (!response.ok || !result?.valid || !Number.isFinite(Number(result.sellPrice))) {
+            return Promise.reject({ message: (result as any)?.error || result?.validation?.blockers?.map((entry) => entry.message).join(" ") || "These inputs could not be resolved", result });
+          }
+          return result;
+        })
+        .then((result) => { if (!controller.signal.aborted) setResolution(result); })
+        .catch((error: { message?: string; result?: ParametricResolution }) => { if (!controller.signal.aborted) { setResolution(error.result ?? null); setResolverError(error.message || "These inputs could not be resolved"); } })
+        .finally(() => { if (!controller.signal.aborted) setIsResolving(false); });
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [isOpen, product, parametricDefinitionId, measurementInput]);
 
   useEffect(() => {
@@ -528,6 +546,7 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
       }
 
       setIsSubmitted(true);
+      void trackDenverDeskEvent("quote_requested", { quote_type: "parametric" });
       toast({
         title: "Quote Submitted Successfully!",
         description: `Thank you ${quoteForm.fullName}! Our team will contact you shortly.`,

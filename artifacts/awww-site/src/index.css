@@ -188,3 +188,14 @@
     height: 0 !important;
   }
 }
+
+/* Background suspension optimization during overlays/modals */
+body.foreground-overlay-active .background-visual-layer {
+  pointer-events: none !important;
+  will-change: auto !important;
+}
+
+body.foreground-overlay-active [data-suspended-when-overlay="true"] {
+  animation-play-state: paused !important;
+}
+

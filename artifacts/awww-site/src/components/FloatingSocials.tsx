@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useBackgroundSuspended } from "@/lib/backgroundSuspension";
 
 interface SocialItem {
   id: string;
@@ -73,6 +74,8 @@ const SOCIALS: SocialItem[] = [
 ];
 
 export function FloatingSocials() {
+  const isSuspended = useBackgroundSuspended();
+
   return (
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
       {SOCIALS.map((social) => (
@@ -89,7 +92,7 @@ export function FloatingSocials() {
           transition={{ duration: 0.8, delay: social.delay, type: "spring" }}
         >
           <motion.div
-            animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
+            animate={isSuspended ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
             transition={{
               y: { duration: social.duration, repeat: Infinity, ease: "easeInOut", delay: social.delay },
               x: { duration: social.duration * 1.2, repeat: Infinity, ease: "easeInOut", delay: social.delay * 1.4 },

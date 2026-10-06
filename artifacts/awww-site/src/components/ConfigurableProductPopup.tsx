@@ -27,6 +27,8 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuoteRequestModal } from "./QuoteRequestModal";
 import { useListProducts, useAddToCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
+import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
+import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
@@ -60,6 +62,15 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
     return items.find((p: any) => p.id === productId);
   }, [rawProducts, productId]);
 
+  useEffect(() => {
+    if (isOpen && product) {
+      void trackDenverDeskEvent("product_viewed", {
+        product_id: String(product.id),
+        product_type: "configurable",
+      });
+    }
+  }, [isOpen, product]);
+
   const optionGroups = useMemo(() => {
     if (!product || !Array.isArray(product.optionGroups)) return [];
     return product.optionGroups as any[];
@@ -81,6 +92,8 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
 
   // Quote Modal Overlay state
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  useRegisterOverlaySuspension("configurable-quote-modal", isOpen && isQuoteModalOpen);
+
 
   // Initialize default selections
   useEffect(() => {
@@ -194,6 +207,10 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
         onSuccess: () => {
           toast({ title: "Added to cart" });
           queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+          void trackDenverDeskEvent("add_to_cart", {
+            product_id: String(product.id),
+            product_type: "configurable",
+          });
           onClose();
         },
         onError: () => {
