@@ -8,6 +8,7 @@ import BookingConfirmation from "@/pages/BookingConfirmation";
 import RequestQuote from "@/pages/RequestQuote";
 import AboutMe from "@/pages/AboutMe";
 import PasswordGate from "@/components/PasswordGate";
+import DenverDeskAnalyticsConsent from "@/components/DenverDeskAnalyticsConsent";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ function App() {
             <div className="dark">
               <Router />
             </div>
+            <DenverDeskAnalyticsConsent />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
@@ -41,3 +43,4 @@ function App() {
 }
 
 export default App;
+
