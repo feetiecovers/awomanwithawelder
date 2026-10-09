@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, ArrowRight, Sparkles } from "lucide-react";
-import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
+import denversDeskChevronIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import {
   getAnalyticsConsent,
   setAnalyticsConsent,
@@ -268,9 +268,9 @@ export default function DenverDeskAnalyticsConsent() {
                     title="Powered by Denver's Desk"
                   >
                     <img
-                      src={denversDeskLogo}
+                      src={denversDeskChevronIcon}
                       alt="Denver's Desk"
-                      className="h-3 w-auto object-contain mix-blend-screen brightness-125 filter drop-shadow-[0_0_6px_rgba(26,157,224,0.4)] group-hover:scale-105 transition-transform"
+                      className="w-3.5 h-3.5 object-contain opacity-90 drop-shadow-[0_0_6px_rgba(26,157,224,0.6)] group-hover:scale-110 transition-transform"
                     />
                     <span className="font-mono text-[9px] sm:text-[10px] tracking-wider text-cyan-200/60 group-hover:text-cyan-200 uppercase font-medium">
                       Powered by Denver&apos;s Desk
