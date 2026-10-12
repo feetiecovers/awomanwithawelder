@@ -55,8 +55,49 @@ interface QuoteFormState {
 
 const GST_RATE = 0.15;
 
+interface SyncedParametricInput {
+  id?: string;
+  key?: string;
+  inputType?: string;
+  controlType?: string;
+  label?: string;
+  unit?: string | null;
+  minimum?: number;
+  maximum?: number;
+  step?: number;
+  defaultValue?: number | string | boolean;
+  choices?: Array<{ id?: string; label?: string; value?: unknown }>;
+}
+
+interface SyncedParametricFeature {
+  id?: string;
+  code?: string;
+  name?: string;
+  kind?: string;
+  price?: number;
+  parametricProductId?: string | null;
+  parametricProduct?: {
+    id?: string;
+    code?: string;
+    name?: string;
+    basePrice?: number;
+    markupPercent?: number;
+    defaultConfiguration?: Record<string, unknown>;
+    inputDefinitions?: SyncedParametricInput[];
+    rules?: Array<{
+      sourceInputKey?: string;
+      basis?: string;
+      pricePerUnit?: number;
+      priceAdjustment?: number;
+      minimumCharge?: number;
+    }>;
+  } | null;
+}
+
 interface SyncedBuildRecord {
   id?: string;
+  buildId?: string;
+  buildCode?: string;
   name?: string;
   description?: string | null;
   image?: string | null;
@@ -64,6 +105,8 @@ interface SyncedBuildRecord {
   basePrice?: number;
   price?: number;
   displayPrice?: number;
+  includedFeatures?: SyncedParametricFeature[];
+  parametricFeatures?: SyncedParametricFeature[];
   optionGroups?: Array<{
     id?: string;
     name?: string;
@@ -82,6 +125,30 @@ interface SyncedBuildRecord {
       sortOrder?: number;
     }>;
   }>;
+}
+
+type SyncedTrailerBuild = TrailerBuild & {
+  remoteId: string;
+  buildCode: string;
+  parametricFeatures: SyncedParametricFeature[];
+};
+
+function resolveParametricProductPrice(feature: SyncedParametricFeature, values: Record<string, unknown>): number {
+  const product = feature.parametricProduct;
+  if (!product) return Number(feature.price ?? 0) || 0;
+  let price = Number(product.basePrice ?? 0) || 0;
+  for (const rule of product.rules ?? []) {
+    const key = String(rule.sourceInputKey ?? rule.basis ?? '').trim();
+    const value = Number(values[key] ?? product.defaultConfiguration?.[key] ?? 0);
+    if (!Number.isFinite(value)) continue;
+    price += Math.max(Number(rule.minimumCharge) || 0, value * (Number(rule.pricePerUnit) || 0) + (Number(rule.priceAdjustment) || 0));
+  }
+  return price * (1 + (Number(product.markupPercent) || 0) / 100);
+}
+
+function resolveParametricFeatureDelta(feature: SyncedParametricFeature, values: Record<string, unknown>): number {
+  const defaults = feature.parametricProduct?.defaultConfiguration ?? {};
+  return resolveParametricProductPrice(feature, values) - resolveParametricProductPrice(feature, defaults);
 }
 
 function hashToNumericId(value: string, fallback: number) {
@@ -119,14 +186,14 @@ function normalizeImageUrl(value: unknown): string | null {
 }
 
 function mapSyncedBuildCatalog(value: unknown): {
-  builds: TrailerBuild[];
+  builds: SyncedTrailerBuild[];
   featureGroupsByBuildId: Record<number, FeatureGroupWithOptions[]>;
 } {
   const records = Array.isArray(value)
     ? value
     : (value as { builds?: unknown[] })?.builds ?? [];
 
-  const builds: TrailerBuild[] = [];
+  const builds: SyncedTrailerBuild[] = [];
   const featureGroupsByBuildId: Record<number, FeatureGroupWithOptions[]> = {};
 
   records.forEach((rawRecord, buildIndex) => {
@@ -135,7 +202,18 @@ function mapSyncedBuildCatalog(value: unknown): {
     const buildId = hashToNumericId(buildKey, buildIndex + 101);
 
     const rawBasePrice = record.displayPrice ?? record.price ?? record.basePrice;
-    const build: TrailerBuild = {
+    const parametricFeatures = (Array.isArray(record.parametricFeatures)
+      ? record.parametricFeatures
+      : (Array.isArray(record.includedFeatures) ? record.includedFeatures : []))
+      .filter((feature) => feature?.kind === 'parametric' && feature?.parametricProduct)
+      .map((feature) => ({
+        ...feature,
+        id: String(feature.id ?? ''),
+        parametricProduct: feature.parametricProduct
+          ? { ...feature.parametricProduct, inputDefinitions: feature.parametricProduct.inputDefinitions ?? [], rules: feature.parametricProduct.rules ?? [], defaultConfiguration: feature.parametricProduct.defaultConfiguration ?? {} }
+          : null,
+      }));
+    const build: SyncedTrailerBuild = {
       id: buildId,
       trailerTypeId: 1,
       name: String(record?.name ?? `Build ${buildIndex + 1}`),
@@ -144,6 +222,9 @@ function mapSyncedBuildCatalog(value: unknown): {
       basePrice: Number(rawBasePrice ?? 0),
       priceIsKnown: Number.isFinite(Number(rawBasePrice)),
       sortOrder: buildIndex + 1,
+      remoteId: String(record?.buildId ?? record?.id ?? buildKey),
+      buildCode: String(record?.buildCode ?? record?.id ?? buildKey),
+      parametricFeatures,
     };
     builds.push(build);
 
@@ -189,7 +270,8 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   const [selectedFeatures, setSelectedFeatures] = useState<Record<number, number | number[]>>({});
   const [activePreviewImage, setActivePreviewImage] = useState<string | null>(null);
   const [activePreviewLabel, setActivePreviewLabel] = useState<string>("");
-  const [syncedBuilds, setSyncedBuilds] = useState<TrailerBuild[]>([]);
+  const [parametricValues, setParametricValues] = useState<Record<string, Record<string, unknown>>>({});
+  const [syncedBuilds, setSyncedBuilds] = useState<SyncedTrailerBuild[]>([]);
   const [syncedFeatureGroupsByBuildId, setSyncedFeatureGroupsByBuildId] = useState<Record<number, FeatureGroupWithOptions[]>>({});
   
   // Quote Modal Overlay state
@@ -278,6 +360,19 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   }, [activeFeatureGroups, selectedBuild?.id]);
 
   useEffect(() => {
+    if (!selectedBuild) {
+      setParametricValues({});
+      return;
+    }
+    setParametricValues(Object.fromEntries(
+      selectedBuild.parametricFeatures.map((feature) => [
+        String(feature.id ?? ''),
+        { ...(feature.parametricProduct?.defaultConfiguration ?? {}) },
+      ]),
+    ));
+  }, [selectedBuild?.id]);
+
+  useEffect(() => {
     if (!selectedBuild?.imageUrl || activePreviewImage) return;
     setActivePreviewImage(selectedBuild.imageUrl);
     setActivePreviewLabel(selectedBuild.name);
@@ -331,7 +426,11 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
   const basePrice = selectedBuild ? selectedBuild.basePrice : 0;
   const isQuoteOnly = selectedBuild?.priceIsKnown === false;
   const addonsTotal = selectedAddons.reduce((sum, item) => sum + item.price, 0);
-  const totalIncGst = basePrice + addonsTotal;
+  const parametricAdjustment = selectedBuild?.parametricFeatures.reduce(
+    (sum, feature) => sum + resolveParametricFeatureDelta(feature, parametricValues[String(feature.id ?? '')] ?? {}),
+    0,
+  ) ?? 0;
+  const totalIncGst = basePrice + addonsTotal + parametricAdjustment;
   const subtotalExGst = totalIncGst / (1 + GST_RATE);
   const gstAmount = totalIncGst - subtotalExGst;
 
@@ -366,6 +465,13 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
     }
   };
 
+  const updateParametricValue = (featureId: string, key: string, value: unknown) => {
+    setParametricValues((current) => ({
+      ...current,
+      [featureId]: { ...(current[featureId] ?? {}), [key]: value },
+    }));
+  };
+
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quoteForm.fullName || !quoteForm.email || !quoteForm.phone) {
@@ -394,6 +500,8 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
+          buildId: selectedBuild.remoteId,
+          buildCode: selectedBuild.buildCode,
           buildName: selectedBuild.name,
           selections: selectedBuildSelections,
           fullName: quoteForm.fullName,
@@ -410,7 +518,10 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
             estimatedGst: gstAmount,
             estimatedTotal: totalIncGst,
           }),
-          selectedAddons,
+          selectedAddons: [
+            { groupName: '', optionName: '', price: 0, parametricFeatureValues: parametricValues },
+            ...selectedAddons,
+          ],
         }),
       });
 
@@ -768,6 +879,51 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
                           </div>
                         );
                       })}
+                      {selectedBuild && selectedBuild.parametricFeatures.length > 0 && (
+                        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/[0.08] p-3 space-y-2">
+                          <div>
+                            <h4 className="font-mono text-xs font-bold uppercase tracking-widest text-violet-200">Parametric Build Features</h4>
+                            <p className="mt-0.5 text-[10px] text-pink-200/60">Configure the linked product inside this Build. Denver&apos;s Desk resolves the final quote from these saved values.</p>
+                          </div>
+                          {selectedBuild.parametricFeatures.map((feature) => {
+                            const product = feature.parametricProduct;
+                            if (!product) return null;
+                            const featureId = String(feature.id ?? '');
+                            const values = parametricValues[featureId] ?? {};
+                            return (
+                              <div key={featureId} className="rounded-xl border border-violet-500/20 bg-black/10 p-2.5 space-y-2">
+                                <div>
+                                  <p className="text-xs font-bold text-white">{feature.name || product.name || product.code || 'Parametric feature'}</p>
+                                  <p className="text-[9px] font-mono text-violet-200/70">{product.code || product.name || feature.parametricProductId}</p>
+                                </div>
+                                {(product.inputDefinitions ?? []).map((input, inputIndex) => {
+                                  const key = String(input.key ?? input.inputType ?? input.id ?? `input-${inputIndex}`);
+                                  const controlType = String(input.controlType ?? '').toLowerCase();
+                                  const currentValue = values[key] ?? input.defaultValue ?? '';
+                                  const choices = Array.isArray(input.choices) ? input.choices : [];
+                                  return (
+                                    <label key={key} className="block rounded-lg border border-pink-500/15 bg-[#0f0414] p-2">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="text-[10px] font-mono uppercase tracking-wider text-pink-100">{input.label || key}</span>
+                                        {input.unit && <span className="text-[9px] text-pink-200/60">{input.unit}</span>}
+                                      </div>
+                                      {controlType.includes('slider') ? (
+                                        <input type="range" min={input.minimum ?? 0} max={input.maximum ?? 100} step={input.step ?? 1} value={Number(currentValue) || Number(input.minimum ?? 0)} onChange={(event) => updateParametricValue(featureId, key, Number(event.target.value))} className="mt-2 w-full accent-[#ff2a8d]" />
+                                      ) : choices.length > 0 ? (
+                                        <select value={String(currentValue)} onChange={(event) => updateParametricValue(featureId, key, event.target.value)} className="mt-2 w-full rounded-lg border border-pink-500/30 bg-[#0f0414] p-2 text-xs text-white outline-none">
+                                          {choices.map((choice, choiceIndex) => <option key={String(choice.id ?? choiceIndex)} value={String(choice.value ?? choice.label ?? '')}>{choice.label ?? String(choice.value ?? '')}</option>)}
+                                        </select>
+                                      ) : (
+                                        <input type="number" min={input.minimum ?? undefined} max={input.maximum ?? undefined} step={input.step ?? 'any'} value={currentValue === '' ? '' : String(currentValue)} onChange={(event) => updateParametricValue(featureId, key, event.target.value === '' ? '' : Number(event.target.value))} className="mt-2 w-full rounded-lg border border-pink-500/30 bg-[#0f0414] p-2 text-xs text-white outline-none" />
+                                      )}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Step 2 Footer Navigation */}
