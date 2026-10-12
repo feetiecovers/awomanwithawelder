@@ -13,9 +13,6 @@ import { getConfiguredApiBaseUrl } from "@/lib/api-base";
 import { useRegisterOverlaySuspension } from "@/lib/backgroundSuspension";
 import { trackDenverDeskEvent } from "@/lib/denversDeskAnalytics";
 
-const OPEN_CHAT_POLL_INTERVAL_MS = 15000;
-const CLOSED_CHAT_POLL_INTERVAL_MS = 60000;
-const REFRESH_DEDUPLICATION_MS = 1000;
 
 interface BottomRightMenuProps {
   onOpenMembers: () => void;
@@ -56,7 +53,6 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
   const [error, setError] = useState<string | null>(null);
   const [operatorCount, setOperatorCount] = useState<number | null>(null);
   const isFetchingRef = useRef(false);
-  const lastFetchAtRef = useRef(0);
 
   const apiBaseUrl = getConfiguredApiBaseUrl();
 
@@ -82,7 +78,6 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     if (!visitorId) return;
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
-    lastFetchAtRef.current = Date.now();
     try {
       const res = await fetch(`${apiBaseUrl}/api/chat?chatId=${encodeURIComponent(visitorId)}`);
       if (res.ok) {
@@ -119,38 +114,53 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
     }
   };
 
-  // Poll chat only while the page is actively visible to reduce backend churn.
+  // History is fetched once on open, then this stream only wakes the widget
+  // when its own conversation changes. Reconnects make one catch-up fetch.
   useEffect(() => {
     if (!visitorId) return;
-
-    const shouldPoll = () => document.visibilityState === "visible" && document.hasFocus();
-    const pollIfVisible = (force = false) => {
-      if (!shouldPoll()) return;
-      if (!force && Date.now() - lastFetchAtRef.current < REFRESH_DEDUPLICATION_MS) return;
-      void fetchMessages();
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryCount = 0;
+    let controller: AbortController | undefined;
+    const connect = () => {
+      controller = new AbortController();
+      void (async () => {
+        try {
+          const url = `${apiBaseUrl}/api/chat/events?chatId=${encodeURIComponent(visitorId)}`;
+          const response = await fetch(url, { headers: { Accept: 'text/event-stream' }, signal: controller?.signal });
+          if (!response.ok || !response.body) throw new Error('Chat event stream unavailable');
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          while (!controller?.signal.aborted) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let boundary: number;
+            while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+              const event = buffer.slice(0, boundary);
+              buffer = buffer.slice(boundary + 2);
+              if (event.includes('event: message')) {
+                retryCount = 0;
+                void fetchMessages();
+              }
+            }
+          }
+        } catch (err) {
+          if (!controller?.signal.aborted) console.warn('Chat event stream disconnected:', err);
+        }
+        if (!controller?.signal.aborted) {
+          const delay = Math.min(30000, 1000 * 2 ** retryCount++);
+          retryTimer = setTimeout(() => { void fetchMessages(); connect(); }, delay);
+        }
+      })();
     };
-
-    pollIfVisible(true);
-    const interval = setInterval(pollIfVisible, isOpen && activeMenuTab === "chat" ? OPEN_CHAT_POLL_INTERVAL_MS : CLOSED_CHAT_POLL_INTERVAL_MS);
-
-    const handleFocus = () => {
-      pollIfVisible();
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        pollIfVisible();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
+    void fetchMessages();
+    connect();
     return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      controller?.abort();
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [activeMenuTab, isOpen, visitorId]);
+  }, [apiBaseUrl, visitorId]);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
