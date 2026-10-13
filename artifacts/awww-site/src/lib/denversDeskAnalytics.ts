@@ -1,6 +1,6 @@
 const CONSENT_KEY = 'awww_analytics_consent';
 const LEGACY_CONSENT_KEY = 'denvers_desk_analytics_consent';
-const DEFAULT_WEBSITE_ID = 'web-awww-2026';
+const DEFAULT_WEBSITE_ID = 'web-1782561404289';
 const DEFAULT_ENDPOINT = 'https://denver-s-desk.onrender.com/api/analytics/events';
 
 export type ConsentStatus = 'granted' | 'denied' | null;
@@ -24,6 +24,8 @@ interface TrackerInstance {
   setCorrelationId: (correlationId: string) => void;
   decorateCrossDomainLinks: () => void;
 }
+
+type AnalyticsAttribution = Record<string, string>;
 
 let tracker: TrackerInstance | null = null;
 
@@ -92,6 +94,26 @@ function storageSet(key: string, value: string): void {
   }
 }
 
+function attributionFromUrl(url: URL): AnalyticsAttribution | undefined {
+  const fields: Array<[string, string]> = [
+    ['source', 'utm_source'], ['medium', 'utm_medium'], ['campaign', 'utm_campaign'],
+    ['term', 'utm_term'], ['content', 'utm_content'], ['gclid', 'gclid'],
+    ['gbraid', 'gbraid'], ['wbraid', 'wbraid'], ['fbclid', 'fbclid'], ['msclkid', 'msclkid'],
+  ];
+  const result: AnalyticsAttribution = {};
+  for (const [field, parameter] of fields) {
+    const value = url.searchParams.get(parameter)?.trim();
+    if (value && value.length <= 180) result[field] = value;
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
+function stripTrackingParameters(): void {
+  const url = new URL(window.location.href);
+  ['dd_session', 'dd_attribution'].forEach((key) => url.searchParams.delete(key));
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 function createTracker(config: TrackerConfig): TrackerInstance {
   const sessionKey = `dd_analytics_session_${config.websiteId}`;
   const attributionKey = `dd_analytics_attribution_${config.websiteId}`;
@@ -113,14 +135,17 @@ function createTracker(config: TrackerConfig): TrackerInstance {
       : storageGet(sessionKey) || newIdentifier();
   storageSet(sessionKey, sessionId);
 
+  const freshAttribution = attributionFromUrl(inboundUrl);
+
   const attributionId =
     inboundAttribution && /^[A-Za-z0-9_-]{12,160}$/.test(inboundAttribution)
       ? inboundAttribution
-      : storageGet(attributionKey);
+      : storageGet(attributionKey) || (freshAttribution ? newIdentifier() : undefined);
   if (attributionId) storageSet(attributionKey, attributionId);
 
   const landingPage = storageGet(`${attributionKey}_landing`) || `${inboundUrl.pathname}${inboundUrl.search}`;
   storageSet(`${attributionKey}_landing`, landingPage);
+  if (inboundSession || inboundAttribution) stripTrackingParameters();
 
   function decorateCrossDomainLinks() {
     const domains = new Set((config.crossDomainDomains || []).map((d) => d.toLowerCase()));
@@ -154,6 +179,7 @@ function createTracker(config: TrackerConfig): TrackerInstance {
       pagePath: `${currentUrl.pathname}${currentUrl.search}`,
       landingPage,
       referrer: document.referrer || undefined,
+      attribution: attributionFromUrl(currentUrl) || freshAttribution,
       properties,
     };
     try {

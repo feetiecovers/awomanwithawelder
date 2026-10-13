@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, ArrowRight, Sparkles } from "lucide-react";
+import { useLocation } from "wouter";
 import denversDeskChevronIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import {
   getAnalyticsConsent,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/denversDeskAnalytics";
 
 export default function DenverDeskAnalyticsConsent() {
+  const [location] = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const [consent, setConsentState] = useState<ConsentStatus>(() => getAnalyticsConsent());
   const [isVisible, setIsVisible] = useState(false);
@@ -23,10 +25,11 @@ export default function DenverDeskAnalyticsConsent() {
 
   useEffect(() => {
     if (configured && consent === "granted") {
-      initialiseDenverDeskAnalytics();
+      const activeTracker = initialiseDenverDeskAnalytics();
+      activeTracker?.decorateCrossDomainLinks();
       void trackDenverDeskEvent("page_view");
     }
-  }, [configured, consent]);
+  }, [configured, consent, location]);
 
   useEffect(() => {
     if (configured && consent === null) {
@@ -34,6 +37,7 @@ export default function DenverDeskAnalyticsConsent() {
       return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
+      return undefined;
     }
   }, [configured, consent]);
 
