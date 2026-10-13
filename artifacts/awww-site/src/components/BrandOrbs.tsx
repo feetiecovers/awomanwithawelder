@@ -186,7 +186,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const ddCenterX = cx + ddOx;
   const ddCenterY = cy + ddOy;
   const ddHeight = Math.round(orbSize * (isMobile ? ((ddBrand as any).mobileSizeMultiplier || ddBrand.sizeMultiplier || 1.0) : (ddBrand.sizeMultiplier || 1.0)));
-  const subSize = Math.round(orbSize * (isMobile ? 0.65 : 0.58));
+  const subSize = Math.round(orbSize * (isMobile ? 0.52 : 0.46));
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -277,13 +277,13 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const lux = ldx / ldist;
           const luy = ldy / ldist;
 
-          const ddEdge = isMobile ? 12 : Math.round(16 * scale);
-          const subEdge = Math.round((subSize / 2) * 0.65);
-          const gapStart = isMobile ? 5 : Math.round(7 * scale);
-          const gapEnd = isMobile ? 5 : Math.round(7 * scale);
+          const ddEdge = isMobile ? 14 : Math.round(18 * scale);
+          const subEdge = Math.round((subSize / 2) * 0.75);
+          const gapStart = isMobile ? 8 : Math.round(16 * scale);
+          const gapEnd = isMobile ? 8 : Math.round(16 * scale);
 
           const startDist = ddEdge + gapStart;
-          const endDist = Math.max(startDist + 16, ldist - subEdge - gapEnd);
+          const endDist = Math.max(startDist + 12, ldist - subEdge - gapEnd);
 
           const lsx = ddCenterX + lux * startDist;
           const lsy = ddCenterY + luy * startDist;
@@ -292,21 +292,21 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
 
           const subS1 = tick + sub.id * 13;
           const subS2 = tick + sub.id * 13 + 5;
-          const subB1 = lightningPath(lsx, lsy, lex, ley, 8, Math.max(2, 6 * scale), subS1);
-          const subB2 = lightningPath(lsx, lsy, lex, ley, 6, Math.max(1.5, 4 * scale), subS2);
+          const subB1 = lightningPath(lsx, lsy, lex, ley, 6, Math.max(1.8, 4.5 * scale), subS1);
+          const subB2 = lightningPath(lsx, lsy, lex, ley, 5, Math.max(1.2, 3 * scale), subS2);
           const subFlk = 0.55 + Math.abs(hash(tick, sub.id)) * 0.35;
 
           return (
             <g key={`sub-elec-${sub.id}`}>
-              <path d={subB1} fill="none" stroke="#1a9de0" strokeWidth="6"
+              <path d={subB1} fill="none" stroke="#1a9de0" strokeWidth="5"
                     strokeLinecap="round" opacity={subFlk * 0.12} filter="url(#elec-glow)" />
               <path d={subB2} fill="none" stroke="#60c8ff" strokeWidth="2"
                     strokeLinecap="round" opacity={subFlk * 0.45} />
               <path d={subB1} fill="none" stroke="#b8e4ff" strokeWidth="1"
                     strokeLinecap="round" opacity={subFlk * 0.85} />
-              <circle cx={lsx} cy={lsy} r={1.8} fill="#ffffff"
+              <circle cx={lsx} cy={lsy} r={1.6} fill="#ffffff"
                       opacity={0.3 + Math.abs(hash(tick * 2, sub.id)) * 0.7} />
-              <circle cx={lex} cy={ley} r={1.8} fill="#ffffff"
+              <circle cx={lex} cy={ley} r={1.6} fill="#ffffff"
                       opacity={0.3 + Math.abs(hash(tick * 2 + 1, sub.id)) * 0.7} />
             </g>
           );
