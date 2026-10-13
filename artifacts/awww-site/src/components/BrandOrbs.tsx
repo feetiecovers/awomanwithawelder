@@ -15,7 +15,7 @@ const BRANDS = [
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 205, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 265, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
 ];
 
@@ -28,10 +28,10 @@ const DENVER_SUB_BRANDS = [
     live: true,
     blurred: false,
     stripWhiteBg: true,
-    dx: 50,
-    dy: -72,
-    mobileDx: 38,
-    mobileDy: -54,
+    dx: 48,
+    dy: -68,
+    mobileDx: 34,
+    mobileDy: -48,
     delay: 1.7,
   },
   {
@@ -41,10 +41,10 @@ const DENVER_SUB_BRANDS = [
     live: false,
     blurred: true,
     stripWhiteBg: true,
-    dx: -50,
-    dy: -72,
-    mobileDx: -38,
-    mobileDy: -54,
+    dx: -48,
+    dy: -68,
+    mobileDx: -34,
+    mobileDy: -48,
     delay: 1.6,
   },
 ];
@@ -179,14 +179,14 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
 
   const ddBrand = BRANDS.find(b => b.id === 5)!;
   const ddRad = (ddBrand.angle * Math.PI) / 180;
-  const ddRx = isMobile ? 100 : ddBrand.radius * scale * 1.15;
-  const ddRy = isMobile ? 135 : ddBrand.radius * scale * 1.15;
+  const ddRx = isMobile ? 120 : ddBrand.radius * scale * 1.15;
+  const ddRy = isMobile ? 160 : ddBrand.radius * scale * 1.15;
   const ddOx = Math.cos(ddRad) * ddRx;
   const ddOy = Math.sin(ddRad) * ddRy;
   const ddCenterX = cx + ddOx;
   const ddCenterY = cy + ddOy;
   const ddHeight = Math.round(orbSize * (isMobile ? ((ddBrand as any).mobileSizeMultiplier || ddBrand.sizeMultiplier || 1.0) : (ddBrand.sizeMultiplier || 1.0)));
-  const subSize = Math.round(ddHeight * 0.75);
+  const subSize = Math.round(orbSize * (isMobile ? 0.65 : 0.58));
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -216,9 +216,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const originRad = (originAngle * Math.PI) / 180;
           const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
           const rx  = isMobile 
-            ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 100 : 125)) 
+            ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 120 : 125)) 
             : brand.radius * scale * 1.15;
-          const ry  = isMobile ? (brand.id === 5 ? 135 : 175) : brand.radius * scale * 1.15;
+          const ry  = isMobile ? (brand.id === 5 ? 160 : 175) : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(originRad) * logoRX;
           const sy  = cy + Math.sin(originRad) * logoRY;
           let ox  = Math.cos(rad) * rx;
@@ -277,13 +277,13 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const lux = ldx / ldist;
           const luy = ldy / ldist;
 
-          const ddEdge = Math.round(ddHeight * 0.35);
-          const subEdge = Math.round((subSize / 2) * 0.75);
-          const gapStart = isMobile ? 8 : Math.round(10 * scale);
-          const gapEnd = isMobile ? 8 : Math.round(10 * scale);
+          const ddEdge = isMobile ? 12 : Math.round(16 * scale);
+          const subEdge = Math.round((subSize / 2) * 0.65);
+          const gapStart = isMobile ? 5 : Math.round(7 * scale);
+          const gapEnd = isMobile ? 5 : Math.round(7 * scale);
 
           const startDist = ddEdge + gapStart;
-          const endDist = Math.max(startDist + 14, ldist - subEdge - gapEnd);
+          const endDist = Math.max(startDist + 16, ldist - subEdge - gapEnd);
 
           const lsx = ddCenterX + lux * startDist;
           const lsy = ddCenterY + luy * startDist;
@@ -327,9 +327,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         const rad = (angle * Math.PI) / 180;
         const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
         const rx  = isMobile 
-          ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 100 : 125)) 
+          ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 120 : 125)) 
           : brand.radius * scale * 1.15;
-        const ry  = isMobile ? (brand.id === 5 ? 135 : 175) : brand.radius * scale * 1.15;
+        const ry  = isMobile ? (brand.id === 5 ? 160 : 175) : brand.radius * scale * 1.15;
         let x   = Math.cos(rad) * rx;
         let y   = Math.sin(rad) * ry;
 
