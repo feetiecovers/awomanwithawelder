@@ -28,6 +28,7 @@ const DENVER_SUB_BRANDS = [
     live: true,
     blurred: false,
     stripWhiteBg: true,
+    sizeMultiplier: 0.95,
     dx: 48,
     dy: -68,
     mobileDx: 34,
@@ -41,6 +42,7 @@ const DENVER_SUB_BRANDS = [
     live: false,
     blurred: true,
     stripWhiteBg: true,
+    sizeMultiplier: 1.0,
     dx: -48,
     dy: -68,
     mobileDx: -34,
@@ -277,8 +279,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const lux = ldx / ldist;
           const luy = ldy / ldist;
 
+          const thisSubSize = Math.round(subSize * ((sub as any).sizeMultiplier || 1.0));
           const ddEdge = isMobile ? 14 : Math.round(18 * scale);
-          const subEdge = Math.round((subSize / 2) * 0.75);
+          const subEdge = Math.round((thisSubSize / 2) * 0.75);
           const gapStart = isMobile ? 8 : Math.round(16 * scale);
           const gapEnd = isMobile ? 8 : Math.round(16 * scale);
 
@@ -483,8 +486,8 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                 whileHover={{ scale: 1.22 }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
                 style={{
-                  width: subSize,
-                  height: subSize,
+                  width: Math.round(subSize * ((sub as any).sizeMultiplier || 1.0)),
+                  height: Math.round(subSize * ((sub as any).sizeMultiplier || 1.0)),
                 }}
                 className="relative flex flex-col items-center justify-center rounded-2xl overflow-visible"
               >
