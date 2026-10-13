@@ -28,7 +28,8 @@ const DENVER_SUB_BRANDS = [
     live: true,
     blurred: false,
     stripWhiteBg: true,
-    sizeMultiplier: 0.95,
+    sizeMultiplier: 0.90,
+    mobileSizeMultiplier: 0.90,
     dx: 48,
     dy: -68,
     mobileDx: 34,
@@ -43,6 +44,7 @@ const DENVER_SUB_BRANDS = [
     blurred: true,
     stripWhiteBg: true,
     sizeMultiplier: 1.0,
+    mobileSizeMultiplier: 1.0,
     dx: -48,
     dy: -68,
     mobileDx: -34,
@@ -188,7 +190,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const ddCenterX = cx + ddOx;
   const ddCenterY = cy + ddOy;
   const ddHeight = Math.round(orbSize * (isMobile ? ((ddBrand as any).mobileSizeMultiplier || ddBrand.sizeMultiplier || 1.0) : (ddBrand.sizeMultiplier || 1.0)));
-  const subSize = Math.round(orbSize * (isMobile ? 0.52 : 0.46));
+  const subSize = Math.round(orbSize * (isMobile ? 0.41 : 0.46));
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -279,7 +281,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const lux = ldx / ldist;
           const luy = ldy / ldist;
 
-          const thisSubSize = Math.round(subSize * ((sub as any).sizeMultiplier || 1.0));
+          const thisSubSize = Math.round(subSize * (isMobile ? ((sub as any).mobileSizeMultiplier || sub.sizeMultiplier || 1.0) : (sub.sizeMultiplier || 1.0)));
           const ddEdge = isMobile ? 14 : Math.round(18 * scale);
           const subEdge = Math.round((thisSubSize / 2) * 0.75);
           const gapStart = isMobile ? 8 : Math.round(16 * scale);
@@ -476,18 +478,18 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             data-testid={`orb-sub-brand-${sub.id}`}
           >
             <motion.div
-              animate={{ y: [-5, 5, -5], x: [-2.5, 2.5, -2.5] }}
+              animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
               transition={{
-                y: { duration: 3.8 + sub.id * 0.2, repeat: Infinity, ease: "easeInOut", delay: sub.delay },
-                x: { duration: 4.6 + sub.id * 0.3, repeat: Infinity, ease: "easeInOut", delay: sub.delay * 1.4 },
+                y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: Infinity, ease: "easeInOut", delay: sub.delay },
+                x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
               }}
             >
               <motion.div
                 whileHover={{ scale: 1.22 }}
                 transition={{ type: "spring", stiffness: 280, damping: 18 }}
                 style={{
-                  width: Math.round(subSize * ((sub as any).sizeMultiplier || 1.0)),
-                  height: Math.round(subSize * ((sub as any).sizeMultiplier || 1.0)),
+                  width: Math.round(subSize * (isMobile ? ((sub as any).mobileSizeMultiplier || sub.sizeMultiplier || 1.0) : (sub.sizeMultiplier || 1.0))),
+                  height: Math.round(subSize * (isMobile ? ((sub as any).mobileSizeMultiplier || sub.sizeMultiplier || 1.0) : (sub.sizeMultiplier || 1.0))),
                 }}
                 className="relative flex flex-col items-center justify-center rounded-2xl overflow-visible"
               >
