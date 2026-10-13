@@ -7,7 +7,6 @@ import Home from "@/pages/Home";
 import BookingConfirmation from "@/pages/BookingConfirmation";
 import RequestQuote from "@/pages/RequestQuote";
 import AboutMe from "@/pages/AboutMe";
-import PasswordGate from "@/components/PasswordGate";
 import DenverDeskAnalyticsConsent from "@/components/DenverDeskAnalyticsConsent";
 
 const queryClient = new QueryClient();
@@ -26,19 +25,17 @@ function Router() {
 
 function App() {
   return (
-    <PasswordGate>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <div className="dark">
-              <Router />
-            </div>
-            <DenverDeskAnalyticsConsent />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </PasswordGate>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <div className="dark">
+            <Router />
+          </div>
+          <DenverDeskAnalyticsConsent />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

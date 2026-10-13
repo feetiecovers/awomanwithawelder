@@ -18,7 +18,7 @@ import { MembersModal } from "@/components/MembersModal";
 import { OrderSuccessModal } from "@/components/OrderSuccessModal";
 import { saveBookingConfirmation, type BookingConfirmationData } from "@/lib/bookingConfirmation";
 import { buildApiUrl } from "@/lib/api-base";
-import { useGetCart, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
+import { useGetCart, useListProducts, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +44,14 @@ export default function Home() {
 
   const { toast } = useToast();
   const { data: cart } = useGetCart();
+  useListProducts({
+    query: {
+      queryKey: getListProductsQueryKey(),
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  });
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
 

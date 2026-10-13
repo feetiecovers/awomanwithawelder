@@ -24,6 +24,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { BookingCalendar } from "./BookingCalendar";
 import { recordLocalBooking, getDateAvailability, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
+import { getProductImages } from "@/lib/product-images";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -47,7 +48,6 @@ const PRODUCT_GRADIENTS = [
   "linear-gradient(135deg, #0d1420 0%, #1e3040 50%, #081020 100%)",
 ];
 
-const SHARED_IMAGE_BASE_URL = "https://denver-s-desk.onrender.com";
 type WebsiteBookingCapacityProjectionType = WebsiteBookingCapacityProjection;
 
 function formatBookingDate(value: string) {
@@ -124,57 +124,8 @@ const emptyBookingForm: BookingFormState = {
   customFields: {},
 };
 
-function normalizeImageUrl(value: unknown): string {
-  if (typeof value !== "string") return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
-  }
-
-  if (/^\/(?:api\/)?images\/products\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
-  }
-
-  if (/^images\/products\//i.test(trimmed)) {
-    return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
-  }
-
-  if (trimmed.startsWith("/")) {
-    return `${SHARED_IMAGE_BASE_URL}${trimmed}`;
-  }
-
-  return trimmed;
-}
-
-function resolveImageCandidate(candidate: unknown): string {
-  if (typeof candidate === "string") return normalizeImageUrl(candidate);
-  if (!candidate || typeof candidate !== "object") return "";
-
-  const record = candidate as Record<string, unknown>;
-  for (const key of ["publishedOriginal", "original", "url", "src", "medium", "large", "thumb"]) {
-    const resolved = normalizeImageUrl(record[key]);
-    if (resolved) return resolved;
-  }
-
-  return "";
-}
-
 function getProductImage(record: Record<string, unknown>): string | null {
-  for (const candidate of [record.image, record.imageUrl, record.image_url]) {
-    const resolved = resolveImageCandidate(candidate);
-    if (resolved) return resolved;
-  }
-
-  if (Array.isArray(record.images)) {
-    for (const candidate of record.images) {
-      const resolved = resolveImageCandidate(candidate);
-      if (resolved) return resolved;
-    }
-  }
-
-  return null;
+  return getProductImages(record, "medium")[0] ?? null;
 }
 
 function normalizeProducts(value: unknown): ProductCard[] {
@@ -815,8 +766,9 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-screen transition-transform duration-500 group-hover:scale-105"
-                                      loading="lazy"
+                                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                      loading="eager"
+                                      decoding="async"
                                       onClick={() => setPreviewImage({ url: item.image!, title: item.name })}
                                       onError={() => {
                                         setFailedImages((prev) => ({ ...prev, [item.id]: true }));

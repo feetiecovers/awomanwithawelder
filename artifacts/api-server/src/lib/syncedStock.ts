@@ -33,6 +33,7 @@ const stockStoreRefreshTtlMs = Math.max(
   60_000,
   Number.parseInt(String(process.env.ECOMMERCE_STOCK_REFRESH_TTL_MS || "900000"), 10) || 900_000,
 );
+let stockRefreshPromise: Promise<SyncedStockEntry[]> | null = null;
 
 export function normalizeWebsiteId(value: unknown): string {
   return String(value ?? "").trim().toLowerCase();
@@ -197,13 +198,37 @@ export async function readStockStore(): Promise<SyncedStockEntry[]> {
     // Fall through to the live desktop fallback below.
   }
 
-  const liveProducts = await fetchLiveDesktopStock();
+  if (cachedEntries.length > 0) {
+    // Keep the storefront responsive when the local snapshot has expired.
+    // Refresh once in the background while visitors continue seeing the last
+    // known catalogue, matching the HTTP stale-while-revalidate policy.
+    void refreshStockStoreInBackground();
+    return cachedEntries;
+  }
+
+  const liveProducts = await refreshStockStoreInBackground();
   if (liveProducts.length > 0) {
-    await writeStockStore(liveProducts);
     return liveProducts;
   }
 
   return cachedEntries;
+}
+
+async function refreshStockStoreInBackground(): Promise<SyncedStockEntry[]> {
+  if (stockRefreshPromise) return stockRefreshPromise;
+
+  stockRefreshPromise = fetchLiveDesktopStock()
+    .then(async (liveProducts) => {
+      if (liveProducts.length > 0) {
+        await writeStockStore(liveProducts);
+      }
+      return liveProducts;
+    })
+    .finally(() => {
+      stockRefreshPromise = null;
+    });
+
+  return stockRefreshPromise;
 }
 
 export async function writeStockStore(products: SyncedStockEntry[]) {
@@ -212,10 +237,7 @@ export async function writeStockStore(products: SyncedStockEntry[]) {
 }
 
 export async function refreshStockProducts() {
-  const liveProducts = await fetchLiveDesktopStock();
-  if (liveProducts.length > 0) {
-    await writeStockStore(liveProducts);
-  }
+  await refreshStockStoreInBackground();
 }
 
 function inferSourceType(product: Record<string, unknown>): SyncedSourceType {

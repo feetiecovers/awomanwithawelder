@@ -11,6 +11,7 @@ import { PARAMETRIC_CATEGORIES_CONFIG } from '@/content/parametricCategories';
 import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
+import { getProductImages } from '@/lib/product-images';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
   if ('target' in node && node.getAttribute('target') === '_blank') {
@@ -167,18 +168,18 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       target.push(normalized);
     };
     const collectOptionImages = (option: any) => {
-      const authored = Array.isArray(option?.images)
-        ? option.images.map((entry: unknown) => String(entry ?? '').trim()).filter(Boolean)
-        : [];
-      if (authored.length > 0) return authored;
-      const fallback = String(option?.imageUrl || option?.image || option?.media || '').trim();
-      return fallback ? [fallback] : [];
+      if (!option || typeof option !== 'object') return [];
+      return getProductImages(option, 'large');
     };
 
     const baseImages: string[] = [];
-    pushUnique(baseImages, product.image);
-    (rawProduct.stockProduct?.images || rawProduct.images || []).forEach((img: unknown) => pushUnique(baseImages, img));
-    (rawProduct.product?.images || []).forEach((img: unknown) => pushUnique(baseImages, img));
+    getProductImages(product as any, 'large').forEach((image) => pushUnique(baseImages, image));
+    if (rawProduct.stockProduct && typeof rawProduct.stockProduct === 'object') {
+      getProductImages(rawProduct.stockProduct, 'large').forEach((image) => pushUnique(baseImages, image));
+    }
+    if (rawProduct.product && typeof rawProduct.product === 'object') {
+      getProductImages(rawProduct.product, 'large').forEach((image) => pushUnique(baseImages, image));
+    }
 
     if (optionGroups.length > 0) {
       const selectedGallery: string[] = [];
@@ -201,12 +202,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         if (choices.length === 0) return;
         const selectedValue = parametricValues[getInputKey(def)];
         const choice = choices.find((candidate: any) => candidate.value === selectedValue);
-        const choiceImages = Array.isArray(choice?.images)
-          ? choice.images.map((entry: unknown) => String(entry ?? '').trim()).filter(Boolean)
-          : [];
-        const fallback = String(choice?.imageUrl || choice?.image || '').trim();
-        const nextImages = choiceImages.length > 0 ? choiceImages : (fallback ? [fallback] : []);
-        nextImages.forEach((image: string) => pushUnique(selectedGallery, image));
+        if (choice && typeof choice === 'object') {
+          getProductImages(choice, 'large').forEach((image) => pushUnique(selectedGallery, image));
+        }
       });
       if (selectedGallery.length > 0) {
         return selectedGallery;
@@ -433,7 +431,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </AnimatePresence>
           ) : (
