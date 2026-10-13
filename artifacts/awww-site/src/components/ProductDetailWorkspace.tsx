@@ -12,6 +12,7 @@ import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
 import { getProductImages } from '@/lib/product-images';
+import { cn } from '@/lib/utils';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
   if ('target' in node && node.getAttribute('target') === '_blank') {
@@ -70,6 +71,40 @@ function getInputMinimum(definition: any): number | undefined {
 function getInputMaximum(definition: any): number | undefined {
   const value = definition?.maximum ?? definition?.max;
   return value === undefined || value === null || value === '' ? undefined : Number(value);
+}
+
+export function isAddToCartBlocked(product: any): boolean {
+  if (!product) return false;
+  const raw = product as any;
+  const candidates = [
+    raw.addtocart,
+    raw.addToCart,
+    raw.add_to_cart,
+    raw.allowAddToCart,
+    raw.canAddToCart,
+    raw.commerceActions?.addtocart,
+    raw.commerceActions?.addToCart,
+    raw.commerceActions?.allowAddToCart,
+    raw.commerceActions?.allowCheckout === false ? false : undefined,
+    raw.availability?.immediateCheckoutAvailable === false && raw.availability?.purchaseAllowed === false ? false : undefined,
+    raw.parametricMode?.addtocart,
+    raw.parametricMode?.addToCart,
+    raw.parametricMode?.allowAddToCart,
+    Array.isArray(raw.purchaseModes)
+      ? raw.purchaseModes.find((m: any) => (m?.purchaseMode ?? m?.mode) === 'parametric')?.addtocart
+      : undefined,
+    Array.isArray(raw.purchaseModes)
+      ? raw.purchaseModes.find((m: any) => (m?.purchaseMode ?? m?.mode) === 'parametric')?.addToCart
+      : undefined,
+    Array.isArray(raw.purchaseModes)
+      ? raw.purchaseModes.find((m: any) => (m?.purchaseMode ?? m?.mode) === 'parametric')?.allowAddToCart
+      : undefined,
+  ];
+
+  for (const c of candidates) {
+    if (c === false || c === 'false' || c === 0) return true;
+  }
+  return false;
 }
 
 interface ProductDetailWorkspaceProps {
@@ -348,8 +383,11 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     return () => controller.abort();
   }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
 
+  const isAddToCartBlockedByProduct = isAddToCartBlocked(product) || isAddToCartBlocked(rawProduct);
+  const showAddToCartButton = !requiresCalculatedQuote && !isAddToCartBlockedByProduct;
   const hasParametricBlocker = localValidation.blockers.length > 0 || (resolverValidation?.blockers.length ?? 0) > 0;
-  const canAddConfiguredProductToCart = isAvailable && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker && !(inputDefinitions.length > 0 && resolvedPrice === null);
+  const canAddConfiguredProductToCart = isAvailable && !isAddToCartBlockedByProduct && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker && !(inputDefinitions.length > 0 && resolvedPrice === null);
+  const canRequestQuote = !isResolving && (product.type !== 'parametric' || (missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker));
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const customerMessage = String(rawProduct.customerMessage || '').trim();
 
@@ -711,20 +749,27 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
            <span className="text-white font-mono text-sm sm:text-lg font-medium tracking-tight whitespace-nowrap ml-2 overflow-hidden text-ellipsis text-right">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
          </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            {!requiresCalculatedQuote && <Button
-              className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
-              onClick={handleAddToCart}
-              disabled={!canAddConfiguredProductToCart || isResolving}
-            >
-              {isResolving ? "Resolving..." : (missingRequiredInputs.length > 0 ? "Complete Measurements" : (outOfBoundsInputs.length > 0 ? "Invalid Measurements" : "Add to Cart"))}
-            </Button>}
+            {showAddToCartButton && (
+              <Button
+                className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
+                onClick={handleAddToCart}
+                disabled={!canAddConfiguredProductToCart || isResolving}
+              >
+                {isResolving ? "Resolving..." : (missingRequiredInputs.length > 0 ? "Complete Measurements" : (outOfBoundsInputs.length > 0 ? "Invalid Measurements" : "Add to Cart"))}
+              </Button>
+            )}
             <Button
-              variant="outline"
-              className="flex-1 border-primary/40 text-primary hover:bg-primary/10 font-mono uppercase tracking-widest text-xs h-11"
+              variant={showAddToCartButton ? "outline" : "default"}
+              className={cn(
+                "flex-1 font-mono uppercase tracking-widest text-xs h-11",
+                showAddToCartButton 
+                  ? "border-primary/40 text-primary hover:bg-primary/10" 
+                  : "bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(26,157,224,0.35)]"
+              )}
               onClick={handleRequestQuote}
-              disabled={product.type === 'parametric' && (!canAddConfiguredProductToCart || isResolving)}
+              disabled={!canRequestQuote}
             >
-              {requiresCalculatedQuote ? "Request Quote" : "Request Quote for Shipping"}
+              Request Quote for Shipping
             </Button>
          </div>
          {missingRequiredInputs.length > 0 && (

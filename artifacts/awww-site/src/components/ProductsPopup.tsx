@@ -847,10 +847,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                         onAddToCartClick(item);
                                       }}
                                       className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
-                                      disabled={addToCart.isPending || item.available === false}
+                                      disabled={addToCart.isPending || (item.type !== "parametric" && item.available === false)}
                                       data-testid={`button-add-to-cart-${item.id}`}
                                     >
-                                      {item.available === false ? "Unavailable" : item.type === "parametric" ? "Configure & Quote" : item.type === "configurable" ? "Configure" : "Add to Cart"}
+                                      {item.type === "parametric" ? "Configure & Quote" : (item.available === false ? "Unavailable" : item.type === "configurable" ? "Configure" : "Add to Cart")}
                                     </Button>
                                     <Button
                                       variant="outline"

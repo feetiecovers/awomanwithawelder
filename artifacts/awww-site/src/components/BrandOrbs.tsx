@@ -7,14 +7,46 @@ import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414
 import ladyLuggerLogo from "@assets/Lady_Lugger_Logo.png";
 import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
+import bizCalcLogo from "@assets/BizCalc_Icon.png";
+import bizDumpLogo from "@assets/BizDump_Logo.png";
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 278, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 205, delay: 1.5, logo: denversDeskLogo,    live: false, dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, lightningOffset: 25 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: false,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.2, blueGlowOpacity: 0.2, brightness: 0.75, lightningOffset: 12 },
+];
+
+const DENVER_SUB_BRANDS = [
+  {
+    id: 101,
+    name: "BizCalc",
+    logo: bizCalcLogo,
+    url: "https://bizcalc.awomanwithawelder.co.nz",
+    live: true,
+    blurred: false,
+    stripWhiteBg: true,
+    dx: 50,
+    dy: -72,
+    mobileDx: 38,
+    mobileDy: -54,
+    delay: 1.7,
+  },
+  {
+    id: 102,
+    name: "BizDump",
+    logo: bizDumpLogo,
+    live: false,
+    blurred: true,
+    stripWhiteBg: true,
+    dx: -50,
+    dy: -72,
+    mobileDx: -38,
+    mobileDy: -54,
+    delay: 1.6,
+  },
 ];
 
 /** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
@@ -55,11 +87,14 @@ function useProcessedLogos() {
 
   useEffect(() => {
     let cancelled = false;
-    const brandsToProcess = BRANDS.filter((b) => (b as any).stripWhiteBg);
+    const itemsToProcess = [
+      ...BRANDS.filter((b) => (b as any).stripWhiteBg),
+      ...DENVER_SUB_BRANDS.filter((b) => (b as any).stripWhiteBg),
+    ];
     Promise.all(
-      brandsToProcess.map(async (brand) => {
-        const cleaned = await removeWhiteBg(brand.logo, (brand as any).invertBlackText);
-        return { id: brand.id, src: cleaned };
+      itemsToProcess.map(async (item) => {
+        const cleaned = await removeWhiteBg(item.logo, (item as any).invertBlackText);
+        return { id: item.id, src: cleaned };
       })
     ).then((results) => {
       if (cancelled) return;
@@ -142,6 +177,17 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const logoRX  = isMobile ? 65 : Math.round(BASE_LOGO_RX * scale * 1.55);
   const logoRY  = isMobile ? 75 : Math.round(BASE_LOGO_RY * scale * 1.55);
 
+  const ddBrand = BRANDS.find(b => b.id === 5)!;
+  const ddRad = (ddBrand.angle * Math.PI) / 180;
+  const ddRx = isMobile ? 100 : ddBrand.radius * scale * 1.15;
+  const ddRy = isMobile ? 135 : ddBrand.radius * scale * 1.15;
+  const ddOx = Math.cos(ddRad) * ddRx;
+  const ddOy = Math.sin(ddRad) * ddRy;
+  const ddCenterX = cx + ddOx;
+  const ddCenterY = cy + ddOy;
+  const ddHeight = Math.round(orbSize * (isMobile ? ((ddBrand as any).mobileSizeMultiplier || ddBrand.sizeMultiplier || 1.0) : (ddBrand.sizeMultiplier || 1.0)));
+  const subSize = Math.round(ddHeight * 0.75);
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Electricity SVG */}
@@ -170,9 +216,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const originRad = (originAngle * Math.PI) / 180;
           const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
           const rx  = isMobile 
-            ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : 125) 
+            ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 100 : 125)) 
             : brand.radius * scale * 1.15;
-          const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
+          const ry  = isMobile ? (brand.id === 5 ? 135 : 175) : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(originRad) * logoRX;
           const sy  = cy + Math.sin(originRad) * logoRY;
           let ox  = Math.cos(rad) * rx;
@@ -217,6 +263,54 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             </g>
           );
         })}
+
+        {/* Small floating electrical lines between Denver's Desk and BizDump / BizCalc (floating in between, not touching either logo) */}
+        {DENVER_SUB_BRANDS.map(sub => {
+          const subDx = isMobile ? sub.mobileDx : Math.round(sub.dx * scale * 1.2);
+          const subDy = isMobile ? sub.mobileDy : Math.round(sub.dy * scale * 1.2);
+          const subCenterX = ddCenterX + subDx;
+          const subCenterY = ddCenterY + subDy;
+
+          const ldx = subCenterX - ddCenterX;
+          const ldy = subCenterY - ddCenterY;
+          const ldist = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+          const lux = ldx / ldist;
+          const luy = ldy / ldist;
+
+          const ddEdge = Math.round(ddHeight * 0.35);
+          const subEdge = Math.round((subSize / 2) * 0.75);
+          const gapStart = isMobile ? 8 : Math.round(10 * scale);
+          const gapEnd = isMobile ? 8 : Math.round(10 * scale);
+
+          const startDist = ddEdge + gapStart;
+          const endDist = Math.max(startDist + 14, ldist - subEdge - gapEnd);
+
+          const lsx = ddCenterX + lux * startDist;
+          const lsy = ddCenterY + luy * startDist;
+          const lex = ddCenterX + lux * endDist;
+          const ley = ddCenterY + luy * endDist;
+
+          const subS1 = tick + sub.id * 13;
+          const subS2 = tick + sub.id * 13 + 5;
+          const subB1 = lightningPath(lsx, lsy, lex, ley, 8, Math.max(2, 6 * scale), subS1);
+          const subB2 = lightningPath(lsx, lsy, lex, ley, 6, Math.max(1.5, 4 * scale), subS2);
+          const subFlk = 0.55 + Math.abs(hash(tick, sub.id)) * 0.35;
+
+          return (
+            <g key={`sub-elec-${sub.id}`}>
+              <path d={subB1} fill="none" stroke="#1a9de0" strokeWidth="6"
+                    strokeLinecap="round" opacity={subFlk * 0.12} filter="url(#elec-glow)" />
+              <path d={subB2} fill="none" stroke="#60c8ff" strokeWidth="2"
+                    strokeLinecap="round" opacity={subFlk * 0.45} />
+              <path d={subB1} fill="none" stroke="#b8e4ff" strokeWidth="1"
+                    strokeLinecap="round" opacity={subFlk * 0.85} />
+              <circle cx={lsx} cy={lsy} r={1.8} fill="#ffffff"
+                      opacity={0.3 + Math.abs(hash(tick * 2, sub.id)) * 0.7} />
+              <circle cx={lex} cy={ley} r={1.8} fill="#ffffff"
+                      opacity={0.3 + Math.abs(hash(tick * 2 + 1, sub.id)) * 0.7} />
+            </g>
+          );
+        })}
       </svg>
 
       {/* Brand Orbs */}
@@ -233,9 +327,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         const rad = (angle * Math.PI) / 180;
         const mobileHorizontalRadius = Math.max(135, Math.min(150, (size.w / 2) - 45));
         const rx  = isMobile 
-          ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : 125) 
+          ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 100 : 125)) 
           : brand.radius * scale * 1.15;
-        const ry  = isMobile ? 175 : brand.radius * scale * 1.15;
+        const ry  = isMobile ? (brand.id === 5 ? 135 : 175) : brand.radius * scale * 1.15;
         let x   = Math.cos(rad) * rx;
         let y   = Math.sin(rad) * ry;
 
@@ -341,6 +435,78 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                 ) : (
                   <span className="text-xs font-mono font-bold text-[#60c8ff] uppercase">{brand.name}</span>
                 )}
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        );
+      })}
+
+      {/* Denver's Desk Sub-Brand Orbs: BizDump & BizCalc */}
+      {DENVER_SUB_BRANDS.map(sub => {
+        const subDx = isMobile ? sub.mobileDx : Math.round(sub.dx * scale * 1.2);
+        const subDy = isMobile ? sub.mobileDy : Math.round(sub.dy * scale * 1.2);
+        const subCenterX = ddCenterX + subDx;
+        const subCenterY = ddCenterY + subDy;
+        const logoSrc = sub.stripWhiteBg ? (processedLogos[sub.id] || sub.logo) : sub.logo;
+
+        return (
+          <motion.div
+            key={`sub-orb-${sub.id}`}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: sub.delay, type: "spring" }}
+            className="absolute pointer-events-auto cursor-pointer"
+            style={{
+              left: `${subCenterX}px`,
+              top: `${subCenterY}px`,
+              translateX: "-50%",
+              translateY: "-50%",
+              zIndex: 2,
+            }}
+            onClick={() => {
+              if (sub.url) {
+                window.open(sub.url, "_blank", "noopener,noreferrer");
+              } else {
+                toast({ title: sub.name, description: `${sub.name} integration coming soon.` });
+              }
+            }}
+            data-testid={`orb-sub-brand-${sub.id}`}
+          >
+            <motion.div
+              animate={{ y: [-5, 5, -5], x: [-2.5, 2.5, -2.5] }}
+              transition={{
+                y: { duration: 3.8 + sub.id * 0.2, repeat: Infinity, ease: "easeInOut", delay: sub.delay },
+                x: { duration: 4.6 + sub.id * 0.3, repeat: Infinity, ease: "easeInOut", delay: sub.delay * 1.4 },
+              }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.22 }}
+                transition={{ type: "spring", stiffness: 280, damping: 18 }}
+                style={{
+                  width: subSize,
+                  height: subSize,
+                }}
+                className="relative flex flex-col items-center justify-center rounded-2xl overflow-visible"
+              >
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={logoSrc}
+                    alt={sub.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      ...(sub.blurred
+                        ? {
+                            filter: "brightness(0.85) blur(3.5px) opacity(0.55) drop-shadow(0 0 10px rgba(26,157,224,0.3))",
+                          }
+                        : {
+                            filter: "brightness(0.95) drop-shadow(0 0 6px rgba(255,255,255,0.45)) drop-shadow(0 0 18px rgba(26,157,224,0.5))",
+                          }),
+                    }}
+                  />
+                  {/* Note: BizDump has blurred: true and explicitly NO coming soon overlay per user requirement */}
+                </div>
               </motion.div>
             </motion.div>
           </motion.div>
