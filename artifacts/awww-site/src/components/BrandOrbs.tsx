@@ -14,8 +14,8 @@ const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
-  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: -12 },
+  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46, mobileLightningOffset: -8 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertTextToBlack: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: -12 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.35, blueGlowOpacity: 0.45, brightness: 0.95, lightningOffset: 12, mobileLightningOffset: -10 },
 ];
 
@@ -53,8 +53,9 @@ const DENVER_SUB_BRANDS = [
   },
 ];
 
-/** Strip near-white backgrounds & optional dark text inversion using off-screen canvas */
-function removeWhiteBg(src: string, invertBlackText?: boolean): Promise<string> {
+/** Strip near-white backgrounds & optional text color adjustments using off-screen canvas */
+function removeWhiteBg(src: string, options?: { invertBlackText?: boolean; invertTextToBlack?: boolean } | boolean): Promise<string> {
+  const opts = typeof options === "boolean" ? { invertBlackText: options } : (options || {});
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -68,10 +69,29 @@ function removeWhiteBg(src: string, invertBlackText?: boolean): Promise<string> 
       const d = imageData.data;
       const threshold = 230;
       for (let i = 0; i < d.length; i += 4) {
+        const a = d[i + 3];
+        if (a === 0) continue;
         const r = d[i], g = d[i + 1], b = d[i + 2];
+        const pixelIndex = i / 4;
+        const x = pixelIndex % canvas.width;
+
+        if (opts.invertTextToBlack) {
+          // Convert text on Denver's Desk logo (x >= 38% width) to solid dark black
+          if (x >= canvas.width * 0.38) {
+            const maxDiff = Math.max(Math.abs(r - g), Math.abs(r - b), Math.abs(g - b));
+            if (maxDiff < 45) {
+              d[i] = 12;
+              d[i + 1] = 12;
+              d[i + 2] = 12;
+              d[i + 3] = Math.max(a, 240);
+              continue;
+            }
+          }
+        }
+
         if (r >= threshold && g >= threshold && b >= threshold) {
           d[i + 3] = 0;
-        } else if (invertBlackText) {
+        } else if (opts.invertBlackText) {
           const maxDiff = Math.max(Math.abs(r - g), Math.abs(r - b), Math.abs(g - b));
           if (maxDiff < 30 && (r < 185 || g < 185 || b < 185)) {
             d[i] = 255;
@@ -95,12 +115,15 @@ function useProcessedLogos() {
   useEffect(() => {
     let cancelled = false;
     const itemsToProcess = [
-      ...BRANDS.filter((b) => (b as any).stripWhiteBg),
+      ...BRANDS.filter((b) => (b as any).stripWhiteBg || (b as any).invertTextToBlack),
       ...DENVER_SUB_BRANDS.filter((b) => (b as any).stripWhiteBg),
     ];
     Promise.all(
       itemsToProcess.map(async (item) => {
-        const cleaned = await removeWhiteBg(item.logo, (item as any).invertBlackText);
+        const cleaned = await removeWhiteBg(item.logo, {
+          invertBlackText: (item as any).invertBlackText,
+          invertTextToBlack: (item as any).invertTextToBlack,
+        });
         return { id: item.id, src: cleaned };
       })
     ).then((results) => {
@@ -214,8 +237,8 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
               angle = 32; 
               originAngle = 55; // from "R" in welder (bottom right)
             } else if (brand.id === 4) { // Lady Lugger
-              angle = 212;
-              originAngle = 235; // from "A" in woman (top left)
+              angle = 205;
+              originAngle = 205; // points directly from left of welder to Lady Lugger
             }
           }
 
@@ -233,6 +256,9 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
 
           if (isMobile) {
             if (brand.id === 2) { ox = 95; oy = 215; }
+            else if (brand.id === 3) { ox = -78; oy = 163; }
+            else if (brand.id === 4) { ox = -142; oy = -66; }
+            else if (brand.id === 6) { ox = 82; oy = -160; }
           }
           
           // Calculate vector from start point (sx, sy) to orb center (cx + ox, cy + oy)
@@ -346,7 +372,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           if (brand.id === 1) { // Tradie Gags
             angle = 32; 
           } else if (brand.id === 4) { // Lady Lugger
-            angle = 212;
+            angle = 205;
           }
         }
 
@@ -361,9 +387,12 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
 
         if (isMobile) {
           if (brand.id === 2) { x = 95; y = 215; }
+          else if (brand.id === 3) { x = -78; y = 163; }
+          else if (brand.id === 4) { x = -142; y = -66; }
+          else if (brand.id === 6) { x = 82; y = -160; }
         }
 
-        const logoSrc = (brand as any).stripWhiteBg
+        const logoSrc = ((brand as any).stripWhiteBg || (brand as any).invertTextToBlack)
           ? (processedLogos[brand.id] || brand.logo)
           : brand.logo;
 
