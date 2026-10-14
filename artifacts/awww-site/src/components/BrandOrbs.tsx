@@ -15,7 +15,7 @@ const BRANDS = [
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 265, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, brightness: 0.95, lightningOffset: 25 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: 25 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.35, blueGlowOpacity: 0.45, brightness: 0.95, lightningOffset: 12 },
 ];
 
@@ -71,10 +71,13 @@ function removeWhiteBg(src: string, invertBlackText?: boolean): Promise<string> 
         const r = d[i], g = d[i + 1], b = d[i + 2];
         if (r >= threshold && g >= threshold && b >= threshold) {
           d[i + 3] = 0;
-        } else if (invertBlackText && r < 70 && g < 70 && b < 70) {
-          d[i] = 255;
-          d[i + 1] = 255;
-          d[i + 2] = 255;
+        } else if (invertBlackText) {
+          const maxDiff = Math.max(Math.abs(r - g), Math.abs(r - b), Math.abs(g - b));
+          if (maxDiff < 30 && (r < 185 || g < 185 || b < 185)) {
+            d[i] = 255;
+            d[i + 1] = 255;
+            d[i + 2] = 255;
+          }
         }
       }
       ctx.putImageData(imageData, 0, 0);
@@ -242,7 +245,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           // Calculate target distance so lightning line reaches the orb border for all brands
           const baseOrbRadius = orbSize / 2;
           const customOffset = isMobile
-            ? Math.round(((brand as any).lightningOffset ?? 8) * 0.7) + 12
+            ? ((brand as any).mobileLightningOffset ?? (Math.round(((brand as any).lightningOffset ?? 8) * 0.7) + 12))
             : ((brand as any).lightningOffset ?? 8);
             
           const targetDist = Math.max(0, pathDist - baseOrbRadius - customOffset);
@@ -402,7 +405,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
                         objectFit: "contain",
                         ...((brand as any).stripWhiteBg
                           ? {
-                              filter: `brightness(${(brand as any).brightness || 0.8}) drop-shadow(0 0 6px rgba(255,255,255,0.35)) drop-shadow(0 0 15px rgba(26,157,224,0.25))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
+                              filter: `brightness(${(brand as any).brightness || 0.95}) drop-shadow(0 0 8px rgba(255,255,255,${(brand as any).glowOpacity ?? 0.55})) drop-shadow(0 0 16px rgba(26,157,224,${(brand as any).blueGlowOpacity ?? 0.65})) drop-shadow(0 0 28px rgba(26,157,224,${((brand as any).blueGlowOpacity ?? 0.65) * 0.5}))${!brand.live ? " blur(3.5px) opacity(0.4)" : ""}`,
                             }
                           : {
                               mixBlendMode: "screen" as const,
