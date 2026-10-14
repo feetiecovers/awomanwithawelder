@@ -33,7 +33,7 @@ const DENVER_SUB_BRANDS = [
     dx: 48,
     dy: -68,
     mobileDx: 34,
-    mobileDy: -34,
+    mobileDy: -76,
     delay: 1.7,
   },
   {
@@ -48,7 +48,7 @@ const DENVER_SUB_BRANDS = [
     dx: -48,
     dy: -68,
     mobileDx: -34,
-    mobileDy: -34,
+    mobileDy: -76,
     delay: 1.6,
   },
 ];
@@ -284,8 +284,8 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const thisSubSize = Math.round(subSize * (isMobile ? ((sub as any).mobileSizeMultiplier || sub.sizeMultiplier || 1.0) : (sub.sizeMultiplier || 1.0)));
           const ddEdge = isMobile ? 14 : Math.round(18 * scale);
           const subEdge = Math.round((thisSubSize / 2) * 0.75);
-          const gapStart = isMobile ? 8 : Math.round(16 * scale);
-          const gapEnd = isMobile ? 8 : Math.round(16 * scale);
+          const gapStart = isMobile ? 12 : Math.round(16 * scale);
+          const gapEnd = isMobile ? 22 : Math.round(16 * scale);
 
           const startDist = ddEdge + gapStart;
           const endDist = Math.max(startDist + 12, ldist - subEdge - gapEnd);
@@ -478,7 +478,10 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             data-testid={`orb-sub-brand-${sub.id}`}
           >
             <motion.div
-              animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
+              animate={{
+                y: isMobile ? [-6, 2, -6] : [-6, 6, -6],
+                x: isMobile ? [-2, 2, -2] : [-3, 3, -3],
+              }}
               transition={{
                 y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: Infinity, ease: "easeInOut", delay: sub.delay },
                 x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
