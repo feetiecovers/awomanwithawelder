@@ -215,7 +215,11 @@ function normalizeProducts(value: unknown): ProductCard[] {
             ? (record.promise as any).message
             : typeof record.customerMessage === "string"
               ? record.customerMessage
-              : undefined,
+              : typeof (record.promiseSettings as any)?.ownProfile?.availabilityLabel === "string"
+                ? (record.promiseSettings as any).ownProfile.availabilityLabel
+                : typeof (record.promiseSettings as any)?.availabilityLabel === "string"
+                  ? (record.promiseSettings as any).availabilityLabel
+                  : undefined,
         fulfillmentMode: typeof (record.availability as any)?.fulfillmentMode === "string"
           ? (record.availability as any).fulfillmentMode
           : undefined,
@@ -766,7 +770,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                      className="absolute inset-0 w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105"
                                       loading="eager"
                                       decoding="async"
                                       onClick={() => setPreviewImage({ url: item.image!, title: item.name })}

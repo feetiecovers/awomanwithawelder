@@ -132,6 +132,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const [isParametricOpen, setIsParametricOpen] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
+  const [resolvedPromise, setResolvedPromise] = useState<{ message?: string; promiseDate?: string } | null>(null);
   const [resolverValidation, setResolverValidation] = useState<{ blockers: ParametricValidationMessage[]; warnings: ParametricValidationMessage[]; info: ParametricValidationMessage[] } | null>(null);
   const [openMeasurementHelp, setOpenMeasurementHelp] = useState<string | null>(null);
 
@@ -338,6 +339,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   useEffect(() => {
     if (inputDefinitions.length === 0 || missingRequiredInputs.length > 0) {
       setResolvedPrice(null);
+      setResolvedPromise(null);
       setResolverValidation(null);
       return;
     }
@@ -369,12 +371,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         setResolverValidation(result?.validation ?? null);
         if (ok && result?.valid && result?.sellPrice !== undefined) {
           setResolvedPrice(Number(result.sellPrice));
+          setResolvedPromise(result?.promise ?? null);
         } else {
           setResolvedPrice(null);
+          setResolvedPromise(null);
         }
       })
       .catch(() => {
-        if (!controller.signal.aborted) { setResolvedPrice(null); setResolverValidation(null); }
+        if (!controller.signal.aborted) { setResolvedPrice(null); setResolvedPromise(null); setResolverValidation(null); }
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsResolving(false);
@@ -389,7 +393,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const canAddConfiguredProductToCart = isAvailable && !isAddToCartBlockedByProduct && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker && !(inputDefinitions.length > 0 && resolvedPrice === null);
   const canRequestQuote = !isResolving && (product.type !== 'parametric' || (missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker));
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
-  const customerMessage = String(rawProduct.customerMessage || '').trim();
+  const promiseMsg = resolvedPromise?.message || (rawProduct.promise as any)?.message || (rawProduct.availability as any)?.customerMessage || rawProduct.customerMessage || (rawProduct.promiseSettings as any)?.ownProfile?.availabilityLabel || (rawProduct.promiseSettings as any)?.availabilityLabel;
+  const promiseDateStr = resolvedPromise?.promiseDate || (rawProduct.availability as any)?.promiseDate || (rawProduct.promise as any)?.promiseDate;
+  const customerMessage = [promiseMsg, promiseDateStr ? `(Expected: ${promiseDateStr})` : ''].filter(Boolean).join(' ').trim();
 
   // --- HANDLers ---
   const handleNextImage = () => setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
@@ -469,7 +475,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-contain sm:object-cover"
               />
             </AnimatePresence>
           ) : (

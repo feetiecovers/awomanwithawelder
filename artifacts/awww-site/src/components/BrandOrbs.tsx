@@ -33,7 +33,7 @@ const DENVER_SUB_BRANDS = [
     dx: 48,
     dy: -68,
     mobileDx: 34,
-    mobileDy: -48,
+    mobileDy: -34,
     delay: 1.7,
   },
   {
@@ -48,7 +48,7 @@ const DENVER_SUB_BRANDS = [
     dx: -48,
     dy: -68,
     mobileDx: -34,
-    mobileDy: -48,
+    mobileDy: -34,
     delay: 1.6,
   },
 ];
@@ -184,7 +184,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const ddBrand = BRANDS.find(b => b.id === 5)!;
   const ddRad = (ddBrand.angle * Math.PI) / 180;
   const ddRx = isMobile ? 120 : ddBrand.radius * scale * 1.15;
-  const ddRy = isMobile ? 160 : ddBrand.radius * scale * 1.15;
+  const ddRy = isMobile ? 174 : ddBrand.radius * scale * 1.15;
   const ddOx = Math.cos(ddRad) * ddRx;
   const ddOy = Math.sin(ddRad) * ddRy;
   const ddCenterX = cx + ddOx;
@@ -222,7 +222,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const rx  = isMobile 
             ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 120 : 125)) 
             : brand.radius * scale * 1.15;
-          const ry  = isMobile ? (brand.id === 5 ? 160 : 175) : brand.radius * scale * 1.15;
+          const ry  = isMobile ? (brand.id === 5 ? 174 : 186) : brand.radius * scale * 1.15;
           const sx  = cx + Math.cos(originRad) * logoRX;
           const sy  = cy + Math.sin(originRad) * logoRY;
           let ox  = Math.cos(rad) * rx;
@@ -242,7 +242,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           // Calculate target distance so lightning line reaches the orb border for all brands
           const baseOrbRadius = orbSize / 2;
           const customOffset = isMobile
-            ? Math.round(((brand as any).lightningOffset ?? 8) * 0.4)
+            ? Math.round(((brand as any).lightningOffset ?? 8) * 0.7) + 12
             : ((brand as any).lightningOffset ?? 8);
             
           const targetDist = Math.max(0, pathDist - baseOrbRadius - customOffset);
@@ -334,7 +334,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
         const rx  = isMobile 
           ? (brand.angle === 0 || brand.angle === 180 ? mobileHorizontalRadius : (brand.id === 5 ? 120 : 125)) 
           : brand.radius * scale * 1.15;
-        const ry  = isMobile ? (brand.id === 5 ? 160 : 175) : brand.radius * scale * 1.15;
+        const ry  = isMobile ? (brand.id === 5 ? 174 : 186) : brand.radius * scale * 1.15;
         let x   = Math.cos(rad) * rx;
         let y   = Math.sin(rad) * ry;
 
