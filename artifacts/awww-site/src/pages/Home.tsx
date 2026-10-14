@@ -48,9 +48,9 @@ export default function Home() {
   const { data: liveProducts } = useListProducts({
     query: {
       queryKey: getListProductsQueryKey(),
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      refetchOnReconnect: true,
     },
   });
 

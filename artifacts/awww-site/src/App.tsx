@@ -15,16 +15,17 @@ import { getCachedProducts } from "@/lib/productsCache";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
       gcTime: 24 * 60 * 60 * 1000,
     },
   },
 });
 
-// Pre-seed query cache immediately so offerings are instantly visible
+// Pre-seed query cache with updatedAt: 0 so products are instantly visible,
+// but TanStack Query immediately revalidates against the live server.
 const initialProducts = getCachedProducts();
 if (initialProducts && initialProducts.length > 0) {
-  queryClient.setQueryData(getListProductsQueryKey(), initialProducts);
+  queryClient.setQueryData(getListProductsQueryKey(), initialProducts, { updatedAt: 0 });
 }
 
 function Router() {
