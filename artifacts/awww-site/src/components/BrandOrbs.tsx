@@ -15,8 +15,8 @@ const BRANDS = [
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
   { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: 25 },
-  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.35, blueGlowOpacity: 0.45, brightness: 0.95, lightningOffset: 12 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertBlackText: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: -12 },
+  { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.35, blueGlowOpacity: 0.45, brightness: 0.95, lightningOffset: 12, mobileLightningOffset: -10 },
 ];
 
 const DENVER_SUB_BRANDS = [
@@ -254,8 +254,26 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
           const ey  = sy + pathDy * ratio;
           const s1  = tick + brand.id * 11;
           const s2  = tick + brand.id * 11 + 6;
-          const b1  = lightningPath(sx, sy, ex, ey, 18, 16 * scale, s1);
-          const b2  = lightningPath(sx, sy, ex, ey, 13,  9 * scale, s2);
+
+          const lineDx = ex - sx;
+          const lineDy = ey - sy;
+          const lineLen = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+
+          const seg1 = isMobile 
+            ? Math.max(5, Math.min(10, Math.round(lineLen / 9)))
+            : 18;
+          const seg2 = isMobile 
+            ? Math.max(4, Math.min(8, Math.round(lineLen / 12)))
+            : 13;
+          const jit1 = isMobile 
+            ? Math.min(4.5, Math.max(2, lineLen * 0.065))
+            : 16 * scale;
+          const jit2 = isMobile 
+            ? Math.min(3, Math.max(1.5, lineLen * 0.04))
+            : 9 * scale;
+
+          const b1  = lightningPath(sx, sy, ex, ey, seg1, jit1, s1);
+          const b2  = lightningPath(sx, sy, ex, ey, seg2, jit2, s2);
           const flk = 0.55 + Math.abs(hash(tick, brand.id)) * 0.35;
           return (
             <g key={brand.id}>
