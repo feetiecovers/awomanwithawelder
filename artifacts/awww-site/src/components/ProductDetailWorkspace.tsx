@@ -12,6 +12,7 @@ import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
 import { getProductImages } from '@/lib/product-images';
+import { formatCustomerPromise } from '@/lib/promiseFormatting';
 import { cn } from '@/lib/utils';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
@@ -395,7 +396,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
   const promiseMsg = resolvedPromise?.message || (rawProduct.promise as any)?.message || (rawProduct.availability as any)?.customerMessage || rawProduct.customerMessage || (rawProduct.promiseSettings as any)?.ownProfile?.availabilityLabel || (rawProduct.promiseSettings as any)?.availabilityLabel;
   const promiseDateStr = resolvedPromise?.promiseDate || (rawProduct.availability as any)?.promiseDate || (rawProduct.promise as any)?.promiseDate;
-  const customerMessage = [promiseMsg, promiseDateStr ? `(Expected: ${promiseDateStr})` : ''].filter(Boolean).join(' ').trim();
+  const capacityDays = (rawProduct.availability as any)?.capacityDays;
+  const customerMessage = formatCustomerPromise(promiseMsg, promiseDateStr, capacityDays);
 
   // --- HANDLers ---
   const handleNextImage = () => setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);

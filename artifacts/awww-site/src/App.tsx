@@ -9,7 +9,23 @@ import RequestQuote from "@/pages/RequestQuote";
 import AboutMe from "@/pages/AboutMe";
 import DenverDeskAnalyticsConsent from "@/components/DenverDeskAnalyticsConsent";
 
-const queryClient = new QueryClient();
+import { getListProductsQueryKey } from "@workspace/api-client-react";
+import { getCachedProducts } from "@/lib/productsCache";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+    },
+  },
+});
+
+// Pre-seed query cache immediately so offerings are instantly visible
+const initialProducts = getCachedProducts();
+if (initialProducts && initialProducts.length > 0) {
+  queryClient.setQueryData(getListProductsQueryKey(), initialProducts);
+}
 
 function Router() {
   return (

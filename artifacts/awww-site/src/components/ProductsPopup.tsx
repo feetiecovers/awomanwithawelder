@@ -25,6 +25,8 @@ import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { BookingCalendar } from "./BookingCalendar";
 import { recordLocalBooking, getDateAvailability, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
 import { getProductImages } from "@/lib/product-images";
+import { getCachedProducts, saveProductsToCache } from "@/lib/productsCache";
+import { formatCustomerPromise } from "@/lib/promiseFormatting";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -209,17 +211,23 @@ function normalizeProducts(value: unknown): ProductCard[] {
           allowCheckout: (record.commerceActions as any).allowCheckout === true,
           allowQuoteRequest: (record.commerceActions as any).allowQuoteRequest !== false,
         } : undefined,
-        customerMessage: typeof (record.availability as any)?.customerMessage === "string"
-          ? (record.availability as any).customerMessage
-          : typeof (record.promise as any)?.message === "string"
-            ? (record.promise as any).message
-            : typeof record.customerMessage === "string"
-              ? record.customerMessage
-              : typeof (record.promiseSettings as any)?.ownProfile?.availabilityLabel === "string"
-                ? (record.promiseSettings as any).ownProfile.availabilityLabel
-                : typeof (record.promiseSettings as any)?.availabilityLabel === "string"
-                  ? (record.promiseSettings as any).availabilityLabel
-                  : undefined,
+        customerMessage: (() => {
+          const rawMsg = typeof (record.availability as any)?.customerMessage === "string"
+            ? (record.availability as any).customerMessage
+            : typeof (record.promise as any)?.message === "string"
+              ? (record.promise as any).message
+              : typeof record.customerMessage === "string"
+                ? record.customerMessage
+                : typeof (record.promiseSettings as any)?.ownProfile?.availabilityLabel === "string"
+                  ? (record.promiseSettings as any).ownProfile.availabilityLabel
+                  : typeof (record.promiseSettings as any)?.availabilityLabel === "string"
+                    ? (record.promiseSettings as any).availabilityLabel
+                    : undefined;
+          const promiseDate = (record.availability as any)?.promiseDate || (record.promise as any)?.promiseDate;
+          const capacityDays = (record.availability as any)?.capacityDays;
+          const formatted = formatCustomerPromise(rawMsg, promiseDate, capacityDays);
+          return formatted || undefined;
+        })(),
         fulfillmentMode: typeof (record.availability as any)?.fulfillmentMode === "string"
           ? (record.availability as any).fulfillmentMode
           : undefined,
@@ -268,12 +276,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const { data: productsData, isLoading } = useListProducts({
     query: {
       queryKey: getListProductsQueryKey(),
-      enabled: isOpen,
+      initialData: getCachedProducts,
       staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     },
   });
+
+  useEffect(() => {
+    if (productsData && Array.isArray(productsData) && productsData.length > 0) {
+      saveProductsToCache(productsData);
+    }
+  }, [productsData]);
   const { data: cart } = useGetCart();
   const { data: member } = useGetCurrentMember();
   const addToCart = useAddToCart();
@@ -730,7 +744,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
           <div className="flex-1 overflow-hidden flex flex-col">
             {activeTab === "shop" && (
               <div className="flex-1 flex flex-col overflow-hidden">
-                {isLoading ? (
+                {isLoading && shopItems.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center font-mono text-muted-foreground text-sm">
                     Loading products...
                   </div>

@@ -9,6 +9,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { evaluateParametricValidation } from "@/lib/parametric-validation";
+import { formatCustomerPromise } from "@/lib/promiseFormatting";
 
 interface ParametricProductPopupProps {
   productId: number | null;
@@ -139,8 +140,8 @@ function roundCurrency(value: number): number {
 
 function formatPromise(promise?: ParametricResolution["promise"]): string {
   const message = promise?.message?.trim();
-  if (message) return message;
-  if (promise?.promiseDate) return `Expected availability: ${promise.promiseDate}`;
+  const formatted = formatCustomerPromise(message, promise?.promiseDate);
+  if (formatted) return formatted;
   return "Availability will be confirmed with your quote";
 }
 

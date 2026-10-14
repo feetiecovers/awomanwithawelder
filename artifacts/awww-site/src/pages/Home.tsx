@@ -21,6 +21,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useGetCart, useListProducts, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { saveProductsToCache } from "@/lib/productsCache";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -44,7 +45,7 @@ export default function Home() {
 
   const { toast } = useToast();
   const { data: cart } = useGetCart();
-  useListProducts({
+  const { data: liveProducts } = useListProducts({
     query: {
       queryKey: getListProductsQueryKey(),
       staleTime: 5 * 60 * 1000,
@@ -52,6 +53,12 @@ export default function Home() {
       refetchOnReconnect: false,
     },
   });
+
+  useEffect(() => {
+    if (liveProducts && Array.isArray(liveProducts) && liveProducts.length > 0) {
+      saveProductsToCache(liveProducts);
+    }
+  }, [liveProducts]);
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
 
