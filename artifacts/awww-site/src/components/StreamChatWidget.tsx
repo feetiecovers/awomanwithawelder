@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, AlertCircle, RefreshCw, Send, User, ArrowRight } from 'lucide-react';
-import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
+import { AlertCircle, RefreshCw, Send, User, ArrowRight } from 'lucide-react';
+import denversDeskChevron from "@assets/Denvers_Desk_New_Chevron_Logo.png";
 type ChatMessage = {
   id: string;
   sender: 'visitor' | 'operator';
@@ -243,7 +243,7 @@ export default function StreamChatWidget({
           <div>
             <h4 className="native-chat-title flex items-center gap-1.5">
               Live Chat Support
-              <img src={denversDeskIcon} alt="Denver's Desk" className="w-3.5 h-3.5 object-contain opacity-50" />
+              <img src={denversDeskChevron} alt="Denver's Desk" className="h-3.5 object-contain opacity-80" />
             </h4>
             <p className="native-chat-subtitle">Self-hosted local support operator</p>
           </div>
@@ -271,9 +271,9 @@ export default function StreamChatWidget({
             }}
             className="w-full max-w-[280px] flex flex-col items-center relative z-10"
           >
-            {/* Glowing Icon Badge */}
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 via-[#0b1b2d] to-[#080d14] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_25px_rgba(26,157,224,0.35)] mb-4 relative group">
-              <MessageSquare className="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(26,157,224,0.6)]" />
+            {/* Denver's Desk Chevron Badge */}
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-[#0b1b2d] to-[#080d14] border border-primary/40 flex items-center justify-center p-2.5 shadow-[0_0_25px_rgba(26,157,224,0.35)] mb-4 relative group">
+              <img src={denversDeskChevron} alt="Denver's Desk" className="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(26,157,224,0.7)]" />
               <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d14] shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
             </div>
 

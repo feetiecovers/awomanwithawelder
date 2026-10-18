@@ -467,8 +467,8 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
 
       <div className="flex-1 overflow-y-auto scroll-industrial flex flex-col">
         
-        {/* Top: Image Gallery */}
-        <div className="relative w-full min-h-[250px] sm:min-h-[350px] bg-black/40 flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/10">
+        {/* Top: Boxed Image Gallery */}
+        <div className="relative w-full h-[175px] sm:h-[210px] bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15">
           {galleryImages.length > 0 ? (
             <AnimatePresence mode="wait">
               <motion.img
@@ -479,7 +479,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 w-full h-full object-contain sm:object-cover"
+                className="w-full h-full object-contain p-2"
               />
             </AnimatePresence>
           ) : (
@@ -504,7 +504,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               <Button variant="ghost" size="icon" onClick={handleNextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-primary hover:bg-black/80 hover:text-primary transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md z-10">
                 <ChevronRight className="h-6 w-6" />
               </Button>
-              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
+              <div className="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5 z-10">
                 {galleryImages.map((_, idx) => (
                   <button key={idx} onClick={() => setCurrentImageIndex(idx)} className={`rounded-full transition-all ${idx === currentImageIndex ? "w-5 h-2 bg-primary shadow-[0_0_8px_rgba(26,157,224,0.8)]" : "w-2 h-2 bg-white/40 hover:bg-white/70"}`} />
                 ))}
@@ -514,9 +514,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         </div>
 
         {/* Middle: Info & Configuration */}
-        <div className="p-6 flex flex-col gap-6">
+        <div className="p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
           
-          <div className="flex flex-col gap-3 border-b border-primary/10 pb-5">
+          <div className="flex flex-col gap-2.5 border-b border-primary/10 pb-4">
              <div className="flex items-center justify-between">
                 <span className="font-mono text-xl sm:text-2xl text-[#f8fafc] font-medium tracking-tight">
                   {requiresCalculatedQuote ? (rawProduct.price > 0 ? `From NZ$${rawProduct.price.toFixed(2)}` : "Quote required") : `NZ$${activePrice.toFixed(2)}`}
@@ -780,16 +780,16 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         </div>
       </div>
 
-      {/* Bottom: Action Area */}
-      <div className="shrink-0 bg-[#0d1520] border-t border-primary/20 p-5 flex flex-col gap-3 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      {/* Bottom: Action Area (Scaled down 5-10% for improved content visibility) */}
+      <div className="shrink-0 bg-[#0d1520] border-t border-primary/20 px-4 py-3 sm:px-5 sm:py-3.5 flex flex-col gap-2.5 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
          <div className="flex justify-between items-center px-1">
-           <span className="text-muted-foreground text-xs uppercase tracking-widest font-mono shrink-0">Total (inc. GST)</span>
-           <span className="text-white font-mono text-sm sm:text-lg font-medium tracking-tight whitespace-nowrap ml-2 overflow-hidden text-ellipsis text-right">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
+           <span className="text-muted-foreground text-[10px] sm:text-[11px] uppercase tracking-wider font-mono shrink-0">Total (inc. GST)</span>
+           <span className="text-white font-mono text-sm sm:text-base font-semibold tracking-tight whitespace-nowrap ml-2 overflow-hidden text-ellipsis text-right">{requiresCalculatedQuote ? "Price confirmed in quote" : `NZ$${pricing.total.toFixed(2)}`}</span>
          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2.5">
             {showAddToCartButton && (
               <Button
-                className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-widest text-xs h-11"
+                className="flex-1 bg-primary text-black hover:bg-primary/90 font-mono uppercase tracking-wider text-[11px] sm:text-xs h-9 sm:h-10"
                 onClick={handleAddToCart}
                 disabled={!canAddConfiguredProductToCart || isResolving}
               >
@@ -799,7 +799,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
             <Button
               variant={showAddToCartButton ? "outline" : "default"}
               className={cn(
-                "flex-1 font-mono uppercase tracking-widest text-xs h-11",
+                "flex-1 font-mono uppercase tracking-wider text-[11px] sm:text-xs h-9 sm:h-10",
                 showAddToCartButton 
                   ? "border-primary/40 text-primary hover:bg-primary/10" 
                   : "bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(26,157,224,0.35)]"
@@ -811,10 +811,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
             </Button>
          </div>
          {missingRequiredInputs.length > 0 && (
-           <p className="font-mono text-[10px] text-amber-200/80">Complete: {missingRequiredInputs.join(", ")}.</p>
+           <p className="font-mono text-[9px] sm:text-[10px] text-amber-200/80">Complete: {missingRequiredInputs.join(", ")}.</p>
          )}
          {outOfBoundsInputs.length > 0 && (
-           <p className="font-mono text-[10px] text-pink-400/80">Invalid limits on: {outOfBoundsInputs.join(", ")}.</p>
+           <p className="font-mono text-[9px] sm:text-[10px] text-pink-400/80">Invalid limits on: {outOfBoundsInputs.join(", ")}.</p>
          )}
       </div>
 

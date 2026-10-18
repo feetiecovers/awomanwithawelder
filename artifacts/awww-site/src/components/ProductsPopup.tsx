@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, PhoneCall, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
@@ -398,8 +398,67 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   }, [selectedService]);
 
   const goToPage = (next: number) => {
-    setSlideDir(next > shopPage ? 1 : -1);
-    setShopPage(next);
+    const target = Math.max(0, Math.min(next, totalPages - 1));
+    if (target === safeShopPage) return;
+    setSlideDir(target > safeShopPage ? 1 : -1);
+    setShopPage(target);
+  };
+
+  // Keyboard navigation with Left and Right arrow keys
+  useEffect(() => {
+    if (!isOpen || activeTab !== "shop" || selectedWorkspaceProduct !== null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || activeTag === "select") return;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goToPage(safeShopPage + 1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goToPage(safeShopPage - 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, activeTab, selectedWorkspaceProduct, safeShopPage, totalPages]);
+
+  // Trackpad / mouse horizontal swipe handler
+  const lastWheelTimeRef = useRef(0);
+  const handleWheel = (e: React.WheelEvent) => {
+    // Only capture distinct horizontal trackpad swipe gestures
+    if (Math.abs(e.deltaX) > 20 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      const now = Date.now();
+      if (now - lastWheelTimeRef.current < 380) return;
+      if (e.deltaX > 25 && safeShopPage < totalPages - 1) {
+        lastWheelTimeRef.current = now;
+        goToPage(safeShopPage + 1);
+      } else if (e.deltaX < -25 && safeShopPage > 0) {
+        lastWheelTimeRef.current = now;
+        goToPage(safeShopPage - 1);
+      }
+    }
+  };
+
+  // Mobile / touchscreen swipe gesture handlers
+  const touchStartXRef = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartXRef.current - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 40 && safeShopPage < totalPages - 1) {
+        goToPage(safeShopPage + 1);
+      } else if (diff < -40 && safeShopPage > 0) {
+        goToPage(safeShopPage - 1);
+      }
+    }
+    touchStartXRef.current = null;
   };
 
   const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number, configuration?: any) => {
@@ -829,7 +888,36 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                   </div>
                 ) : (
                   <>
-                    <div className="overflow-hidden relative px-5 pt-4 pb-2" style={{ flex: "1 1 0" }}>
+                    <div
+                      className="overflow-hidden relative px-5 pt-4 pb-2"
+                      style={{ flex: "1 1 0" }}
+                      onWheel={handleWheel}
+                      onTouchStart={handleTouchStart}
+                      onTouchEnd={handleTouchEnd}
+                    >
+                      {/* Floating illuminated side arrows on medium+ screens */}
+                      {safeShopPage > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => goToPage(safeShopPage - 1)}
+                          aria-label="Previous product"
+                          title="Previous product"
+                          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/70 border border-primary/30 text-primary/80 hover:text-white hover:bg-primary/25 hover:border-primary hover:shadow-[0_0_22px_rgba(26,157,224,0.75)] backdrop-blur-md items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                      )}
+                      {safeShopPage < totalPages - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => goToPage(safeShopPage + 1)}
+                          aria-label="Next product"
+                          title="Next product"
+                          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/70 border border-primary/30 text-primary/80 hover:text-white hover:bg-primary/25 hover:border-primary hover:shadow-[0_0_22px_rgba(26,157,224,0.75)] backdrop-blur-md items-center justify-center transition-all duration-200 cursor-pointer active:scale-95"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      )}
                       <AnimatePresence mode="wait" custom={slideDir}>
                         <motion.div
                           key={safeShopPage}
@@ -965,42 +1053,57 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
 
                     {totalPages > 0 && (
                       <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-primary/10">
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <button
+                          type="button"
                           onClick={() => goToPage(safeShopPage - 1)}
                           disabled={safeShopPage === 0}
-                          className="h-8 w-8 text-primary disabled:opacity-25"
+                          className="h-9 w-9 rounded-full border border-primary/25 bg-[#09121d] text-primary/80 hover:text-white hover:bg-primary/25 hover:border-primary hover:shadow-[0_0_20px_rgba(26,157,224,0.7)] transition-all duration-200 cursor-pointer disabled:opacity-20 disabled:hover:shadow-none disabled:hover:border-primary/25 disabled:hover:bg-[#09121d] disabled:cursor-not-allowed flex items-center justify-center active:scale-95"
                           data-testid="button-prev-page"
+                          aria-label="Previous product"
+                          title="Previous product (Left Arrow)"
                         >
-                          <ChevronLeft className="h-5 w-5" />
-                        </Button>
+                          <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+                        </button>
 
-                        <div className="flex gap-1.5">
-                          {Array.from({ length: totalPages }).map((_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => goToPage(i)}
-                              className={`rounded-full transition-all ${
-                                i === safeShopPage
-                                  ? "w-5 h-2 bg-primary"
-                                  : "w-2 h-2 bg-primary/25 hover:bg-primary/50"
-                              }`}
-                              data-testid={`dot-page-${i}`}
-                            />
-                          ))}
+                        <div className="flex items-center gap-1 sm:gap-1.5 py-1">
+                          {Array.from({ length: totalPages }).map((_, i) => {
+                            const isCurrent = i === safeShopPage;
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  goToPage(i);
+                                }}
+                                aria-label={`View product ${i + 1} of ${totalPages}`}
+                                title={`Product ${i + 1}`}
+                                className="p-2.5 -m-1.5 flex items-center justify-center cursor-pointer group focus:outline-none"
+                                data-testid={`dot-page-${i}`}
+                              >
+                                <span
+                                  className={`block rounded-full transition-all duration-300 ${
+                                    isCurrent
+                                      ? "w-7 h-2 bg-primary shadow-[0_0_12px_rgba(26,157,224,0.9)]"
+                                      : "w-2.5 h-2 bg-primary/25 group-hover:bg-primary/70 group-hover:scale-125"
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <button
+                          type="button"
                           onClick={() => goToPage(safeShopPage + 1)}
                           disabled={safeShopPage >= totalPages - 1}
-                          className="h-8 w-8 text-primary disabled:opacity-25"
+                          className="h-9 w-9 rounded-full border border-primary/25 bg-[#09121d] text-primary/80 hover:text-white hover:bg-primary/25 hover:border-primary hover:shadow-[0_0_20px_rgba(26,157,224,0.7)] transition-all duration-200 cursor-pointer disabled:opacity-20 disabled:hover:shadow-none disabled:hover:border-primary/25 disabled:hover:bg-[#09121d] disabled:cursor-not-allowed flex items-center justify-center active:scale-95"
                           data-testid="button-next-page"
+                          aria-label="Next product"
+                          title="Next product (Right Arrow)"
                         >
-                          <ChevronRight className="h-5 w-5" />
-                        </Button>
+                          <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                        </button>
                       </div>
                     )}
                   </>
