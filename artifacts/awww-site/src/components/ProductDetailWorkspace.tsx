@@ -601,7 +601,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                     });
                     
                     return Object.entries(categorizedInputs).map(([category, defs]) => {
-                      const categoryHelper = getCategoryHelper(rawProduct.sku || product.id, category);
+                      const categoryHelper = getCategoryHelper(rawProduct.sku, category, product.id);
                       return (
                         <div key={category} className="space-y-4">
                           <div 
@@ -625,11 +625,11 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                                 const maximum = getInputMaximum(def);
                                 const choices = getInputChoices(def);
                                 const unit = def.unit || def.units || '';
-                                const optionHelper = getOptionHelper(rawProduct.sku || product.id, inputKey, def.label, {
+                                const optionHelper = getOptionHelper(rawProduct.sku, inputKey, def.label, {
                                   helperTitle: def.helperTitle,
                                   helperText: def.helperText,
                                   helperImage: def.helperImage,
-                                });
+                                }, product.id);
 
                                 return (
                                   <div key={inputKey} className="flex flex-col gap-3">
