@@ -10,6 +10,8 @@ import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { evaluateParametricValidation } from "@/lib/parametric-validation";
 import { formatCustomerPromise } from "@/lib/promiseFormatting";
+import { ParametricHelperBubble } from "./ParametricHelperBubble";
+import { getOptionHelper } from "@/content/parametricHelpers";
 
 interface ParametricProductPopupProps {
   productId: number | null;
@@ -46,6 +48,7 @@ type SyncedParametricRule = {
 type SyncedParametricProduct = {
   id: number;
   name: string;
+  sku?: string;
   description?: string | null;
   price?: number;
   sellPrice?: number;
@@ -653,11 +656,19 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                           const type = inputKey(definition) ? controlType(definition) : "number";
                           const currentValue = measurementInput[key];
                           const unit = definition.unit || legacyRule.unitLabel || product.measurementLabel || "ea";
+                          const optionHelper = getOptionHelper(product?.sku || product?.id, key, definition.label, {
+                            helperTitle: definition.helperTitle,
+                            helperText: definition.helperText,
+                            helperImage: definition.helperImage,
+                          });
                           return (
                             <fieldset key={definition.id || key} className="space-y-2 rounded-xl border border-cyan-400/10 bg-black/20 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <div className="flex items-center gap-1 text-sm font-semibold text-white">{definition.label || legacyRule.label || key}{definition.required === false ? "" : " *"}{(definition.helperTitle || definition.helperText || definition.helperImage) && <button type="button" onClick={() => setOpenHelp(openHelp === key ? null : key)} className="rounded-full text-cyan-200 hover:text-white" aria-label={`How to measure ${definition.label || key}`}><CircleHelp className="h-4 w-4" /></button>}</div>
+                                  <div className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                                    {definition.label || legacyRule.label || key}{definition.required === false ? "" : " *"}
+                                    {optionHelper && <ParametricHelperBubble helper={optionHelper} align="left" />}
+                                  </div>
                                   <div className="text-[11px] text-cyan-100/60">
                                     {definition.helperText || product.measurementLabel || "Measurement"}
                                     {unit ? ` • ${unit}` : ""}
@@ -687,10 +698,10 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
                                 {rule.maximum ? ` • Max ${rule.maximum}` : ""}
                                 {rule.step ? ` • Step ${rule.step}` : ""}
                               </div>
-                              {openHelp === key && <div className="rounded-lg border border-cyan-300/25 bg-slate-950/95 p-3 text-xs text-cyan-50 shadow-xl">{definition.helperImage && <img src={definition.helperImage} alt="Measurement guide" className="mb-2 max-h-40 w-full rounded object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />}{definition.helperTitle && <p className="font-bold text-cyan-200">{definition.helperTitle}</p>}{definition.helperText && <p className="mt-1 text-cyan-50/80">{definition.helperText}</p>}</div>}
                             </fieldset>
                           );
                         })}
+
                       </div>
                     ) : (
                       <div className="rounded-xl border border-dashed border-cyan-400/20 p-4 text-sm text-cyan-100/70">

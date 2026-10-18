@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
+import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, PhoneCall, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
 import { ProductDetailWorkspace } from "./ProductDetailWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -308,6 +308,22 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const [selectedWorkspaceProduct, setSelectedWorkspaceProduct] = useState<ProductCard | null>(null);
   const [bookingCapacity, setBookingCapacity] = useState<WebsiteBookingCapacityProjection | null>(null);
   const [bookingCapacityLoading, setBookingCapacityLoading] = useState(false);
+  const [showCustomCallPrompt, setShowCustomCallPrompt] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const hasBeenShown = sessionStorage.getItem("awww_custom_call_prompt_dismissed");
+      if (!hasBeenShown) {
+        setShowCustomCallPrompt(true);
+        sessionStorage.setItem("awww_custom_call_prompt_dismissed", "true");
+      }
+    }
+  }, [isOpen]);
+
+  const handleDismissCustomCallPrompt = () => {
+    setShowCustomCallPrompt(false);
+    sessionStorage.setItem("awww_custom_call_prompt_dismissed", "true");
+  };
 
   const products = normalizeProducts(productsData);
   const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
@@ -564,7 +580,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-2.5 sm:p-4 pointer-events-none">
         
         <AnimatePresence mode="wait">
           {selectedWorkspaceProduct ? (
@@ -584,14 +600,72 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
               }}
             />
           ) : (
-            <motion.div
-              key="offerings"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="w-full max-w-2xl flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] max-h-[calc(100dvh-32px)]"
-            >
+            <div className="w-full max-w-2xl flex flex-col items-center pointer-events-none">
+              <AnimatePresence>
+                {showCustomCallPrompt && (
+                  <motion.aside
+                    key="custom-call-banner"
+                    initial={{ opacity: 0, y: -16, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.2 } }}
+                    transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                    className="pointer-events-auto w-full mb-2.5 sm:mb-3 z-30 shrink-0"
+                  >
+                    <div className="relative overflow-hidden rounded-2xl bg-[#071322]/90 backdrop-blur-2xl border border-cyan-400/35 px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_30px_rgba(26,157,224,0.28)] flex items-center justify-between gap-3 text-white">
+                      {/* Glow ambient decoration */}
+                      <div className="absolute -left-10 -top-10 w-28 h-28 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute right-0 bottom-0 w-28 h-28 bg-primary/15 rounded-full blur-2xl pointer-events-none" />
+
+                      <div className="relative flex items-center gap-3 sm:gap-3.5 min-w-0">
+                        <div className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(26,157,224,0.4)]">
+                          <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-mono text-[10px] sm:text-[11px] text-cyan-200/80 uppercase tracking-widest font-semibold truncate">
+                            Custom Fabrication
+                          </p>
+                          <p className="text-xs sm:text-sm font-medium text-slate-100 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                            <span>Do you want something completely customized?</span>
+                            <span className="text-cyan-300/90 whitespace-nowrap">
+                              Call Charlotte on{" "}
+                              <a
+                                href="tel:035626024"
+                                className="font-mono font-bold text-white underline decoration-cyan-400/60 underline-offset-4 hover:decoration-cyan-300 hover:text-cyan-200 transition-colors inline-flex items-center gap-1"
+                                title="Call Charlotte on 03 562 6024"
+                              >
+                                03 562 6024
+                              </a>
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleDismissCustomCallPrompt}
+                        aria-label="Dismiss custom fabrication banner"
+                        className="shrink-0 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.aside>
+                )}
+              </AnimatePresence>
+
+              <motion.div
+                key="offerings"
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`w-full flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] ${
+                  showCustomCallPrompt
+                    ? "max-h-[calc(100dvh-120px)] sm:max-h-[calc(100dvh-130px)]"
+                    : "max-h-[calc(100dvh-32px)]"
+                }`}
+              >
+
               <div className="flex items-center justify-between px-5 py-4 border-b border-primary/15 shrink-0">
                 <div className="flex items-center gap-3">
                   <h2 className="font-mono font-bold tracking-[0.2em] uppercase text-primary text-base">
@@ -980,6 +1054,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
             )}
           </div>
         </motion.div>
+            </div>
         )}
         </AnimatePresence>
       </div>

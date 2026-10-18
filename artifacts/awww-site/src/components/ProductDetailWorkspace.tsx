@@ -9,6 +9,8 @@ import { buildApiUrl } from '@/lib/api-base';
 import { QuoteRequestModal } from './QuoteRequestModal';
 import { PARAMETRIC_CATEGORIES_CONFIG } from '@/content/parametricCategories';
 import { BUNDLED_PRODUCTS_CONFIG } from '@/content/bundledProducts';
+import { ParametricHelperBubble } from './ParametricHelperBubble';
+import { getCategoryHelper, getOptionHelper } from '@/content/parametricHelpers';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
 import { getProductImages } from '@/lib/product-images';
@@ -130,7 +132,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   // Parametric State: record of input name -> value
   const [parametricValues, setParametricValues] = useState<Record<string, any>>({});
   
-  const [isParametricOpen, setIsParametricOpen] = useState(false);
+  const [isParametricOpen, setIsParametricOpen] = useState(true);
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
   const [resolvedPromise, setResolvedPromise] = useState<{ message?: string; promiseDate?: string } | null>(null);
@@ -598,27 +600,48 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                       categorizedInputs[category].push(def);
                     });
                     
-                    return Object.entries(categorizedInputs).map(([category, defs]) => (
-                      <div key={category} className="space-y-4">
-                        <div 
-                          className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
-                          onClick={() => setIsParametricOpen(!isParametricOpen)}
-                        >
-                          <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{category}</h3>
-                          {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
-                        </div>
-                        {isParametricOpen && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
-                            {defs.map((def: any) => {
-                const inputKey = getInputKey(def);
-                const controlType = getInputControlType(def);
-                const minimum = getInputMinimum(def);
-                const maximum = getInputMaximum(def);
-                const choices = getInputChoices(def);
-                const unit = def.unit || def.units || '';
-                return (
-                <div key={inputKey} className="flex flex-col gap-3">
-                   <div className="flex items-center gap-1"><h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || inputKey}</h4>{(def.helperTitle || def.helperText || def.helperImage) && <button type="button" onClick={() => setOpenMeasurementHelp(openMeasurementHelp === inputKey ? null : inputKey)} aria-label={`How to measure ${def.label || inputKey}`} className="text-primary hover:text-white"><CircleHelp className="h-4 w-4" /></button>}</div>
+                    return Object.entries(categorizedInputs).map(([category, defs]) => {
+                      const categoryHelper = getCategoryHelper(rawProduct.sku || product.id, category);
+                      return (
+                        <div key={category} className="space-y-4">
+                          <div 
+                            className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
+                            onClick={() => setIsParametricOpen(!isParametricOpen)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{category}</h3>
+                              {categoryHelper && (
+                                <ParametricHelperBubble helper={categoryHelper} align="left" />
+                              )}
+                            </div>
+                            {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
+                          </div>
+                          {isParametricOpen && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                              {defs.map((def: any, defIdx: number) => {
+                                const inputKey = getInputKey(def);
+                                const controlType = getInputControlType(def);
+                                const minimum = getInputMinimum(def);
+                                const maximum = getInputMaximum(def);
+                                const choices = getInputChoices(def);
+                                const unit = def.unit || def.units || '';
+                                const optionHelper = getOptionHelper(rawProduct.sku || product.id, inputKey, def.label, {
+                                  helperTitle: def.helperTitle,
+                                  helperText: def.helperText,
+                                  helperImage: def.helperImage,
+                                });
+
+                                return (
+                                  <div key={inputKey} className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-mono text-xs uppercase tracking-widest text-primary/80">{def.label || inputKey}</h4>
+                                      {optionHelper && (
+                                        <ParametricHelperBubble
+                                          helper={optionHelper}
+                                          align={defIdx % 2 === 1 ? "right" : "left"}
+                                        />
+                                      )}
+                                    </div>
 
                    {controlType === 'slider' && minimum !== undefined && maximum !== undefined && (
                       <div className="flex flex-col gap-2 p-4 border border-primary/20 rounded-lg bg-[#0d1520]/50">
@@ -729,14 +752,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                        className="bg-black/30 border-primary/20 text-white"
                      />
                    )}
-                   {openMeasurementHelp === inputKey && <div className="rounded-lg border border-primary/30 bg-[#09111b]/95 p-3 text-xs text-cyan-50 shadow-xl">{def.helperImage && <img src={def.helperImage} alt="Measurement guide" className="mb-2 max-h-40 w-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}{def.helperTitle && <p className="font-bold text-primary">{def.helperTitle}</p>}{def.helperText && <p className="mt-1 text-cyan-50/80">{def.helperText}</p>}</div>}
                  </div>
                   );
                 })}
                   </div>
                   )}
                   </div>
-                    ));
+                      );
+                    });
                   })()}
                 </div>
               )}
