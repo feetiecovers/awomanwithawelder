@@ -611,26 +611,26 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     transition={{ type: "spring", stiffness: 450, damping: 28 }}
                     className="pointer-events-auto w-full mb-2.5 sm:mb-3 z-30 shrink-0"
                   >
-                    <div className="relative overflow-hidden rounded-2xl bg-[#071322]/90 backdrop-blur-2xl border border-cyan-400/35 px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_30px_rgba(26,157,224,0.28)] flex items-center justify-between gap-3 text-white">
+                    <div className="relative overflow-hidden rounded-2xl bg-[#071322]/90 backdrop-blur-2xl border border-primary/40 px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_30px_rgba(26,157,224,0.35)] flex items-center justify-between gap-3 text-white">
                       {/* Glow ambient decoration */}
-                      <div className="absolute -left-10 -top-10 w-28 h-28 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none" />
-                      <div className="absolute right-0 bottom-0 w-28 h-28 bg-primary/15 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute -left-10 -top-10 w-28 h-28 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+                      <div className="absolute right-0 bottom-0 w-28 h-28 bg-blue-600/15 rounded-full blur-2xl pointer-events-none" />
 
                       <div className="relative flex items-center gap-3 sm:gap-3.5 min-w-0">
-                        <div className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(26,157,224,0.4)]">
+                        <div className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center text-primary shadow-[0_0_18px_rgba(26,157,224,0.5)]">
                           <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-mono text-[10px] sm:text-[11px] text-cyan-200/80 uppercase tracking-widest font-semibold truncate">
+                          <p className="font-mono text-[10px] sm:text-[11px] text-primary uppercase tracking-widest font-semibold truncate">
                             Custom Fabrication
                           </p>
                           <p className="text-xs sm:text-sm font-medium text-slate-100 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                             <span>Do you want something completely customized?</span>
-                            <span className="text-cyan-300/90 whitespace-nowrap">
+                            <span className="text-blue-200/90 whitespace-nowrap">
                               Call Charlotte on{" "}
                               <a
                                 href="tel:035626024"
-                                className="font-mono font-bold text-white underline decoration-cyan-400/60 underline-offset-4 hover:decoration-cyan-300 hover:text-cyan-200 transition-colors inline-flex items-center gap-1"
+                                className="font-mono font-bold text-white underline decoration-primary/70 underline-offset-4 hover:decoration-primary hover:text-blue-300 transition-colors inline-flex items-center gap-1"
                                 title="Call Charlotte on 03 562 6024"
                               >
                                 03 562 6024
@@ -852,17 +852,18 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[160px] bg-black/40"
+                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[160px] bg-black/40 cursor-pointer"
+                                onClick={() => setSelectedWorkspaceProduct(item)}
                               >
                                 {item.image && !failedImages[item.id] ? (
                                   <>
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105"
+                                      className="absolute inset-0 w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                                       loading="eager"
                                       decoding="async"
-                                      onClick={() => setPreviewImage({ url: item.image!, title: item.name })}
+                                      onClick={() => setSelectedWorkspaceProduct(item)}
                                       onError={() => {
                                         setFailedImages((prev) => ({ ...prev, [item.id]: true }));
                                       }}

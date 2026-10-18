@@ -600,8 +600,12 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                       categorizedInputs[category].push(def);
                     });
                     
+                    let hasRenderedProductHelper = false;
                     return Object.entries(categorizedInputs).map(([category, defs]) => {
-                      const categoryHelper = getCategoryHelper(rawProduct.sku, category, product.id);
+                      const categoryHelper = !hasRenderedProductHelper ? getCategoryHelper(rawProduct.sku, category, product.id) : null;
+                      if (categoryHelper) {
+                        hasRenderedProductHelper = true;
+                      }
                       return (
                         <div key={category} className="space-y-4">
                           <div 
@@ -625,11 +629,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                                 const maximum = getInputMaximum(def);
                                 const choices = getInputChoices(def);
                                 const unit = def.unit || def.units || '';
-                                const optionHelper = getOptionHelper(rawProduct.sku, inputKey, def.label, {
+                                const optionHelper = !hasRenderedProductHelper ? getOptionHelper(rawProduct.sku, inputKey, def.label, {
                                   helperTitle: def.helperTitle,
                                   helperText: def.helperText,
                                   helperImage: def.helperImage,
-                                }, product.id);
+                                }, product.id) : null;
+                                if (optionHelper) {
+                                  hasRenderedProductHelper = true;
+                                }
 
                                 return (
                                   <div key={inputKey} className="flex flex-col gap-3">

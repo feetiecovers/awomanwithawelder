@@ -83,10 +83,10 @@ export function ParametricHelperBubble({
           e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
-        className={`relative inline-flex items-center justify-center w-[19px] h-[19px] rounded-[5px] transition-all duration-150 select-none shadow-[0_0_8px_rgba(26,157,224,0.18)] focus:outline-none ${
+        className={`relative inline-flex items-center justify-center w-[19px] h-[19px] rounded-[5px] transition-all duration-150 select-none shadow-[0_0_8px_rgba(26,157,224,0.2)] focus:outline-none ${
           isOpen
-            ? "bg-cyan-500/25 border border-cyan-300 text-white shadow-[0_0_12px_rgba(26,157,224,0.4)]"
-            : "bg-[#0b1b29] border border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-300 hover:text-white"
+            ? "bg-primary/30 border border-primary text-white shadow-[0_0_12px_rgba(26,157,224,0.5)]"
+            : "bg-[#0b1b29] border border-primary/40 text-primary hover:bg-primary/20 hover:border-primary hover:text-white"
         }`}
       >
         <span className="font-mono text-[11px] font-black leading-none pointer-events-none">
@@ -109,17 +109,17 @@ export function ParametricHelperBubble({
           >
             {/* Speech bubble beak / arrow pointing to the boxed ? */}
             <div
-              className={`absolute -top-1.5 w-3 h-3 rotate-45 bg-[#081320] border-t border-l border-cyan-400/35 z-10 ${getArrowAlignmentClasses()}`}
+              className={`absolute -top-1.5 w-3 h-3 rotate-45 bg-[#081320] border-t border-l border-primary/40 z-10 ${getArrowAlignmentClasses()}`}
             />
 
             {/* Bubble Card Body */}
-            <div className="relative overflow-hidden rounded-xl bg-[#081320]/95 backdrop-blur-2xl border border-cyan-400/35 p-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_24px_rgba(26,157,224,0.25)] flex flex-col gap-2.5">
+            <div className="relative overflow-hidden rounded-xl bg-[#081320]/95 backdrop-blur-2xl border border-primary/40 p-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_24px_rgba(26,157,224,0.3)] flex flex-col gap-2.5">
               {/* Subtle ambient glow inside card */}
-              <div className="absolute -top-8 -right-8 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute -top-8 -right-8 w-20 h-20 bg-primary/15 rounded-full blur-xl pointer-events-none" />
 
               {/* Header */}
-              <div className="flex items-center justify-between gap-2 border-b border-cyan-400/15 pb-2">
-                <h5 className="font-mono text-[11px] font-bold uppercase tracking-wider text-cyan-300 truncate">
+              <div className="flex items-center justify-between gap-2 border-b border-primary/20 pb-2">
+                <h5 className="font-mono text-[11px] font-bold uppercase tracking-wider text-primary truncate">
                   {helper.title || "Option Guide"}
                 </h5>
                 <button
@@ -130,7 +130,7 @@ export function ParametricHelperBubble({
                     setIsOpen(false);
                   }}
                   aria-label="Close helper"
-                  className="shrink-0 p-1 rounded text-cyan-200/60 hover:text-white hover:bg-white/10 transition-colors"
+                  className="shrink-0 p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -138,7 +138,7 @@ export function ParametricHelperBubble({
 
               {/* Small but visible image */}
               {helper.image && (
-                <div className="relative w-full h-32 sm:h-36 rounded-lg overflow-hidden border border-cyan-400/20 bg-black/60 shrink-0">
+                <div className="relative w-full h-32 sm:h-36 rounded-lg overflow-hidden border border-primary/25 bg-black/60 shrink-0">
                   <img
                     src={helper.image}
                     alt={helper.imageAlt || helper.title || "Helper illustration"}
@@ -154,7 +154,7 @@ export function ParametricHelperBubble({
 
               {/* Text definition */}
               {helper.definition && (
-                <p className="text-xs text-cyan-100/90 leading-relaxed font-sans select-text">
+                <p className="text-xs text-slate-200 leading-relaxed font-sans select-text">
                   {helper.definition}
                 </p>
               )}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, AlertCircle, RefreshCw, Send } from 'lucide-react';
+import { MessageSquare, AlertCircle, RefreshCw, Send, User, ArrowRight } from 'lucide-react';
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 type ChatMessage = {
   id: string;
@@ -259,29 +259,63 @@ export default function StreamChatWidget({
       )}
 
       {!visitorName ? (
-        <form
-          className="native-chat-messages items-center justify-center"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const name = nameInput.trim();
-            if (name) onVisitorNameChange(name);
-          }}
-        >
-          <label className="w-full max-w-[240px] text-slate-300 text-xs font-medium">
-            What should we call you?
-            <input
-              autoFocus
-              value={nameInput}
-              onChange={(event) => setNameInput(event.target.value)}
-              placeholder="Your name"
-              maxLength={120}
-              className="native-chat-input mt-2 w-full"
-            />
-          </label>
-          <button type="submit" disabled={!nameInput.trim()} className="native-chat-send mt-3 w-auto px-4 text-xs">
-            Start chat
-          </button>
-        </form>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden bg-[#080d14]">
+          {/* Ambient background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const name = nameInput.trim();
+              if (name) onVisitorNameChange(name);
+            }}
+            className="w-full max-w-[280px] flex flex-col items-center relative z-10"
+          >
+            {/* Glowing Icon Badge */}
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/25 via-[#0b1b2d] to-[#080d14] border border-primary/40 flex items-center justify-center text-primary shadow-[0_0_25px_rgba(26,157,224,0.35)] mb-4 relative group">
+              <MessageSquare className="w-6 h-6 text-primary drop-shadow-[0_0_8px_rgba(26,157,224,0.6)]" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d14] shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+            </div>
+
+            {/* Title & Description */}
+            <h3 className="font-mono text-sm font-bold text-white tracking-wider uppercase mb-1">
+              Live Operator Chat
+            </h3>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              What should we call you? Enter your name to connect directly with Charlotte.
+            </p>
+
+            {/* Input with icon */}
+            <div className="w-full relative mb-3">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <User className="w-4 h-4" />
+              </div>
+              <input
+                autoFocus
+                value={nameInput}
+                onChange={(event) => setNameInput(event.target.value)}
+                placeholder="Enter your name..."
+                maxLength={120}
+                className="w-full bg-[#0d1624] border border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition-all shadow-inner"
+              />
+            </div>
+
+            {/* Full-width stylish button */}
+            <button
+              type="submit"
+              disabled={!nameInput.trim()}
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-xs font-bold uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(26,157,224,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed group active:scale-[0.98]"
+            >
+              <span>Start Chat</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+
+            {/* Discreet status tag */}
+            <p className="font-mono text-[10px] text-slate-500 mt-4 tracking-widest uppercase">
+              Free • Instant • Direct Operator
+            </p>
+          </form>
+        </div>
       ) : (
         <>
       {/* Message Thread container */}
