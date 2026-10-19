@@ -11,6 +11,7 @@ import { FloatingSocials } from "@/components/FloatingSocials";
 import { BottomRightMenu } from "@/components/BottomRightMenu";
 import { ProductsPopup } from "@/components/ProductsPopup";
 import { TrailerConfiguratorPopup } from "@/components/TrailerConfiguratorPopup";
+import { AxleBuilderPopup } from "@/components/AxleBuilderPopup";
 import { ConfigurableProductPopup } from "@/components/ConfigurableProductPopup";
 import { ParametricProductPopup } from "@/components/ParametricProductPopup";
 import { CartPopup } from "@/components/CartPopup";
@@ -31,6 +32,8 @@ export default function Home() {
   const [configurableProductId, setConfigurableProductId] = useState<number | null>(null);
   const [isParametricProductOpen, setIsParametricProductOpen] = useState(false);
   const [parametricProductId, setParametricProductId] = useState<number | null>(null);
+  const [isAxleBuilderOpen, setIsAxleBuilderOpen] = useState(false);
+  const [selectedAxleBuild, setSelectedAxleBuild] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
@@ -39,6 +42,7 @@ export default function Home() {
   // is unchanged, but avoid mounting closed modal trees during the initial load.
   const [hasMountedProducts, setHasMountedProducts] = useState(false);
   const [hasMountedConfigurator, setHasMountedConfigurator] = useState(false);
+  const [hasMountedAxleBuilder, setHasMountedAxleBuilder] = useState(false);
   const [hasMountedConfigurableProduct, setHasMountedConfigurableProduct] = useState(false);
   const [hasMountedParametricProduct, setHasMountedParametricProduct] = useState(false);
   const [hasMountedCart, setHasMountedCart] = useState(false);
@@ -129,6 +133,7 @@ export default function Home() {
   const isAnyModalOpen =
     isProductsOpen ||
     isConfiguratorOpen ||
+    isAxleBuilderOpen ||
     isConfigurableProductOpen ||
     isParametricProductOpen ||
     isCartOpen ||
@@ -235,11 +240,23 @@ export default function Home() {
           setHasMountedParametricProduct(true);
           setIsParametricProductOpen(true);
         }}
+        onOpenBuildProduct={(build) => {
+          setSelectedAxleBuild(build);
+          setHasMountedAxleBuilder(true);
+          setIsAxleBuilderOpen(true);
+        }}
       />}
 
       {hasMountedConfigurator && <TrailerConfiguratorPopup
         isOpen={isConfiguratorOpen}
         onClose={() => setIsConfiguratorOpen(false)}
+        onRequireSignIn={handleOpenMembers}
+      />}
+
+      {hasMountedAxleBuilder && <AxleBuilderPopup
+        isOpen={isAxleBuilderOpen}
+        onClose={() => setIsAxleBuilderOpen(false)}
+        build={selectedAxleBuild}
         onRequireSignIn={handleOpenMembers}
       />}
 

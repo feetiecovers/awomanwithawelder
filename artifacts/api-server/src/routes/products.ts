@@ -18,7 +18,6 @@ router.get("/products", async (req, res) => {
       req.query.websiteId ?? req.query.website ?? req.query.siteId ?? req.query.site ?? defaultWebsiteId,
     );
     const syncedProducts = (await readStockStore())
-      .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
       .map((entry) => mapEntryToStockResponse(entry, websiteId));
     if (syncedProducts.length > 0) {
@@ -51,7 +50,6 @@ router.get("/products/:id", async (req, res) => {
     );
 
     const syncedProduct = (await readStockStore())
-      .filter((entry) => entry._sourceType !== "build")
       .filter((entry) => entry.showOnWebsite !== false)
       .map((entry) => mapEntryToStockResponse(entry, websiteId))
       .find((entry) => entry.id === parsed.data.id);

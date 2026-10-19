@@ -37,6 +37,7 @@ interface ProductsPopupProps {
   onOpenConfigurator?: () => void;
   onOpenConfigurableProduct?: (id: number) => void;
   onOpenParametricProduct?: (id: number) => void;
+  onOpenBuildProduct?: (build: any) => void;
 }
 
 const ITEMS_PER_PAGE = 1;
@@ -66,7 +67,7 @@ type ProductCard = {
   name: string;
   description: string | null;
   price: number;
-  type: "product" | "service" | "configurable" | "parametric";
+  type: "product" | "service" | "configurable" | "parametric" | "build";
   available: boolean;
   image: string | null;
   bookingFields?: Array<{
@@ -159,12 +160,17 @@ function normalizeProducts(value: unknown): ProductCard[] {
       const isParametric = rawType === "parametric_product" || rawType === "parametric"
         || record.parametricProductType === "parametric_product"
         || record.purchaseMode === "parametric";
+      const isBuild = rawType === "build"
+        || record._sourceType === "build"
+        || record.buildType === "build"
+        || record.purchaseMode === "build"
+        || Boolean(record.buildId || record.build_id);
       const type: ProductCard["type"] = (
         rawType === "service"
         || rawType === "stock_service"
         || record.bookingRequired === true
         || record.fulfillmentType === "job"
-      ) ? "service" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : isParametric ? "parametric" : "product";
+      ) ? "service" : isBuild ? "build" : (rawType === "configurable_product" || rawType === "configurable") ? "configurable" : isParametric ? "parametric" : "product";
       const price = Number(record.price ?? record.displayPrice ?? record.sellPrice ?? record.unitPrice ?? record.sell_price ?? record.unit_price);
       const image = getProductImage(record);
       const bookingFields: NonNullable<ProductCard["bookingFields"]> = Array.isArray(record.bookingFields)
@@ -268,7 +274,7 @@ function getPricingBreakdown(price: number) {
   return { subtotal, gst, total };
 }
 
-export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator, onOpenConfigurableProduct, onOpenParametricProduct }: ProductsPopupProps) {
+export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator, onOpenConfigurableProduct, onOpenParametricProduct, onOpenBuildProduct }: ProductsPopupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -326,7 +332,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   };
 
   const products = normalizeProducts(productsData);
-  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric");
+  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric" || p.type === "build");
   const serviceItems = products.filter((p) => p.type === "service");
   const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
   const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
@@ -941,7 +947,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                             >
                               <div
                                 className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[160px] bg-black/40 cursor-pointer"
-                                onClick={() => setSelectedWorkspaceProduct(item)}
+                                onClick={() => {
+                                  if (item.type === "build") {
+                                    if (onOpenBuildProduct) onOpenBuildProduct(item);
+                                    else setSelectedWorkspaceProduct(item);
+                                  } else {
+                                    setSelectedWorkspaceProduct(item);
+                                  }
+                                }}
                               >
                                 {item.image && !failedImages[item.id] ? (
                                   <>
@@ -951,7 +964,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       className="absolute inset-0 w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                                       loading="eager"
                                       decoding="async"
-                                      onClick={() => setSelectedWorkspaceProduct(item)}
+                                      onClick={() => {
+                                        if (item.type === "build") {
+                                          if (onOpenBuildProduct) onOpenBuildProduct(item);
+                                          else setSelectedWorkspaceProduct(item);
+                                        } else {
+                                          setSelectedWorkspaceProduct(item);
+                                        }
+                                      }}
                                       onError={() => {
                                         setFailedImages((prev) => ({ ...prev, [item.id]: true }));
                                       }}
@@ -991,7 +1011,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/30 bg-red-500/10'}`}>
                                       {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
                                     </span>
-                                    {(item.type === "parametric" || item.type === "configurable") && (
+                                    {item.type === "build" ? (
+                                      <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-cyan-300 border-cyan-400/40 bg-cyan-500/15 shadow-[0_0_12px_rgba(26,161,224,0.3)]">
+                                        NO-CODE BUILDR
+                                      </span>
+                                    ) : (item.type === "parametric" || item.type === "configurable") && (
                                       <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-fuchsia-300 border-fuchsia-400/30 bg-fuchsia-500/10">
                                         CONFIGURABLE PRODUCT
                                       </span>
@@ -1012,7 +1036,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
                                   <div className="text-left sm:text-right">
                                     <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">
-                                      {item.type === "parametric" || item.type === "configurable" 
+                                      {item.type === "parametric" || item.type === "configurable" || item.type === "build"
                                         ? (item.price > 0 ? `From ${formatCurrency(item.price)}` : "Configure for price") 
                                         : formatCurrency(item.price)}
                                     </span>
@@ -1022,6 +1046,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <Button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        if (item.type === "build") {
+                                          if (onOpenBuildProduct) onOpenBuildProduct(item);
+                                          else setSelectedWorkspaceProduct(item);
+                                          return;
+                                        }
                                         if (item.type === "parametric" || item.type === "configurable") {
                                           setSelectedWorkspaceProduct(item);
                                           return;
@@ -1029,18 +1058,25 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                         onAddToCartClick(item);
                                       }}
                                       className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
-                                      disabled={addToCart.isPending || (item.type !== "parametric" && item.available === false)}
+                                      disabled={addToCart.isPending || (item.type !== "parametric" && item.type !== "build" && item.available === false)}
                                       data-testid={`button-add-to-cart-${item.id}`}
                                     >
-                                      {item.type === "parametric" ? "Configure & Quote" : (item.available === false ? "Unavailable" : item.type === "configurable" ? "Configure" : "Add to Cart")}
+                                      {item.type === "build" ? "Build & Quote" : item.type === "parametric" ? "Configure & Quote" : (item.available === false ? "Unavailable" : item.type === "configurable" ? "Configure" : "Add to Cart")}
                                     </Button>
                                     <Button
                                       variant="outline"
-                                      onClick={() => setSelectedWorkspaceProduct(item)}
+                                      onClick={() => {
+                                        if (item.type === "build") {
+                                          if (onOpenBuildProduct) onOpenBuildProduct(item);
+                                          else setSelectedWorkspaceProduct(item);
+                                        } else {
+                                          setSelectedWorkspaceProduct(item);
+                                        }
+                                      }}
                                       className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
                                       data-testid={`button-view-product-${item.id}`}
                                     >
-                                      View Product
+                                      {item.type === "build" ? "Customize Build" : "View Product"}
                                     </Button>
                                   </div>
                                 </div>

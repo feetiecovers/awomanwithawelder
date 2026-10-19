@@ -1,6 +1,6 @@
 import liveCatalogSnapshot from "@/content/currentLiveCatalog.json";
 
-export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v4";
+export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v5";
 
 /**
  * Purge outdated/stale cache keys from previous deployments
@@ -11,6 +11,7 @@ function purgeLegacyCaches() {
     localStorage.removeItem("awww_products_offerings_cache_v1");
     localStorage.removeItem("awww_products_offerings_cache_v2");
     localStorage.removeItem("awww_products_offerings_cache_v3");
+    localStorage.removeItem("awww_products_offerings_cache_v4");
   } catch {}
 }
 
@@ -29,6 +30,29 @@ function isValidProductsList(items: unknown): items is any[] {
 }
 
 /**
+ * Ensures build items from snapshot are preserved if remote products payload hasn't synced builds yet
+ */
+function mergeWithBuildSnapshots(items: any[]): any[] {
+  if (!Array.isArray(liveCatalogSnapshot)) return items;
+  const snapshotBuilds = (liveCatalogSnapshot as any[]).filter(
+    (item) => item?.type === "build" || item?._sourceType === "build" || item?.buildType === "build" || Boolean(item?.buildId)
+  );
+  if (snapshotBuilds.length === 0) return items;
+
+  const result = [...items];
+  for (const buildItem of snapshotBuilds) {
+    const buildId = buildItem.buildId || buildItem.id;
+    const exists = result.some(
+      (p) => (p.buildId && p.buildId === buildId) || (p.id && p.id === buildItem.id) || p.name === buildItem.name
+    );
+    if (!exists) {
+      result.push(buildItem);
+    }
+  }
+  return result;
+}
+
+/**
  * Returns cached products from localStorage if valid.
  * Automatically wipes any old or corrupt caches containing test stock.
  * Falls back to currentLiveCatalog.json snapshot so real offerings are instantly visible.
@@ -42,7 +66,7 @@ export function getCachedProducts(): any[] {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (isValidProductsList(parsed)) {
-          return parsed;
+          return mergeWithBuildSnapshots(parsed);
         }
         localStorage.removeItem(PRODUCTS_CACHE_KEY);
       }
@@ -63,8 +87,10 @@ export function saveProductsToCache(products: unknown): void {
   if (!isValidProductsList(products)) return;
 
   try {
-    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(products));
+    const merged = mergeWithBuildSnapshots(products);
+    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(merged));
   } catch (e) {
     console.warn("Failed to save products to localStorage cache", e);
   }
 }
+
