@@ -5,8 +5,6 @@ import { ArrowLeft, Calendar, Clock3, MapPin, Phone, ReceiptText } from "lucide-
 import { Button } from "@/components/ui/button";
 import mainLogo from "@assets/Logo_-_Main_Logo_1782352742134.png";
 import { ParticleBackground } from "@/components/ParticleBackground";
-import { BrandOrbs } from "@/components/BrandOrbs";
-import { SmokeEffect } from "@/components/SmokeEffect";
 import {
   clearBookingConfirmation,
   loadBookingConfirmation,
@@ -34,8 +32,6 @@ export default function BookingConfirmation() {
     return (
       <div className="relative w-full min-h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
         <ParticleBackground />
-        <BrandOrbs />
-        <SmokeEffect />
         <div className="relative z-10 min-h-[100dvh] flex items-center justify-center p-6">
           <div className="w-full max-w-xl rounded-3xl border border-primary/20 bg-[#080d14]/95 p-8 text-center shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)]">
             <p className="font-mono text-xs uppercase tracking-[0.3em] text-primary/70">Booking Confirmation</p>
@@ -60,8 +56,6 @@ export default function BookingConfirmation() {
   return (
     <div className="relative w-full min-h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
       <ParticleBackground />
-      <BrandOrbs />
-      <SmokeEffect />
 
       <div className="relative z-10 min-h-[100dvh] p-4 sm:p-6 lg:p-10">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 pb-6">

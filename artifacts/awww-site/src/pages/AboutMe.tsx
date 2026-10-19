@@ -4,20 +4,17 @@ import { motion } from "framer-motion";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import mainLogo from "@assets/Logo_-_Main_Logo_1782352742134.png";
-import { ParticleBackground } from "@/components/ParticleBackground";
-import { BrandOrbs } from "@/components/BrandOrbs";
-import { SmokeEffect } from "@/components/SmokeEffect";
-import { FloatingSocials } from "@/components/FloatingSocials";
 
 export default function AboutMe() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="relative w-full min-h-[100dvh] bg-[#0a0a0f] overflow-x-hidden text-foreground selection:bg-primary/30">
-      <ParticleBackground />
-      <BrandOrbs />
-      <SmokeEffect />
-      <FloatingSocials />
+    <div className="relative w-full min-h-[100dvh] bg-[#070b12] overflow-x-hidden text-foreground selection:bg-primary/30">
+      {/* Lightweight static ambient gradient for ultra-smooth scrolling on laptops and mobile */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[140px]" />
+      </div>
 
       <div className="relative z-10 min-h-[100dvh] p-4 sm:p-6 lg:p-10 flex flex-col">
         {/* Header Navigation */}
@@ -68,7 +65,7 @@ export default function AboutMe() {
             </div>
             
             {/* Image 1 */}
-            <div className="rounded-[28px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[4/5] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden">
+            <div className="rounded-[28px] border border-primary/30 bg-[#080d14] aspect-[4/5] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden">
               <img src="/about-portrait.jpg" alt="Portrait of Charlotte in the workshop" className="w-full h-full object-cover" />
             </div>
           </motion.section>
@@ -107,7 +104,7 @@ export default function AboutMe() {
             className="grid gap-8 md:grid-cols-[0.9fr_1.1fr] items-center"
           >
             {/* Image 2 */}
-            <div className="rounded-[28px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-square flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] md:order-1 order-2 overflow-hidden">
+            <div className="rounded-[28px] border border-primary/30 bg-[#080d14] aspect-square flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] md:order-1 order-2 overflow-hidden">
               <img src="/about-trailer.jpg" alt="Trailer manufacturing or repair work" className="w-full h-full object-cover" />
             </div>
 
@@ -134,7 +131,7 @@ export default function AboutMe() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="w-full rounded-[32px] border border-primary/30 bg-[#080d14]/60 backdrop-blur-sm aspect-[21/9] sm:aspect-[3/1] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden"
+            className="w-full rounded-[32px] border border-primary/30 bg-[#080d14] aspect-[21/9] sm:aspect-[3/1] flex items-center justify-center shadow-[0_0_30px_rgba(26,157,224,0.15)] overflow-hidden"
           >
             <img src="/about-wide.jpg" alt="Wide shot of the workshop or a completed project" className="w-full h-full object-cover" />
           </motion.div>

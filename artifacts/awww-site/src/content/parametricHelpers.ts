@@ -27,9 +27,9 @@ const DRAWBAR_BOX_HELPERS: ProductHelpersConfig = {
   categories: {
     "Dimensions": {
       title: "Drawbar Box Sizing Guide",
-      definition: "Measurements are taken from the outer edges. Make sure to allow clearance for your trailer winch post, tow ball coupling, and jockey wheel when tilting the lid open.",
+      definition: "The toolbox sits nestled inside of the trailer A-frame rails and mounts directly inside the frame. Measure between the inside faces of your A-frame beams and allow clearance for the front tow hitch, jockey wheel, and lid opening swing.",
       image: "/assets/helpers/drawbar_box_guide.jpg",
-      imageAlt: "Drawbar toolbox schematic diagram with measurements",
+      imageAlt: "Pencil sketch of drawbar toolbox mounted inside trailer A-frame with length, width, and height dimension arrows",
     },
   },
 };
