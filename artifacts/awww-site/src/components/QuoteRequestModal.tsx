@@ -293,7 +293,7 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
                 </form>
 
                 {/* Right Side - Context */}
-                <div className="border-t border-primary/10 bg-[#0d1520]/60 backdrop-blur-md p-6 lg:border-l lg:border-t-0 flex flex-col">
+                <div className="border-t border-primary/10 bg-[#0d1520]/90 p-6 lg:border-l lg:border-t-0 flex flex-col">
                   <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
                     <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Product Info</p>
                     {product.image && (

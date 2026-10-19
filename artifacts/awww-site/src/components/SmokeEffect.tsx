@@ -14,8 +14,14 @@ interface Spatter {
   size: number; hue: number;
 }
 
-export function SmokeEffect() {
+interface SmokeEffectProps {
+  isPaused?: boolean;
+}
+
+export function SmokeEffect({ isPaused = false }: SmokeEffectProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stopFnRef = useRef<(() => void) | null>(null);
+  const startFnRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -173,13 +179,16 @@ export function SmokeEffect() {
       if (animId === null) animate();
     };
 
+    stopFnRef.current = stop;
+    startFnRef.current = start;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") stop();
-      else start();
+      else if (!isPaused) start();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    if (document.visibilityState === "visible") start();
+    if (document.visibilityState === "visible" && !isPaused) start();
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       stop();
@@ -187,10 +196,20 @@ export function SmokeEffect() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isPaused) {
+      stopFnRef.current?.();
+    } else if (document.visibilityState === "visible") {
+      startFnRef.current?.();
+    }
+  }, [isPaused]);
+
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-none"
+      className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
+        isPaused ? "opacity-0" : "opacity-100"
+      }`}
       style={{ zIndex: 5 }}
     />
   );

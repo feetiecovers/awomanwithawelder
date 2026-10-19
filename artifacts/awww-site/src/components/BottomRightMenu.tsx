@@ -17,14 +17,19 @@ interface BottomRightMenuProps {
   onOpenMembers: () => void;
   onOpenProducts: () => void;
   onOpenConfigurator?: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigurator }: BottomRightMenuProps) {
+export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigurator, onOpenChange }: BottomRightMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeMenuTab, setActiveMenuTab] = useState("pages");
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
 
   useEffect(() => {
     const handleOpenContact = () => {

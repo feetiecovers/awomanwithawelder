@@ -452,7 +452,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative w-full h-[95dvh] sm:h-[90dvh] max-h-[850px] max-w-[95vw] sm:max-w-xl md:max-w-2xl bg-[#080d14]/95 border-2 border-primary/40 rounded-3xl shadow-[0_0_60px_rgba(26,157,224,0.35)] flex flex-col backdrop-blur-3xl overflow-hidden pointer-events-auto"
+      className="relative w-full h-[95dvh] sm:h-[90dvh] max-h-[850px] max-w-[95vw] sm:max-w-xl md:max-w-2xl bg-[#080d14]/95 border-2 border-primary/40 rounded-3xl shadow-[0_0_60px_rgba(26,157,224,0.35)] flex flex-col backdrop-blur-md overflow-hidden pointer-events-auto transform-gpu will-change-transform"
     >
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-primary/20 bg-[#0d1520]/80">

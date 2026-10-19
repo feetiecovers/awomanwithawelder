@@ -635,7 +635,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/75 backdrop-blur-md"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm sm:backdrop-blur-md"
         onClick={onClose}
       />
 
@@ -668,9 +668,9 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.2 } }}
                     transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                    className="pointer-events-auto w-full mb-2.5 sm:mb-3 z-30 shrink-0"
+                    className="pointer-events-auto w-full mb-2.5 sm:mb-3 z-30 shrink-0 transform-gpu"
                   >
-                    <div className="relative overflow-hidden rounded-2xl bg-[#071322]/90 backdrop-blur-2xl border border-primary/40 px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_30px_rgba(26,157,224,0.35)] flex items-center justify-between gap-3 text-white">
+                    <div className="relative overflow-hidden rounded-2xl bg-[#071322]/95 backdrop-blur-md border border-primary/40 px-4 py-3 sm:px-5 sm:py-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_30px_rgba(26,157,224,0.35)] flex items-center justify-between gap-3 text-white">
                       {/* Glow ambient decoration */}
                       <div className="absolute -left-10 -top-10 w-28 h-28 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
                       <div className="absolute right-0 bottom-0 w-28 h-28 bg-blue-600/15 rounded-full blur-2xl pointer-events-none" />
@@ -718,7 +718,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-full flex flex-col bg-[#080d14]/85 backdrop-blur-xl border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] ${
+                className={`w-full flex flex-col bg-[#080d14]/95 backdrop-blur-md border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] transform-gpu will-change-transform ${
                   showCustomCallPrompt
                     ? "max-h-[calc(100dvh-120px)] sm:max-h-[calc(100dvh-130px)]"
                     : "max-h-[calc(100dvh-32px)]"
@@ -936,7 +936,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           {currentShopItems.map((item, idx) => (
                             <div
                               key={item.id}
-                              className="flex flex-col rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md overflow-hidden hover:border-primary/35 transition-colors h-full"
+                              className="flex flex-col rounded-[18px] border border-primary/20 bg-[#0d1520]/90 overflow-hidden hover:border-primary/40 transition-colors h-full"
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
@@ -1125,7 +1125,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                   serviceItems.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-[18px] border border-primary/15 bg-[#0d1520]/60 backdrop-blur-md p-5 hover:border-primary/35 transition-colors"
+                      className="rounded-[18px] border border-primary/20 bg-[#0d1520]/90 p-5 hover:border-primary/40 transition-colors"
                       data-testid={`card-service-${item.id}`}
                     >
                       {item.hasVariants && (
@@ -1402,7 +1402,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     )}
                   </div>
 
-                  <div className="border-t border-primary/10 bg-[#0d1520]/60 backdrop-blur-md p-6 lg:border-l lg:border-t-0">
+                  <div className="border-t border-primary/10 bg-[#0d1520]/90 p-6 lg:border-l lg:border-t-0">
                     <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
                       <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary/60">Service Info</p>
                       <p className="mt-2 text-lg font-semibold text-foreground">{selectedService.name}</p>

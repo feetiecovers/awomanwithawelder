@@ -174,9 +174,10 @@ function lightningPath(
 
 interface BrandOrbsProps {
   onOpenConfigurator?: () => void;
+  isPaused?: boolean;
 }
 
-export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
+export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsProps = {}) {
   const { toast } = useToast();
   const processedLogos = useProcessedLogos();
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -192,8 +193,13 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
     };
     window.addEventListener("resize", onResize);
     
-    // Performance Fix (Option 1 & 4): Debounced resize and slower interval on mobile.
-    // If you need to rollback, change intervalTime back to 130 and remove the clearTimeout/setTimeout logic above.
+    if (isPaused) {
+      return () => {
+        window.removeEventListener("resize", onResize);
+        clearTimeout(resizeTimer);
+      };
+    }
+
     const isMobile = window.innerWidth < 640;
     const intervalTime = isMobile ? 400 : 250;
     const iv = setInterval(() => setTick(t => t + 1), intervalTime);
@@ -203,7 +209,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
       clearTimeout(resizeTimer);
       clearInterval(iv); 
     };
-  }, []);
+  }, [isPaused]);
 
   const cx = size.w / 2;
   const cy = size.h / 2;
@@ -227,7 +233,7 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
   const subSize = Math.round(orbSize * (isMobile ? 0.41 : 0.46));
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${isPaused ? "opacity-15" : "opacity-100"}`}>
       {/* Electricity SVG */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
         <defs>
@@ -441,10 +447,10 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             data-testid={`orb-brand-${brand.id}`}
           >
             <motion.div
-              animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
+              animate={isPaused ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
               transition={{
-                y: { duration: 4 + brand.id * 0.3, repeat: Infinity, ease: "easeInOut", delay: brand.delay },
-                x: { duration: 5 + brand.id * 0.4, repeat: Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },
+                y: { duration: 4 + brand.id * 0.3, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: brand.delay },
+                x: { duration: 5 + brand.id * 0.4, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },
               }}
             >
               <motion.div
@@ -545,13 +551,17 @@ export function BrandOrbs({ onOpenConfigurator }: BrandOrbsProps = {}) {
             data-testid={`orb-sub-brand-${sub.id}`}
           >
             <motion.div
-              animate={{
-                y: isMobile ? [-6, 2, -6] : [-6, 6, -6],
-                x: isMobile ? [-2, 2, -2] : [-3, 3, -3],
-              }}
+              animate={
+                isPaused
+                  ? { y: 0, x: 0 }
+                  : {
+                      y: isMobile ? [-6, 2, -6] : [-6, 6, -6],
+                      x: isMobile ? [-2, 2, -2] : [-3, 3, -3],
+                    }
+              }
               transition={{
-                y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: Infinity, ease: "easeInOut", delay: sub.delay },
-                x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
+                y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: sub.delay },
+                x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
               }}
             >
               <motion.div

@@ -34,6 +34,7 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isOrderSuccessOpen, setIsOrderSuccessOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Keep each workspace alive after its first use so its close/reopen behavior
   // is unchanged, but avoid mounting closed modal trees during the initial load.
   const [hasMountedProducts, setHasMountedProducts] = useState(false);
@@ -125,25 +126,39 @@ export default function Home() {
     setIsMembersOpen(true);
   };
 
+  const isAnyModalOpen =
+    isProductsOpen ||
+    isConfiguratorOpen ||
+    isConfigurableProductOpen ||
+    isParametricProductOpen ||
+    isCartOpen ||
+    isMembersOpen ||
+    isOrderSuccessOpen ||
+    isMenuOpen;
+
   return (
     <div className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
-      <ParticleBackground />
-      <BrandOrbs onOpenConfigurator={handleOpenConfigurator} />
-      <SmokeEffect />
-      <FloatingSocials />
+      <ParticleBackground isPaused={isAnyModalOpen} />
+      <BrandOrbs onOpenConfigurator={handleOpenConfigurator} isPaused={isAnyModalOpen} />
+      <SmokeEffect isPaused={isAnyModalOpen} />
+      <FloatingSocials isPaused={isAnyModalOpen} />
 
       {/* Center logo — uninverted original colors, enlarged for desktop */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
-          animate={{
-            scale: [1, 1.02, 1],
-            filter: [
-              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-              "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
-              "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-            ],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          animate={
+            isAnyModalOpen
+              ? { scale: 1, filter: "drop-shadow(0 0 16px rgba(26, 157, 224, 0.40))" }
+              : {
+                  scale: [1, 1.02, 1],
+                  filter: [
+                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
+                    "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
+                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
+                  ],
+                }
+          }
+          transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
           className="pointer-events-auto cursor-pointer"
           onClick={handleOpenProducts}
           whileHover={{ scale: 1.05 }}
@@ -200,6 +215,7 @@ export default function Home() {
         onOpenMembers={handleOpenMembers}
         onOpenProducts={handleOpenProducts}
         onOpenConfigurator={handleOpenConfigurator}
+        onOpenChange={setIsMenuOpen}
       />
 
       {hasMountedProducts && <ProductsPopup

@@ -72,9 +72,17 @@ const SOCIALS: SocialItem[] = [
   },
 ];
 
-export function FloatingSocials() {
+interface FloatingSocialsProps {
+  isPaused?: boolean;
+}
+
+export function FloatingSocials({ isPaused = false }: FloatingSocialsProps = {}) {
   return (
-    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+    <div
+      className={`absolute inset-0 pointer-events-none z-20 overflow-hidden transition-opacity duration-500 ${
+        isPaused ? "opacity-15" : "opacity-100"
+      }`}
+    >
       {SOCIALS.map((social) => (
         <motion.a
           key={social.id}
@@ -89,10 +97,10 @@ export function FloatingSocials() {
           transition={{ duration: 0.8, delay: social.delay, type: "spring" }}
         >
           <motion.div
-            animate={{ y: [-6, 6, -6], x: [-3, 3, -3] }}
+            animate={isPaused ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
             transition={{
-              y: { duration: social.duration, repeat: Infinity, ease: "easeInOut", delay: social.delay },
-              x: { duration: social.duration * 1.2, repeat: Infinity, ease: "easeInOut", delay: social.delay * 1.4 },
+              y: { duration: social.duration, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: social.delay },
+              x: { duration: social.duration * 1.2, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: social.delay * 1.4 },
             }}
           >
             <motion.div

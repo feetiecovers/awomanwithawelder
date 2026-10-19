@@ -1,7 +1,13 @@
 import { useEffect, useRef } from "react";
 
-export function ParticleBackground() {
+interface ParticleBackgroundProps {
+  isPaused?: boolean;
+}
+
+export function ParticleBackground({ isPaused = false }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stopFnRef = useRef<(() => void) | null>(null);
+  const startFnRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,15 +92,18 @@ export function ParticleBackground() {
       if (animationFrameId === null) draw();
     };
 
+    stopFnRef.current = stop;
+    startFnRef.current = start;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") stop();
-      else start();
+      else if (!isPaused) start();
     };
 
     window.addEventListener("resize", init);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     init();
-    if (document.visibilityState === "visible") start();
+    if (document.visibilityState === "visible" && !isPaused) start();
 
     return () => {
       window.removeEventListener("resize", init);
@@ -103,10 +112,20 @@ export function ParticleBackground() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isPaused) {
+      stopFnRef.current?.();
+    } else if (document.visibilityState === "visible") {
+      startFnRef.current?.();
+    }
+  }, [isPaused]);
+
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 opacity-80"
+      className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-500 ${
+        isPaused ? "opacity-10" : "opacity-80"
+      }`}
     />
   );
 }

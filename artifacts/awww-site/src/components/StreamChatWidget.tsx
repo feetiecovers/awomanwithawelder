@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { AlertCircle, RefreshCw, Send, User, ArrowRight } from 'lucide-react';
-import denversDeskChevron from "@assets/Denvers_Desk_New_Chevron_Logo.png";
+import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 type ChatMessage = {
   id: string;
   sender: 'visitor' | 'operator';
@@ -241,9 +241,9 @@ export default function StreamChatWidget({
         <div className="native-chat-header-info">
           <div className="native-chat-status" />
           <div>
-            <h4 className="native-chat-title flex items-center gap-1.5">
+            <h4 className="native-chat-title flex items-center gap-2">
               Live Chat Support
-              <img src={denversDeskChevron} alt="Denver's Desk" className="h-3.5 object-contain opacity-80" />
+              <img src={ddIcon} alt="Denver's Desk" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(26,157,224,0.6)]" />
             </h4>
             <p className="native-chat-subtitle">Self-hosted local support operator</p>
           </div>
@@ -271,10 +271,13 @@ export default function StreamChatWidget({
             }}
             className="w-full max-w-[280px] flex flex-col items-center relative z-10"
           >
-            {/* Denver's Desk Chevron Badge */}
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-[#0b1b2d] to-[#080d14] border border-primary/40 flex items-center justify-center p-2.5 shadow-[0_0_25px_rgba(26,157,224,0.35)] mb-4 relative group">
-              <img src={denversDeskChevron} alt="Denver's Desk" className="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(26,157,224,0.7)]" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d14] shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+            {/* Denver's Desk Chevron — Standalone, cleanly sized, without surrounding box */}
+            <div className="mb-4 flex items-center justify-center">
+              <img
+                src={ddIcon}
+                alt="Denver's Desk"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_20px_rgba(26,157,224,0.7)] select-none pointer-events-none"
+              />
             </div>
 
             {/* Title & Description */}
