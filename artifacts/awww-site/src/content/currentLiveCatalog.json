@@ -6,9 +6,9 @@
     "sellPrice": 1064.99,
     "unitPrice": 1064.99,
     "displayPrice": 1064.99,
-    "comingSoon": false,
-    "showComingSoonBanner": false,
-    "comingSoonLabel": "Coming Soon",
+    "comingSoon": true,
+    "showComingSoonBanner": true,
+    "comingSoonLabel": "I am on my way! Just not ready yet.",
     "priceLabel": "",
     "pricePrefix": "",
     "gstIncluded": true,
@@ -29,10 +29,10 @@
       "backorderedQuantity": 1,
       "shortageClassification": "backorder",
       "availableQuantity": 0,
-      "estimatedDispatchDate": "2026-10-24",
-      "estimatedDispatchDateLabel": "Estimated dispatch: 24 October",
-      "estimatedPromiseDate": "2026-10-24",
-      "promiseDate": "2026-10-24",
+      "estimatedDispatchDate": "2026-10-30",
+      "estimatedDispatchDateLabel": "Estimated dispatch: 30 October",
+      "estimatedPromiseDate": "2026-10-30",
+      "promiseDate": "2026-10-30",
       "capacityQuantity": 1,
       "capacityDays": 10,
       "outstandingQuantityAhead": 0,
@@ -40,19 +40,19 @@
         {
           "fromQuantity": 1,
           "toQuantity": 1,
-          "promiseDate": "2026-10-24",
+          "promiseDate": "2026-10-30",
           "days": 10
         },
         {
           "fromQuantity": 2,
           "toQuantity": 2,
-          "promiseDate": "2026-11-03",
+          "promiseDate": "2026-11-09",
           "days": 20
         },
         {
           "fromQuantity": 3,
           "toQuantity": 3,
-          "promiseDate": "2026-11-13",
+          "promiseDate": "2026-11-19",
           "days": 30
         }
       ]
@@ -112,12 +112,12 @@
     "purchaseAllowed": true,
     "allowBackorder": true,
     "availableQuantity": 0,
-    "stockRevision": "a5f4d9cc",
+    "stockRevision": "5e0a2a07",
     "externalId": "sp-1780139922566",
     "_sourceType": "product",
     "_syncKey": "product:sp-1780139922566",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.472Z",
+    "updatedAt": "2026-10-20T12:09:07.472Z",
     "productType": "product",
     "type": "product",
     "available": false
@@ -166,8 +166,8 @@
     "externalId": "svc-1790046775620",
     "_sourceType": "service",
     "_syncKey": "service:svc-1790046775620",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -216,8 +216,8 @@
     "externalId": "svc-1789468855892",
     "_sourceType": "service",
     "_syncKey": "service:svc-1789468855892",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -266,8 +266,8 @@
     "externalId": "svc-1789467907182",
     "_sourceType": "service",
     "_syncKey": "service:svc-1789467907182",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -339,8 +339,8 @@
     "externalId": "svc-1783166810182",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166810182",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -401,8 +401,8 @@
     "externalId": "svc-1783166554908",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166554908",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -463,8 +463,8 @@
     "externalId": "svc-1783166188316",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166188316",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -525,8 +525,8 @@
     "externalId": "svc-1783165606392",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783165606392",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -599,7 +599,7 @@
       "measurement_muv1as0o_lcobd": 200
     },
     "validationRules": [],
-    "resolvedDefaultConfigurationPrice": 349.99,
+    "resolvedDefaultConfigurationPrice": 261.34,
     "rules": [],
     "inputDefinitions": [
       {
@@ -697,10 +697,10 @@
     ],
     "basePrice": 199.75,
     "costPrice": 199.75,
-    "price": 349.99,
-    "displayPrice": 349.99,
-    "sellPrice": 349.99,
-    "unitPrice": 349.99,
+    "price": 261.34,
+    "displayPrice": 261.34,
+    "sellPrice": 261.34,
+    "unitPrice": 261.34,
     "priceLabel": "",
     "pricePrefix": "",
     "available": true,
@@ -710,8 +710,8 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1791190561826-cdom",
     "images": [],
@@ -736,7 +736,7 @@
     "commercialProductCode": "COF-TBL-CUST",
     "commercialProductName": "Coffee Tables",
     "definitionId": "pp-1790141374941-bor5",
-    "definitionVersion": 3,
+    "definitionVersion": 10,
     "fulfilmentIntent": "build_to_order",
     "promiseSettings": {
       "strategy": "own",
@@ -763,7 +763,7 @@
       "type": "parametric",
       "inputField": "inputValues",
       "definitionId": "pp-1790141374941-bor5",
-      "version": 3,
+      "version": 10,
       "url": "https://denver-s-desk.onrender.com/api/ecommerce/configuration/resolve"
     },
     "sku": "COF-TBL-CUST",
@@ -775,9 +775,88 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Coffee Tables",
     "subcategoryId": "sub-prod-1783334225266-875",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1790157258917-k7cagi.jpg",
-    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1790157258917-k7cagi.jpg",
-    "conditionalImageRules": [],
+    "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "conditionalImageRules": [
+      {
+        "id": "mto-image-1792482931765-yt9f",
+        "label": "Sq  (Brown)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496094256-m7h3tw.png",
+        "optionIds": [
+          "ppi-choice-1790143524190-cp9c"
+        ],
+        "priority": 1
+      },
+      {
+        "id": "mto-image-1792496211507-rym1",
+        "label": "Spider (Brown)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496233076-ir24wv.png",
+        "optionIds": [
+          "ppi-choice-1792495880670-injf"
+        ],
+        "priority": 2
+      },
+      {
+        "id": "mto-image-1792496253023-jg1f",
+        "label": "X + Swatch (Brown)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496281292-6xoxcj.png",
+        "optionIds": [
+          "ppi-choice-1790143383115-b34t",
+          "ppi-choice-1792496028100-uv5i"
+        ],
+        "priority": 3
+      },
+      {
+        "id": "mto-image-1792496304702-lomp",
+        "label": "X + Swatch (Light)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496327165-fukayo.png",
+        "optionIds": [
+          "ppi-choice-1792496029411-gymg",
+          "ppi-choice-1790143383115-b34t"
+        ],
+        "priority": 4
+      },
+      {
+        "id": "mto-image-1792496333197-hht8",
+        "label": "Sq + Swatch (Light)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496370091-26w2z8.png",
+        "optionIds": [
+          "ppi-choice-1792496029411-gymg",
+          "ppi-choice-1790143524190-cp9c"
+        ],
+        "priority": 5
+      },
+      {
+        "id": "mto-image-1792496334873-pr2e",
+        "label": "Sq + Swatch (brown)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496402755-vc4hc6.png",
+        "optionIds": [
+          "ppi-choice-1792496028100-uv5i",
+          "ppi-choice-1790143524190-cp9c"
+        ],
+        "priority": 6
+      },
+      {
+        "id": "mto-image-1792496410190-qlqy",
+        "label": "Spider + Swatch (Brown)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496436264-mm0qkc.png",
+        "optionIds": [
+          "ppi-choice-1792496028100-uv5i",
+          "ppi-choice-1792495880670-injf"
+        ],
+        "priority": 7
+      },
+      {
+        "id": "mto-image-1792496411535-x7wr",
+        "label": "Spider + Swatch (Light)",
+        "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496465245-532ph5.png",
+        "optionIds": [
+          "ppi-choice-1792496029411-gymg",
+          "ppi-choice-1792495880670-injf"
+        ],
+        "priority": 8
+      }
+    ],
     "measurementLabel": "Measurement",
     "measurementUnit": "m",
     "pricingMode": "formula",
@@ -785,10 +864,11 @@
     "defaultConfiguration": {
       "measurement_mudoyh9v_ps3aq": 1000,
       "measurement_mudp2wfg_jxm7o": 600,
-      "measurement_mudp4vze_nte11": "Cross Legged"
+      "measurement_mudp4vze_nte11": "Cross Legged",
+      "measurement_mvgltuej_im712": "Dark Stain"
     },
     "validationRules": [],
-    "resolvedDefaultConfigurationPrice": 339.99,
+    "resolvedDefaultConfigurationPrice": 223.6,
     "rules": [
       {
         "id": "ppr-1790143202887-pvrg",
@@ -900,17 +980,67 @@
             "isDefault": false,
             "priceAdjustment": 0,
             "sortOrder": 2
+          },
+          {
+            "id": "ppi-choice-1792495880670-injf",
+            "label": "Spider Legged",
+            "value": "",
+            "description": "",
+            "isDefault": false,
+            "priceAdjustment": 0,
+            "sortOrder": 3
           }
         ],
         "sortOrder": 3
+      },
+      {
+        "id": "ppi-mvgltuej_im712",
+        "key": "measurement_mvgltuej_im712",
+        "inputType": "select",
+        "controlType": "dropdown",
+        "label": "Finish Colour",
+        "internalLabel": "",
+        "unit": "",
+        "step": 1,
+        "precision": 0,
+        "required": true,
+        "helperText": "",
+        "helperTitle": "",
+        "helperImage": "",
+        "bomEffect": "resource",
+        "calculationMode": "variable",
+        "sourceInputKeys": [],
+        "choices": [
+          {
+            "id": "ppi-choice-1792496028100-uv5i",
+            "label": "Dark Stain",
+            "value": "",
+            "description": "",
+            "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496500508-34x5oq.png",
+            "isDefault": true,
+            "priceAdjustment": 0,
+            "sortOrder": 1
+          },
+          {
+            "id": "ppi-choice-1792496029411-gymg",
+            "label": "Light Stain",
+            "value": "",
+            "description": "",
+            "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792496491461-2ettmx.png",
+            "isDefault": false,
+            "priceAdjustment": 0,
+            "sortOrder": 2
+          }
+        ],
+        "sortOrder": 4
       }
     ],
     "basePrice": 153.51,
     "costPrice": 153.51,
-    "price": 339.99,
-    "displayPrice": 339.99,
-    "sellPrice": 339.99,
-    "unitPrice": 339.99,
+    "price": 223.6,
+    "displayPrice": 223.6,
+    "sellPrice": 223.6,
+    "unitPrice": 223.6,
     "priceLabel": "Measured pricing",
     "pricePrefix": "",
     "available": true,
@@ -920,8 +1050,8 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1790141374941-bor5",
     "images": [],
@@ -946,7 +1076,7 @@
     "commercialProductCode": "ALPB-CUST",
     "commercialProductName": "Aluminium Planter Boxes",
     "definitionId": "pp-1789616572481-ropa",
-    "definitionVersion": 2,
+    "definitionVersion": 3,
     "fulfilmentIntent": "build_to_order",
     "promiseSettings": {
       "strategy": "category_capacity",
@@ -973,7 +1103,7 @@
       "type": "parametric",
       "inputField": "inputValues",
       "definitionId": "pp-1789616572481-ropa",
-      "version": 2,
+      "version": 3,
       "url": "https://denver-s-desk.onrender.com/api/ecommerce/configuration/resolve"
     },
     "sku": "ALPB-CUST",
@@ -985,8 +1115,8 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Outdoor Furniture",
     "subcategoryId": "sub-prod-1789386589503-695",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1790157328535-dqj1ha.png",
-    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1790157328535-dqj1ha.png",
+    "imageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
+    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
     "measurementUnit": "m",
@@ -1124,8 +1254,8 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-14T07:57:22.447Z",
-    "updatedAt": "2026-10-14T07:57:22.447Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1789616572481-ropa",
     "images": [],
@@ -1139,37 +1269,39 @@
     "productType": "build",
     "buildType": "build",
     "buildId": "build-1792398167103",
-    "buildCode": "",
+    "buildCode": "AXLEBUILDER-BLD01",
     "purchaseMode": "build",
     "commercialProductId": null,
-    "commercialProductCode": "",
+    "commercialProductCode": "AXLEBUILDER-BLD01",
     "commercialProductName": "Trailer Axle Builder",
     "definitionId": "build-1792398167103",
     "definitionVersion": 1,
     "fulfilmentIntent": "build_to_order",
-    "promiseSettings": null,
+    "promiseSettings": {
+      "strategy": "own"
+    },
     "configurationResolver": {
       "type": "build",
       "selectionField": "selections",
       "definitionId": "build-1792398167103",
       "version": 1
     },
-    "sku": "",
-    "code": "",
+    "sku": "AXLEBUILDER-BLD01",
+    "code": "AXLEBUILDER-BLD01",
     "name": "Trailer Axle Builder",
     "title": "Trailer Axle Builder",
-    "description": "Customizable trailer axle builder. Select your axle profile, hub configurations, and specify custom length dynamically.",
+    "description": "Need a specifically sized Axle for your trailer? Resolve a true price using the configurations below and A Woman With a Welder will build you the axle you desire. ",
     "category": "Trailer Component",
     "categoryId": "build-cat-1791714386528",
     "trailerType": "Trailer Component",
     "sizeLabel": "",
-    "price": 327.9,
-    "displayPrice": 327.9,
-    "sellPrice": 327.9,
-    "unitPrice": 327.9,
-    "costPrice": 240.8,
-    "image": "/assets/products/trailer_axle_assembly.jpg",
-    "imageUrl": "/assets/products/trailer_axle_assembly.jpg",
+    "price": 14.86,
+    "displayPrice": 14.86,
+    "sellPrice": 14.86,
+    "unitPrice": 14.86,
+    "costPrice": 0,
+    "image": null,
+    "imageUrl": "",
     "images": [],
     "available": true,
     "inStock": true,
@@ -1179,18 +1311,68 @@
     ],
     "optionGroups": [
       {
-        "id": "bog-1792398222088-ig7d",
-        "name": "Axle Type",
-        "description": "",
+        "id": "bog-1792496686911-i81n",
+        "name": "Wheel Size",
+        "description": "Choose the size of the wheel you are intending on using so the configurator can offer the accurate solutions.",
         "selectionType": "single",
         "required": true,
         "sortOrder": 1,
         "options": [
           {
-            "id": "bo-1792398234991-fxkk",
-            "featureGroupId": "bog-1792398222088-ig7d",
-            "name": "40X40 Axle ",
+            "id": "bo-1792496800618-honi",
+            "featureGroupId": "bog-1792496686911-i81n",
             "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 1,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-0nem",
+              "bf-1792496635376-wrkn",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-3n0d",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-08ll"
+            ],
+            "blockedOptionIds": [
+              "bo-1792496931854-qz2j"
+            ],
+            "featureIds": []
+          },
+          {
+            "id": "bo-1792496931854-qz2j",
+            "featureGroupId": "bog-1792496686911-i81n",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 2,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [],
+            "blockedOptionIds": [
+              "bo-1792496800618-honi"
+            ],
+            "featureIds": []
+          }
+        ]
+      },
+      {
+        "id": "bog-1792497018284-ryxw",
+        "name": "Axle Size",
+        "description": "",
+        "selectionType": "single",
+        "required": true,
+        "sortOrder": 2,
+        "options": [
+          {
+            "id": "bo-1792497097987-ljd7",
+            "featureGroupId": "bog-1792497018284-ryxw",
+            "description": "Choose this option if the axle you want needs to fit into 40mm U-Bolts.",
             "imageUrl": "",
             "price": 14.86,
             "isIncluded": false,
@@ -1203,14 +1385,36 @@
             ]
           },
           {
-            "id": "bo-1792398247384-yfr2",
-            "featureGroupId": "bog-1792398222088-ig7d",
-            "name": "50X50 Axle",
+            "id": "bo-1792497183144-hh5l",
+            "featureGroupId": "bog-1792497018284-ryxw",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 2,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [],
+            "blockedOptionIds": [],
+            "featureIds": []
+          }
+        ]
+      },
+      {
+        "id": "bog-1792497041748-0ahp",
+        "name": "Axle Beam (length)",
+        "description": "",
+        "selectionType": "single",
+        "required": true,
+        "sortOrder": 3,
+        "options": [
+          {
+            "id": "bo-1792497220266-0pfz",
+            "featureGroupId": "bog-1792497041748-0ahp",
             "description": "",
             "imageUrl": "",
             "price": 14.86,
             "isIncluded": false,
-            "sortOrder": 2,
+            "sortOrder": 1,
             "requiredFeatureIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
@@ -1221,73 +1425,259 @@
         ]
       },
       {
-        "id": "bog-1792398274047-3o02",
-        "name": "Hub Type",
+        "id": "bog-1792497055402-xxnr",
+        "name": "Brake System",
         "description": "",
         "selectionType": "single",
-        "required": true,
-        "sortOrder": 2,
+        "required": false,
+        "sortOrder": 4,
         "options": [
           {
-            "id": "bo-1792398280222-2yue",
-            "featureGroupId": "bog-1792398274047-3o02",
-            "name": "Idler",
+            "id": "bo-1792497289583-ve7t",
+            "featureGroupId": "bog-1792497055402-xxnr",
             "description": "",
             "imageUrl": "",
-            "price": 313.04,
+            "price": 0,
             "isIncluded": false,
             "sortOrder": 1,
             "requiredFeatureIds": [
               "bf-1792397963987"
             ],
             "blockedFeatureIds": [
-              "bf-1790849890089"
+              "bf-1792496635376-eq9j",
+              "bf-1792496635376-bels",
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-0nem",
+              "bf-1792496635376-wrkn",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-j63h"
             ],
-            "blockedOptionIds": [
-              "bo-1792398247384-yfr2"
-            ],
+            "blockedOptionIds": [],
             "featureIds": [
-              "bf-1790850082357"
+              "bf-1792496635376-20ux",
+              "bf-1792496635376-sima",
+              "bf-1792496635376-3n0d",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-08ll"
             ]
           },
           {
-            "id": "bo-1792398303471-h6am",
-            "featureGroupId": "bog-1792398274047-3o02",
-            "name": "Idler 2",
+            "id": "bo-1792497423715-obpd",
+            "featureGroupId": "bog-1792497055402-xxnr",
             "description": "",
             "imageUrl": "",
-            "price": 313.04,
+            "price": 0,
             "isIncluded": false,
             "sortOrder": 2,
             "requiredFeatureIds": [
               "bf-1792397963987"
             ],
             "blockedFeatureIds": [
-              "bf-1790850082357"
+              "bf-1792496635376-eq9j",
+              "bf-1792496635376-bels",
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-j63h",
+              "bf-1792496635376-sima",
+              "bf-1792496635376-20ux",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-3n0d",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-08ll"
             ],
-            "blockedOptionIds": [
-              "bo-1792398280222-2yue",
-              "bo-1792398234991-fxkk"
-            ],
+            "blockedOptionIds": [],
             "featureIds": [
-              "bf-1790849890089"
+              "bf-1792496635376-0nem",
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-wrkn"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "bog-1792497069274-vzas",
+        "name": "PCD of your Wheels",
+        "description": "",
+        "selectionType": "single",
+        "required": true,
+        "sortOrder": 5,
+        "options": [
+          {
+            "id": "bo-1792497483124-7hm2",
+            "featureGroupId": "bog-1792497069274-vzas",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 1,
+            "requiredFeatureIds": [
+              "bf-1792397963987"
+            ],
+            "blockedFeatureIds": [
+              "bf-1792496635376-bels",
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-j63h"
+            ],
+            "blockedOptionIds": [],
+            "featureIds": [
+              "bf-1792496635376-sima",
+              "bf-1792496635376-eq9j"
+            ]
+          },
+          {
+            "id": "bo-1792497559955-7ewi",
+            "featureGroupId": "bog-1792497069274-vzas",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 2,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [
+              "bf-1792496635376-eq9j",
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-sima",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-3n0d",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-0nem"
+            ],
+            "blockedOptionIds": [],
+            "featureIds": [
+              "bf-1792496635376-bels",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-j63h",
+              "bf-1792496635376-20ux",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-wrkn"
+            ]
+          },
+          {
+            "id": "bo-1792497629197-p94c",
+            "featureGroupId": "bog-1792497069274-vzas",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 3,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-0nem",
+              "bf-1792496635376-wrkn",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-08ll",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-20ux",
+              "bf-1792496635376-sima",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-j63h",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-eq9j",
+              "bf-1792496635376-bels"
+            ],
+            "blockedOptionIds": [],
+            "featureIds": [
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-3n0d"
+            ]
+          },
+          {
+            "id": "bo-1792497711139-1h16",
+            "featureGroupId": "bog-1792497069274-vzas",
+            "description": "",
+            "imageUrl": "",
+            "price": 0,
+            "isIncluded": false,
+            "sortOrder": 4,
+            "requiredFeatureIds": [],
+            "blockedFeatureIds": [
+              "bf-1792496635376-eq9j",
+              "bf-1792496635376-bels",
+              "bf-1792496635376-b4bf",
+              "bf-1792496635376-p5xx",
+              "bf-1792496635376-j63h",
+              "bf-1792496635376-sima",
+              "bf-1792496635376-20ux",
+              "bf-1792496635376-3n0d",
+              "bf-1792496635376-m9g1",
+              "bf-1792496635376-wrkn",
+              "bf-1792496635376-u9b6",
+              "bf-1792496635376-08ll"
+            ],
+            "blockedOptionIds": [],
+            "featureIds": [
+              "bf-1792496635376-6auu",
+              "bf-1792496635376-twpu",
+              "bf-1792496635376-qu4x",
+              "bf-1792496635376-o5ee",
+              "bf-1792496635376-xcu8",
+              "bf-1792496635376-fsbw",
+              "bf-1792496635376-epfa",
+              "bf-1792496635376-0nem"
             ]
           }
         ]
       }
     ],
     "defaultSelections": {
-      "bog-1792398222088-ig7d": [
-        "bo-1792398234991-fxkk"
+      "bog-1792496686911-i81n": [
+        "bo-1792496800618-honi"
       ],
-      "bog-1792398274047-3o02": [
-        "bo-1792398280222-2yue"
+      "bog-1792497018284-ryxw": [
+        "bo-1792497097987-ljd7"
+      ],
+      "bog-1792497041748-0ahp": [
+        "bo-1792497220266-0pfz"
+      ],
+      "bog-1792497055402-xxnr": [
+        "bo-1792497289583-ve7t"
+      ],
+      "bog-1792497069274-vzas": [
+        "bo-1792497483124-7hm2"
       ]
     },
     "baseFeatureIds": [],
     "includedFeatureIds": [
       "bf-1792397963987",
-      "bf-1790850082357"
+      "bf-1792496635376-20ux",
+      "bf-1792496635376-sima",
+      "bf-1792496635376-3n0d",
+      "bf-1792496635376-o5ee",
+      "bf-1792496635376-m9g1",
+      "bf-1792496635376-xcu8",
+      "bf-1792496635376-fsbw",
+      "bf-1792496635376-08ll",
+      "bf-1792496635376-eq9j"
     ],
     "includedFeatures": [
       {
@@ -1301,7 +1691,7 @@
           "id": "pp-1790850200924-qamf",
           "code": "AXLE40X3MM",
           "name": "The Trailer Axle Builder",
-          "definitionVersion": 1,
+          "definitionVersion": 2,
           "measurementLabel": "Measurement",
           "measurementUnit": "Measurement",
           "pricingMode": "formula",
@@ -1348,14 +1738,94 @@
         "price": 14.86
       },
       {
-        "id": "bf-1790850082357",
-        "code": "AXL-BLD-HS02",
-        "name": "Hub & Stubs (Idler) - 5 x 4.5 - 1,500kg ",
-        "description": "",
-        "kind": "standard",
+        "id": "bf-1792496635376-20ux",
+        "code": "AXL-BLDR-HYD-5X1143-1500-03",
+        "name": "Axle Builder - Hydraulic Disc - 5x114.3 - 1500kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB03; Hydraulic Disc hub/stub assembly, 5x1143 PCD, 1500kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
         "parametricProductId": null,
         "parametricProduct": null,
-        "price": 313.04
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-sima",
+        "code": "AXL-BLDR-HYD-4X1143-1500-02",
+        "name": "Axle Builder - Hydraulic Disc - 4x114.3 - 1500kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB02; Hydraulic Disc hub/stub assembly, 4x1143 PCD, 1500kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-3n0d",
+        "code": "AXL-BLDR-HYD-5X120-1500-04",
+        "name": "Axle Builder - Hydraulic Disc - 5x120 - 1500kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB04; Hydraulic Disc hub/stub assembly, 5x120 PCD, 1500kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-o5ee",
+        "code": "AXL-BLDR-HYD-6X1397-1500-05",
+        "name": "Axle Builder - Hydraulic Disc - 6x139.7 - 1500kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB05; Hydraulic Disc hub/stub assembly, 6x1397 PCD, 1500kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-m9g1",
+        "code": "AXL-BLDR-HYD-5X1143-1750-07",
+        "name": "Axle Builder - Hydraulic Disc - 5x114.3 - 1750kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB07; Hydraulic Disc hub/stub assembly, 5x1143 PCD, 1750kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-xcu8",
+        "code": "AXL-BLDR-HYD-6X1397-1750-08",
+        "name": "Axle Builder - Hydraulic Disc - 6x139.7 - 1750kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB08; Hydraulic Disc hub/stub assembly, 6x1397 PCD, 1750kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-fsbw",
+        "code": "AXL-BLDR-HYD-6X1397-2000-11",
+        "name": "Axle Builder - Hydraulic Disc - 6x139.7 - 2000kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB11; Hydraulic Disc hub/stub assembly, 6x1397 PCD, 2000kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-08ll",
+        "code": "AXL-BLDR-HYD-5X1143-2000-10",
+        "name": "Axle Builder - Hydraulic Disc - 5x114.3 - 2000kg",
+        "description": "Existing DD Stock Component HYDBRK-HUBSTUB10; Hydraulic Disc hub/stub assembly, 5x1143 PCD, 2000kg. Qty 1 complete kit/pair per axle. Hydraulic stock component recipe references idler kit + 2 matching rotors + SaveBarn caliper pair; do not add those again to this feature.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
+      },
+      {
+        "id": "bf-1792496635376-eq9j",
+        "code": "AXL-BLDR-IDL-4X1143-1500-02",
+        "name": "Axle Builder - Idler - 4x114.3 - 1500kg",
+        "description": "Existing DD Stock Component HUBSTUB02; Idler hub/stub assembly, 4x1143 PCD, 1500kg. Qty 1 complete kit/pair per axle.",
+        "kind": "component",
+        "parametricProductId": null,
+        "parametricProduct": null,
+        "price": 0
       }
     ],
     "parametricFeatures": [
@@ -1370,7 +1840,7 @@
           "id": "pp-1790850200924-qamf",
           "code": "AXLE40X3MM",
           "name": "The Trailer Axle Builder",
-          "definitionVersion": 1,
+          "definitionVersion": 2,
           "measurementLabel": "Measurement",
           "measurementUnit": "Measurement",
           "pricingMode": "formula",
@@ -1419,8 +1889,8 @@
     ],
     "optionPriceAdjustments": 0,
     "warnings": [],
-    "createdAt": "2026-10-19T08:31:55.007Z",
-    "updatedAt": "2026-10-19T08:31:55.007Z",
+    "createdAt": "2026-10-20T12:09:07.473Z",
+    "updatedAt": "2026-10-20T12:09:07.473Z",
     "_sourceType": "build",
     "_syncKey": "build:build-1792398167103"
   }

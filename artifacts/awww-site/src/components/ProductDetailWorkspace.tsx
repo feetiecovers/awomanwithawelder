@@ -13,7 +13,7 @@ import { ParametricHelperBubble } from './ParametricHelperBubble';
 import { getCategoryHelper, getOptionHelper } from '@/content/parametricHelpers';
 import DOMPurify from 'isomorphic-dompurify';
 import { evaluateParametricValidation, type ParametricValidationMessage } from '@/lib/parametric-validation';
-import { getProductImages } from '@/lib/product-images';
+import { getProductImages, normalizeImageUrl } from '@/lib/product-images';
 import { formatCustomerPromise } from '@/lib/promiseFormatting';
 import { cn } from '@/lib/utils';
 
@@ -218,6 +218,64 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     }
     if (rawProduct.product && typeof rawProduct.product === 'object') {
       getProductImages(rawProduct.product, 'large').forEach((image) => pushUnique(baseImages, image));
+    }
+
+    // 1. Check conditionalImageRules (Ruled Made-to-Order Images)
+    const conditionalRules: any[] = Array.isArray(rawProduct.conditionalImageRules)
+      ? rawProduct.conditionalImageRules
+      : Array.isArray(rawProduct.product?.conditionalImageRules)
+        ? rawProduct.product.conditionalImageRules
+        : [];
+
+    if (conditionalRules.length > 0) {
+      const activeOptionIds = new Set<string>();
+
+      // Collect active parametric choice IDs
+      inputDefinitions.forEach((def: any) => {
+        const key = getInputKey(def);
+        const selectedVal = parametricValues[key];
+        const choices = getInputChoices(def);
+        const matchedChoice = choices.find((c: any) =>
+          c.id === selectedVal || c.value === selectedVal || c.label === selectedVal || c.name === selectedVal
+        );
+        if (matchedChoice?.id) {
+          activeOptionIds.add(String(matchedChoice.id));
+        }
+      });
+
+      // Collect active option IDs from optionGroups
+      Object.values(configSelections).forEach((ids) => {
+        if (Array.isArray(ids)) {
+          ids.forEach((id) => activeOptionIds.add(String(id)));
+        }
+      });
+
+      // Find all rules where EVERY optionId in rule.optionIds is selected
+      const matchingRules = conditionalRules.filter((rule: any) => {
+        const ruleOptionIds = Array.isArray(rule.optionIds) ? rule.optionIds : [];
+        if (ruleOptionIds.length === 0) return false;
+        return ruleOptionIds.every((optId: any) => activeOptionIds.has(String(optId)));
+      });
+
+      if (matchingRules.length > 0) {
+        // Sort: most specific match first (highest count of matching optionIds), then highest priority
+        matchingRules.sort((a: any, b: any) => {
+          const countDiff = (b.optionIds?.length || 0) - (a.optionIds?.length || 0);
+          if (countDiff !== 0) return countDiff;
+          return (Number(b.priority) || 0) - (Number(a.priority) || 0);
+        });
+
+        const ruledGallery: string[] = [];
+        matchingRules.forEach((rule: any) => {
+          const url = normalizeImageUrl(rule.imageUrl || rule.url);
+          if (url) pushUnique(ruledGallery, url);
+        });
+
+        if (ruledGallery.length > 0) {
+          baseImages.forEach((img) => pushUnique(ruledGallery, img));
+          return ruledGallery;
+        }
+      }
     }
 
     if (optionGroups.length > 0) {

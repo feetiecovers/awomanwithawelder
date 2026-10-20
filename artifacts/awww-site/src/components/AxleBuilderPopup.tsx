@@ -19,6 +19,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Layers,
+  Disc,
+  CircleDot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +52,60 @@ interface QuoteFormState {
 const GST_RATE = 0.15;
 const DEFAULT_IMAGE = "/assets/products/trailer_axle_assembly.jpg";
 
+/**
+ * Provides a clean display label for options, utilizing option name/label if set,
+ * or intelligent inference from referenced features/descriptions.
+ */
+function getOptionDisplayLabel(group: any, option: any): string {
+  if (option.name && String(option.name).trim()) return String(option.name).trim();
+  if (option.label && String(option.label).trim()) return String(option.label).trim();
+
+  const gName = (group?.name || "").toLowerCase();
+  const oid = String(option?.id || "").toLowerCase();
+  const desc = (option?.description || "").toLowerCase();
+
+  // Wheel Size
+  if (gName.includes("wheel size")) {
+    if (option.sortOrder === 1 || oid.includes("honi")) return "13\" – 14\" Wheels (Standard)";
+    return "15\"+ Wheels (Heavy Duty / Large)";
+  }
+
+  // Axle Size
+  if (gName.includes("axle size")) {
+    if (option.sortOrder === 1 || desc.includes("40mm") || oid.includes("ljd7")) return "40X40 Square Axle (40mm U-Bolts)";
+    return "50X50 Square Axle (Heavy Duty 50mm)";
+  }
+
+  // Brake System
+  if (gName.includes("brake")) {
+    if (option.sortOrder === 1 || oid.includes("ve7t")) return "Hydraulic Disc Brakes (Rotors & Calipers)";
+    return "Standard Idler (Unbraked)";
+  }
+
+  // PCD of wheels
+  if (gName.includes("pcd")) {
+    if (oid.includes("7hm2") || option.sortOrder === 1) return "4 x 114.3 PCD (4-Stud)";
+    if (oid.includes("7ewi") || option.sortOrder === 2) return "5 x 114.3 PCD (Ford / Standard 5-Stud)";
+    if (oid.includes("p94c") || option.sortOrder === 3) return "5 x 120 PCD (Commodore / European)";
+    if (oid.includes("1h16") || option.sortOrder === 4) return "6 x 139.7 PCD (Hilux / Landcruiser 6-Stud)";
+  }
+
+  if (option.description && option.description.trim()) {
+    return option.description.length > 35 ? option.description.slice(0, 32) + "..." : option.description;
+  }
+
+  return `Option ${option.sortOrder || 1}`;
+}
+
+function getGroupIcon(groupName: string) {
+  const name = groupName.toLowerCase();
+  if (name.includes("wheel")) return CircleDot;
+  if (name.includes("axle size") || name.includes("profile")) return Layers;
+  if (name.includes("brake")) return Disc;
+  if (name.includes("pcd")) return Wrench;
+  return Sliders;
+}
+
 export function AxleBuilderPopup({
   isOpen,
   onClose,
@@ -61,14 +117,12 @@ export function AxleBuilderPopup({
   const addToCart = useAddToCart();
   const { data: cart } = useGetCart();
 
-  // Selections
-  const [selectedAxleType, setSelectedAxleType] = useState<"40X40" | "50X50">("40X40");
-  const [selectedHubType, setSelectedHubType] = useState<"idler" | "idler2">("idler");
+  // Selections: map of groupId -> optionId
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [lengthMm, setLengthMm] = useState<number>(1000);
   const [lengthInputVal, setLengthInputVal] = useState<string>("1000");
 
   // UI state
-  const [activeTab, setActiveTab] = useState<"builder" | "specs">("builder");
   const [isPreviewImageOpen, setIsPreviewImageOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
@@ -87,6 +141,12 @@ export function AxleBuilderPopup({
     notes: "",
   });
 
+  // Extract option groups from build payload, filtering out pure length groups since that's handled by slider
+  const optionGroups = useMemo(() => {
+    if (!build?.optionGroups || !Array.isArray(build.optionGroups)) return [];
+    return build.optionGroups.filter((g: any) => !g.name?.toLowerCase().includes("beam (length)"));
+  }, [build]);
+
   // Reset or initialize from build payload
   useEffect(() => {
     if (!isOpen) {
@@ -95,52 +155,57 @@ export function AxleBuilderPopup({
       return;
     }
 
-    // Default configuration from payload if available
-    const defaultAxleOption = build?.defaultSelections?.["bog-1792398222088-ig7d"]?.[0];
-    if (defaultAxleOption === "bo-1792398247384-yfr2") {
-      setSelectedAxleType("50X50");
-      setSelectedHubType("idler2");
-    } else {
-      setSelectedAxleType("40X40");
-      setSelectedHubType("idler");
-    }
+    const initialSelections: Record<string, string> = {};
+
+    optionGroups.forEach((group: any) => {
+      const defaultOptionId = build?.defaultSelections?.[group.id]?.[0];
+      const foundDefault = group.options?.find((o: any) => o.id === defaultOptionId);
+      if (foundDefault) {
+        initialSelections[group.id] = foundDefault.id;
+      } else if (group.options?.[0]) {
+        initialSelections[group.id] = group.options[0].id;
+      }
+    });
+
+    setSelectedOptions(initialSelections);
 
     const defaultLength = Number(build?.parametricFeatures?.[0]?.parametricProduct?.defaultConfiguration?.measurement_mupe311o_3ygeq ?? 1000);
     setLengthMm(defaultLength);
     setLengthInputVal(String(defaultLength));
-  }, [isOpen, build]);
+  }, [isOpen, build, optionGroups]);
 
-  // Handle constraints & automatic compatibility sync
-  const handleAxleTypeChange = (type: "40X40" | "50X50") => {
-    setSelectedAxleType(type);
-    if (type === "40X40" && selectedHubType === "idler2") {
-      setSelectedHubType("idler");
-      toast({
-        title: "Compatible Hub Selected",
-        description: "Standard Idler hub matched to 40x40 axle beam.",
-      });
-    } else if (type === "50X50" && selectedHubType === "idler") {
-      setSelectedHubType("idler2");
-      toast({
-        title: "Compatible Hub Selected",
-        description: "Heavy-Duty Idler 2 hub matched to 50x50 axle beam.",
-      });
-    }
-  };
+  // Handle option selection with rules / blockedOptionIds check
+  const handleSelectOption = (group: any, option: any) => {
+    const updated = { ...selectedOptions, [group.id]: option.id };
 
-  const handleHubTypeChange = (hub: "idler" | "idler2") => {
-    setSelectedHubType(hub);
-    if (hub === "idler2" && selectedAxleType === "40X40") {
-      setSelectedAxleType("50X50");
+    // Check if this option blocks any currently selected option in other groups
+    const blockedIds = new Set<string>([
+      ...(Array.isArray(option.blockedOptionIds) ? option.blockedOptionIds : []),
+    ]);
+
+    let hadConflict = false;
+    let switchedNotice = "";
+
+    optionGroups.forEach((otherGroup: any) => {
+      if (otherGroup.id === group.id) return;
+      const currentSelectedId = updated[otherGroup.id];
+      if (currentSelectedId && blockedIds.has(currentSelectedId)) {
+        // Find an alternative option in otherGroup that is NOT blocked
+        const alternative = otherGroup.options?.find((opt: any) => !blockedIds.has(opt.id) && opt.id !== currentSelectedId);
+        if (alternative) {
+          updated[otherGroup.id] = alternative.id;
+          hadConflict = true;
+          switchedNotice = `Switched ${otherGroup.name} to ${getOptionDisplayLabel(otherGroup, alternative)} for compatibility.`;
+        }
+      }
+    });
+
+    setSelectedOptions(updated);
+
+    if (hadConflict && switchedNotice) {
       toast({
-        title: "Axle Beam Upgraded",
-        description: "Switched to 50x50 Axle required by Idler 2 Hubs.",
-      });
-    } else if (hub === "idler" && selectedAxleType === "50X50") {
-      setSelectedAxleType("40X40");
-      toast({
-        title: "Axle Beam Updated",
-        description: "Switched to 40x40 Axle paired with Standard Idler Hubs.",
+        title: "Compatibility Rule Applied",
+        description: switchedNotice,
       });
     }
   };
@@ -172,34 +237,58 @@ export function AxleBuilderPopup({
     setLengthInputVal(String(parsed));
   };
 
-  // Pricing formula breakdown
-  // Base components:
-  // Axle beam: $14.86
-  // Hubs & stubs: $313.04
-  // Baseline price at 1,000mm (1.0m) = $327.90
-  // Variable length addition: (lengthMm - 1000) / 1000 * $14.86
-  const axleBasePrice = 14.86;
-  const hubPrice = 313.04;
-  const baseComponentsTotal = axleBasePrice + hubPrice; // 327.90
+  // Price Calculation
+  const { optionsTotal, lengthAdjustment, totalIncGst, subtotalExGst, gstAmount, activeSpecs } = useMemo(() => {
+    let optsTotal = 0;
+    const specs: { groupName: string; optionName: string; price: number; description?: string }[] = [];
 
-  const extraMetres = Math.max(0, (lengthMm - 1000) / 1000);
-  const lengthAdjustment = Number((extraMetres * ratePerMetre).toFixed(2));
-  const totalIncGst = Number((baseComponentsTotal + lengthAdjustment).toFixed(2));
-  const subtotalExGst = Number((totalIncGst / (1 + GST_RATE)).toFixed(2));
-  const gstAmount = Number((totalIncGst - subtotalExGst).toFixed(2));
+    optionGroups.forEach((group: any) => {
+      const selectedId = selectedOptions[group.id];
+      const opt = group.options?.find((o: any) => o.id === selectedId);
+      if (opt) {
+        const price = Number(opt.price || 0);
+        optsTotal += price;
+        specs.push({
+          groupName: group.name,
+          optionName: getOptionDisplayLabel(group, opt),
+          price,
+          description: opt.description,
+        });
+      }
+    });
+
+    const extraMetres = Math.max(0, (lengthMm - 1000) / 1000);
+    const lengthAdj = Number((extraMetres * ratePerMetre).toFixed(2));
+    const baseComponents = Number(build?.price || build?.basePrice || 14.86);
+
+    const total = Number((baseComponents + optsTotal + lengthAdj).toFixed(2));
+    const subtotal = Number((total / (1 + GST_RATE)).toFixed(2));
+    const gst = Number((total - subtotal).toFixed(2));
+
+    return {
+      optionsTotal: optsTotal,
+      lengthAdjustment: lengthAdj,
+      totalIncGst: total,
+      subtotalExGst: subtotal,
+      gstAmount: gst,
+      activeSpecs: specs,
+    };
+  }, [optionGroups, selectedOptions, lengthMm, build]);
 
   // Cart addition
   const handleAddToCart = () => {
     const buildId = build?.id ?? 12;
+    const selectionsRecord: Record<string, string> = {};
+    activeSpecs.forEach((s) => {
+      selectionsRecord[s.groupName] = s.optionName;
+    });
+    selectionsRecord["Hub-Face Track Length"] = `${lengthMm} mm`;
+
     const configuration = {
       type: "build",
       buildId: build?.buildId ?? "build-1792398167103",
       buildName: "Trailer Axle Builder",
-      selections: {
-        "Axle Type": selectedAxleType === "40X40" ? "40X40 Axle" : "50X50 Axle",
-        "Hub Type": selectedHubType === "idler" ? "Idler (5 x 4.5)" : "Idler 2 (5 x 4.5 Heavy Duty)",
-        "Axle Length": `${lengthMm} mm`,
-      },
+      selections: selectionsRecord,
       parametricValues: {
         measurement_mupe311o_3ygeq: lengthMm,
       },
@@ -219,7 +308,7 @@ export function AxleBuilderPopup({
         onSuccess: () => {
           toast({
             title: "Custom Axle Added to Cart",
-            description: `${selectedAxleType} Axle (${lengthMm}mm) with ${selectedHubType === "idler" ? "Idler" : "Idler 2"} hubs ready for checkout.`,
+            description: `${lengthMm}mm Track Axle configured and ready in your cart.`,
           });
           queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
           onClose();
@@ -249,6 +338,12 @@ export function AxleBuilderPopup({
 
     setIsSubmittingQuote(true);
 
+    const selectionsPayload: Record<string, string[]> = {};
+    activeSpecs.forEach((s) => {
+      selectionsPayload[s.groupName] = [s.optionName];
+    });
+    selectionsPayload["Track Length"] = [`${lengthMm} mm`];
+
     try {
       const response = await fetch(buildApiUrl("/api/build-quote-request"), {
         method: "POST",
@@ -256,13 +351,9 @@ export function AxleBuilderPopup({
         credentials: "include",
         body: JSON.stringify({
           buildId: build?.buildId ?? "build-1792398167103",
-          buildCode: "AXLE-BUILDR-01",
+          buildCode: build?.buildCode || "AXLEBUILDER-BLD01",
           buildName: "Trailer Axle Builder",
-          selections: {
-            "Axle Type": [selectedAxleType === "40X40" ? "40X40 Axle" : "50X50 Axle"],
-            "Hub Type": [selectedHubType === "idler" ? "Idler" : "Idler 2"],
-            "Track Length": [`${lengthMm} mm`],
-          },
+          selections: selectionsPayload,
           fullName: quoteForm.fullName,
           email: quoteForm.email,
           phone: quoteForm.phone,
@@ -282,16 +373,11 @@ export function AxleBuilderPopup({
               price: lengthAdjustment,
               parametricFeatureValues: { measurement_mupe311o_3ygeq: lengthMm },
             },
-            {
-              groupName: "Axle Type",
-              optionName: selectedAxleType === "40X40" ? "40X40 Axle" : "50X50 Axle",
-              price: axleBasePrice,
-            },
-            {
-              groupName: "Hub Type",
-              optionName: selectedHubType === "idler" ? "Idler" : "Idler 2",
-              price: hubPrice,
-            },
+            ...activeSpecs.map((s) => ({
+              groupName: s.groupName,
+              optionName: s.optionName,
+              price: s.price,
+            })),
           ],
         }),
       });
@@ -379,7 +465,7 @@ export function AxleBuilderPopup({
 
         {/* Content Area - 2 Columns on desktop, scrollable on mobile */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Visual Blueprint & Configuration (Cols 1-7) */}
+          {/* Left Column: Visual Blueprint & Dynamic Configuration Groups (Cols 1-7) */}
           <div className="lg:col-span-7 flex flex-col gap-5">
             {/* Engineering Blueprint Display Card */}
             <div className="rounded-xl border border-[#1aa1e0]/30 bg-[#04080e]/80 overflow-hidden relative group shadow-[0_0_20px_rgba(0,0,0,0.6)]">
@@ -390,13 +476,13 @@ export function AxleBuilderPopup({
                   SPEC: {lengthMm}mm Track Length
                 </span>
                 <span className="text-slate-400 text-[11px]">
-                  5-Stud &middot; 1,500kg Rated Assembly
+                  Precision Fabricated Assembly
                 </span>
               </div>
 
               {/* Technical Drawing Image */}
               <div
-                className="relative h-48 sm:h-64 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
+                className="relative h-48 sm:h-60 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
                 onClick={() => setIsPreviewImageOpen(true)}
               >
                 <img
@@ -422,150 +508,84 @@ export function AxleBuilderPopup({
               </div>
             </div>
 
-            {/* Step 1: Axle Profile Selection */}
-            <div className="flex flex-col gap-2.5">
-              <label className="text-xs uppercase font-mono tracking-wider text-slate-300 font-semibold flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#1aa1e0]" />
-                1. Select Axle Profile Tube
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 40X40 Option */}
-                <button
-                  type="button"
-                  onClick={() => handleAxleTypeChange("40X40")}
-                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                    selectedAxleType === "40X40"
-                      ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_20px_rgba(26,161,224,0.3)] ring-1 ring-[#1aa1e0]"
-                      : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-1.5">
-                        40X40 Square Axle
-                        {selectedAxleType === "40X40" && (
-                          <CheckCircle2 className="w-4 h-4 text-[#1aa1e0]" />
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1">
-                        40mm solid steel profile. Ideal for lightweight single axle utility & boat trailers.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Standard Idler Hubs</span>
-                    <span className="text-[#1aa1e0] font-semibold">NZ$14.86</span>
-                  </div>
-                </button>
+            {/* Dynamic Option Groups Configurator */}
+            {optionGroups.map((group: any, groupIndex: number) => {
+              const GroupIcon = getGroupIcon(group.name);
+              const selectedOptionId = selectedOptions[group.id];
 
-                {/* 50X50 Option */}
-                <button
-                  type="button"
-                  onClick={() => handleAxleTypeChange("50X50")}
-                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                    selectedAxleType === "50X50"
-                      ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_20px_rgba(26,161,224,0.3)] ring-1 ring-[#1aa1e0]"
-                      : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-1.5">
-                        50X50 Square Axle
-                        {selectedAxleType === "50X50" && (
-                          <CheckCircle2 className="w-4 h-4 text-[#1aa1e0]" />
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-400 mt-1">
-                        50mm heavy-duty profile. Maximum beam rigidity for heavy hauling and tandem applications.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Idler 2 Heavy Hubs</span>
-                    <span className="text-[#1aa1e0] font-semibold">NZ$14.86</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Step 2: Hub & Stub Assembly */}
-            <div className="flex flex-col gap-2.5">
-              <label className="text-xs uppercase font-mono tracking-wider text-slate-300 font-semibold flex items-center gap-1.5">
-                <Wrench className="w-3.5 h-3.5 text-[#1aa1e0]" />
-                2. Select Hub & Stub Assembly
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Idler Option */}
-                <button
-                  type="button"
-                  onClick={() => handleHubTypeChange("idler")}
-                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                    selectedHubType === "idler"
-                      ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_20px_rgba(26,161,224,0.3)] ring-1 ring-[#1aa1e0]"
-                      : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-white flex items-center gap-1.5">
-                        Idler (5 x 4.5" PCD)
-                        {selectedHubType === "idler" && (
-                          <CheckCircle2 className="w-4 h-4 text-[#1aa1e0]" />
-                        )}
+              return (
+                <div key={group.id} className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs uppercase font-mono tracking-wider text-slate-300 font-semibold flex items-center gap-1.5">
+                      <GroupIcon className="w-3.5 h-3.5 text-[#1aa1e0]" />
+                      {groupIndex + 1}. {group.name}
+                    </label>
+                    {group.description && (
+                      <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                        {group.description}
                       </span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      1,500kg rated idler hub & stub pair. Complete with bearings, seals, and slotted wheel nuts.
-                    </p>
+                    )}
                   </div>
-                  <div className="mt-3 flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Paired with 40x40</span>
-                    <span className="text-[#1aa1e0] font-semibold">NZ$313.04</span>
-                  </div>
-                </button>
 
-                {/* Idler 2 Option */}
-                <button
-                  type="button"
-                  onClick={() => handleHubTypeChange("idler2")}
-                  className={`p-3.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                    selectedHubType === "idler2"
-                      ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_20px_rgba(26,161,224,0.3)] ring-1 ring-[#1aa1e0]"
-                      : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-white flex items-center gap-1.5">
-                        Idler 2 (Heavy-Duty 5 x 4.5")
-                        {selectedHubType === "idler2" && (
-                          <CheckCircle2 className="w-4 h-4 text-[#1aa1e0]" />
-                        )}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Heavy-duty 1,500kg rated hub & stub kit engineered for 50x50 beam integration.
-                    </p>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs font-mono">
-                    <span className="text-slate-400">Paired with 50x50</span>
-                    <span className="text-[#1aa1e0] font-semibold">NZ$313.04</span>
-                  </div>
-                </button>
-              </div>
-            </div>
+                  <div className={`grid grid-cols-1 ${group.options?.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-2.5`}>
+                    {group.options?.map((option: any) => {
+                      const isSelected = selectedOptionId === option.id;
+                      const displayLabel = getOptionDisplayLabel(group, option);
 
-            {/* Step 3: Parametric Length Slider */}
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => handleSelectOption(group, option)}
+                          className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                            isSelected
+                              ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_18px_rgba(26,161,224,0.25)] ring-1 ring-[#1aa1e0]"
+                              : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+                                {displayLabel}
+                                {isSelected && (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1aa1e0] shrink-0" />
+                                )}
+                              </span>
+                            </div>
+                            {option.description && (
+                              <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                {option.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono">
+                            <span className="text-slate-500">
+                              {isSelected ? "Selected" : "Select"}
+                            </span>
+                            {Number(option.price) > 0 && (
+                              <span className="text-[#1aa1e0] font-semibold">
+                                +NZ${Number(option.price).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Parametric Length Specification */}
             <div className="flex flex-col gap-3 p-4 rounded-xl border border-[#1aa1e0]/30 bg-[#060d16]/90 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 text-[#1aa1e0]" />
-                    3. Specify Hub-Face Track Length
+                    {optionGroups.length + 1}. Specify Hub-Face Track Length
                   </label>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Hub face to hub face measurement (1,000mm &ndash; 3,000mm)
+                    Exact hub face to hub face measurement (1,000mm &ndash; 3,000mm)
                   </p>
                 </div>
 
@@ -632,7 +652,7 @@ export function AxleBuilderPopup({
                 <span>Formula Rate: $14.86 per metre</span>
                 <span className="text-[#1aa1e0] font-semibold">
                   {lengthMm > 1000
-                    ? `+NZ$${lengthAdjustment.toFixed(2)} (${(extraMetres).toFixed(3)}m extra)`
+                    ? `+NZ$${lengthAdjustment.toFixed(2)} (${((lengthMm - 1000) / 1000).toFixed(3)}m extra)`
                     : "Included in Baseline"}
                 </span>
               </div>
@@ -653,26 +673,20 @@ export function AxleBuilderPopup({
               </div>
 
               {/* Spec Breakdown List */}
-              <div className="flex flex-col gap-2.5 text-xs font-mono">
-                <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                  <span className="text-slate-400">Axle Profile:</span>
-                  <span className="text-white font-semibold">{selectedAxleType} Square Solid Beam</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                  <span className="text-slate-400">Hub Pattern:</span>
-                  <span className="text-white font-semibold">
-                    {selectedHubType === "idler" ? "Idler (5 x 4.5\" PCD)" : "Idler 2 Heavy Duty"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800/60">
+              <div className="flex flex-col gap-2 text-xs font-mono">
+                {activeSpecs.map((spec) => (
+                  <div key={spec.groupName} className="flex justify-between py-1 border-b border-slate-800/60">
+                    <span className="text-slate-400">{spec.groupName}:</span>
+                    <span className="text-white font-semibold text-right max-w-[55%] truncate" title={spec.optionName}>
+                      {spec.optionName}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between py-1 border-b border-slate-800/60">
                   <span className="text-slate-400">Hub-Face Measurement:</span>
                   <span className="text-[#1aa1e0] font-bold">{lengthMm} mm</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                  <span className="text-slate-400">Load Capacity:</span>
-                  <span className="text-emerald-400 font-semibold">1,500 kg Gross</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-800/60">
+                <div className="flex justify-between py-1 border-b border-slate-800/60">
                   <span className="text-slate-400">Fulfilment:</span>
                   <span className="text-slate-300">Custom Built to Order</span>
                 </div>
@@ -681,13 +695,15 @@ export function AxleBuilderPopup({
               {/* Cost Itemization */}
               <div className="bg-[#04080e] p-3.5 rounded-lg border border-slate-800/80 flex flex-col gap-2 text-xs font-mono mt-1">
                 <div className="flex justify-between text-slate-400">
-                  <span>Beam Component Base:</span>
-                  <span>NZ${axleBasePrice.toFixed(2)}</span>
+                  <span>Base Axle Assembly:</span>
+                  <span>NZ${Number(build?.price || 14.86).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Hub & Stub Kit (Pair):</span>
-                  <span>NZ${hubPrice.toFixed(2)}</span>
-                </div>
+                {optionsTotal > 0 && (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Options Adjustment:</span>
+                    <span>+NZ${optionsTotal.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-400">
                   <span>Length Adjustment ({lengthMm}mm):</span>
                   <span className={lengthAdjustment > 0 ? "text-[#1aa1e0]" : ""}>
@@ -766,7 +782,7 @@ export function AxleBuilderPopup({
                   className="max-w-full max-h-[75vh] object-contain rounded-xl border border-[#1aa1e0]/40 shadow-[0_0_40px_rgba(26,161,224,0.3)]"
                 />
                 <p className="mt-3 text-xs font-mono text-[#1aa1e0] text-center">
-                  Trailer Axle Assembly &middot; Hub-Face Track: {lengthMm}mm &middot; 5-Stud Pattern
+                  Trailer Axle Assembly &middot; Hub-Face Track: {lengthMm}mm
                 </p>
                 <button
                   onClick={() => setIsPreviewImageOpen(false)}
@@ -796,7 +812,7 @@ export function AxleBuilderPopup({
                       Request Formal Axle Quote
                     </h3>
                     <p className="text-xs text-slate-400 font-mono mt-0.5">
-                      {selectedAxleType} Axle &middot; {lengthMm}mm Track &middot; NZ${totalIncGst.toFixed(2)} incl GST
+                      Custom Axle &middot; {lengthMm}mm Track &middot; NZ${totalIncGst.toFixed(2)} incl GST
                     </p>
                   </div>
                   <button
