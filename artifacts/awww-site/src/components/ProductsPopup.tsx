@@ -97,6 +97,9 @@ type ProductCard = {
   };
   customerMessage?: string;
   fulfillmentMode?: string;
+  comingSoon?: boolean;
+  showComingSoonBanner?: boolean;
+  comingSoonLabel?: string;
 };
 
 type BookingFormState = {
@@ -228,15 +231,28 @@ function normalizeProducts(value: unknown): ProductCard[] {
                   ? (record.promiseSettings as any).ownProfile.availabilityLabel
                   : typeof (record.promiseSettings as any)?.availabilityLabel === "string"
                     ? (record.promiseSettings as any).availabilityLabel
-                    : undefined;
+                    : (type === "parametric" || type === "configurable" || type === "build" ? "Made to Order" : undefined);
           const promiseDate = (record.availability as any)?.promiseDate || (record.promise as any)?.promiseDate;
-          const capacityDays = (record.availability as any)?.capacityDays;
+          const parsedCapacityDays = Number(
+            (record.availability as any)?.capacityDays ??
+            (record.promiseSettings as any)?.ownProfile?.capacityDays ??
+            (record.promiseSettings as any)?.capacityDays ??
+            record.capacityDays
+          );
+          const capacityDays = Number.isFinite(parsedCapacityDays) && parsedCapacityDays > 0
+            ? parsedCapacityDays
+            : (type === "parametric" || type === "configurable" || type === "build" || rawMsg?.toLowerCase().includes("made to order") ? 10 : undefined);
           const formatted = formatCustomerPromise(rawMsg, promiseDate, capacityDays);
           return formatted || undefined;
         })(),
         fulfillmentMode: typeof (record.availability as any)?.fulfillmentMode === "string"
           ? (record.availability as any).fulfillmentMode
           : undefined,
+        comingSoon: Boolean(record.comingSoon),
+        showComingSoonBanner: Boolean(record.showComingSoonBanner ?? record.comingSoon),
+        comingSoonLabel: typeof record.comingSoonLabel === "string" && record.comingSoonLabel.trim()
+          ? record.comingSoonLabel.trim()
+          : (record.comingSoon ? "Coming Soon" : undefined),
       };
     })
     .filter((item): item is ProductCard => item !== null && Number.isFinite(item.id) && item.id > 0);
@@ -1015,14 +1031,32 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     </span>
                                   </>
                                 )}
+
+                                {item.showComingSoonBanner && item.comingSoonLabel && (
+                                  <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-10 pointer-events-none">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#060e18]/85 backdrop-blur-md border border-cyan-400/50 text-cyan-200 text-xs font-mono shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                                      <span className="relative flex h-2 w-2 shrink-0">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+                                      </span>
+                                      <span className="font-medium text-cyan-100 tracking-wide">{item.comingSoonLabel}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               <div className="flex flex-col sm:flex-row justify-between p-5 gap-4 bg-[#0a1018]/80 shrink-0 border-t border-primary/10">
                                 <div className="flex flex-col justify-start gap-2 flex-1 min-w-0">
                                   <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/30 bg-red-500/10'}`}>
-                                      {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
+                                    <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${
+                                      item.comingSoon
+                                        ? 'text-amber-300 border-amber-400/40 bg-amber-500/10'
+                                        : item.available !== false
+                                          ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10'
+                                          : 'text-red-300 border-red-400/30 bg-red-500/10'
+                                    }`}>
+                                      {item.comingSoon ? "COMING SOON" : (item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK")}
                                     </span>
                                     {(item.type === "parametric" || item.type === "configurable") && (
                                       <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-fuchsia-300 border-fuchsia-400/30 bg-fuchsia-500/10">
@@ -1064,13 +1098,17 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                           setSelectedWorkspaceProduct(item);
                                           return;
                                         }
+                                        if (item.comingSoon) {
+                                          setSelectedWorkspaceProduct(item);
+                                          return;
+                                        }
                                         onAddToCartClick(item);
                                       }}
                                       className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
-                                      disabled={addToCart.isPending || (item.type !== "parametric" && item.type !== "build" && item.available === false)}
+                                      disabled={addToCart.isPending || (!item.comingSoon && item.type !== "parametric" && item.type !== "build" && item.available === false)}
                                       data-testid={`button-add-to-cart-${item.id}`}
                                     >
-                                      {item.type === "build" ? "Build & Quote" : item.type === "parametric" ? "Configure & Quote" : (item.available === false ? "Unavailable" : item.type === "configurable" ? "Configure" : "Add to Cart")}
+                                      {item.comingSoon ? "Coming Soon" : item.type === "build" ? "Build & Quote" : item.type === "parametric" ? "Configure & Quote" : (item.available === false ? "Unavailable" : item.type === "configurable" ? "Configure" : "Add to Cart")}
                                     </Button>
                                     <Button
                                       variant="outline"

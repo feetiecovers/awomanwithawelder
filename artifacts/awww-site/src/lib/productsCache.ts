@@ -1,6 +1,6 @@
 import liveCatalogSnapshot from "@/content/currentLiveCatalog.json";
 
-export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v8";
+export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v9";
 
 /**
  * Purge outdated/stale cache keys from previous deployments
@@ -15,6 +15,7 @@ function purgeLegacyCaches() {
     localStorage.removeItem("awww_products_offerings_cache_v5");
     localStorage.removeItem("awww_products_offerings_cache_v6");
     localStorage.removeItem("awww_products_offerings_cache_v7");
+    localStorage.removeItem("awww_products_offerings_cache_v8");
   } catch {}
 }
 

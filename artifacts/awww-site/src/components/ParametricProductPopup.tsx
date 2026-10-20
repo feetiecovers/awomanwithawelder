@@ -142,8 +142,8 @@ function roundCurrency(value: number): number {
 }
 
 function formatPromise(promise?: ParametricResolution["promise"]): string {
-  const message = promise?.message?.trim();
-  const formatted = formatCustomerPromise(message, promise?.promiseDate);
+  const message = promise?.message?.trim() || "Made to Order";
+  const formatted = formatCustomerPromise(message, promise?.promiseDate, 10);
   if (formatted) return formatted;
   return "Availability will be confirmed with your quote";
 }

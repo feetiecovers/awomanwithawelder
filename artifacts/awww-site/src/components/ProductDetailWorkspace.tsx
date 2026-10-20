@@ -28,9 +28,12 @@ type ProductCard = {
   name: string;
   description?: string | null;
   price: number;
-  type: 'product' | 'service' | 'configurable' | 'parametric';
+  type: 'product' | 'service' | 'configurable' | 'parametric' | 'build';
   available: boolean;
   image?: string | null;
+  comingSoon?: boolean;
+  showComingSoonBanner?: boolean;
+  comingSoonLabel?: string;
 };
 
 const GST_RATE = 0.15;
@@ -448,15 +451,32 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
     return () => controller.abort();
   }, [parametricMode, parametricValues, missingRequiredInputs.length, product.id, product.type]);
 
-  const isAddToCartBlockedByProduct = isAddToCartBlocked(product) || isAddToCartBlocked(rawProduct);
+  const isComingSoon = Boolean(product.comingSoon || rawProduct.comingSoon);
+  const showComingSoonBanner = Boolean(
+    (product.showComingSoonBanner ?? rawProduct.showComingSoonBanner) ??
+    (product.comingSoon ?? rawProduct.comingSoon)
+  );
+  const comingSoonLabel = String(
+    product.comingSoonLabel || rawProduct.comingSoonLabel || "Coming Soon"
+  ).trim();
+
+  const isAddToCartBlockedByProduct = isComingSoon || isAddToCartBlocked(product) || isAddToCartBlocked(rawProduct);
   const showAddToCartButton = !requiresCalculatedQuote && !isAddToCartBlockedByProduct;
   const hasParametricBlocker = localValidation.blockers.length > 0 || (resolverValidation?.blockers.length ?? 0) > 0;
   const canAddConfiguredProductToCart = isAvailable && !isAddToCartBlockedByProduct && !requiresCalculatedQuote && missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker && !(inputDefinitions.length > 0 && resolvedPrice === null);
   const canRequestQuote = !isResolving && (product.type !== 'parametric' || (missingRequiredInputs.length === 0 && outOfBoundsInputs.length === 0 && !hasParametricBlocker));
   const isBackorder = rawProduct.fulfillmentMode === 'backorder';
-  const promiseMsg = resolvedPromise?.message || (rawProduct.promise as any)?.message || (rawProduct.availability as any)?.customerMessage || rawProduct.customerMessage || (rawProduct.promiseSettings as any)?.ownProfile?.availabilityLabel || (rawProduct.promiseSettings as any)?.availabilityLabel;
+  const promiseMsg = resolvedPromise?.message || (rawProduct.promise as any)?.message || (rawProduct.availability as any)?.customerMessage || rawProduct.customerMessage || (rawProduct.promiseSettings as any)?.ownProfile?.availabilityLabel || (rawProduct.promiseSettings as any)?.availabilityLabel || (product.type === 'parametric' || product.type === 'configurable' || product.type === 'build' ? 'Made to Order' : undefined);
   const promiseDateStr = resolvedPromise?.promiseDate || (rawProduct.availability as any)?.promiseDate || (rawProduct.promise as any)?.promiseDate;
-  const capacityDays = (rawProduct.availability as any)?.capacityDays;
+  const rawCapDays = Number(
+    (rawProduct.availability as any)?.capacityDays ??
+    (rawProduct.promiseSettings as any)?.ownProfile?.capacityDays ??
+    (rawProduct.promiseSettings as any)?.capacityDays ??
+    rawProduct.capacityDays
+  );
+  const capacityDays = Number.isFinite(rawCapDays) && rawCapDays > 0
+    ? rawCapDays
+    : (product.type === 'parametric' || product.type === 'configurable' || product.type === 'build' || promiseMsg?.toLowerCase().includes('made to order') ? 10 : undefined);
   const customerMessage = formatCustomerPromise(promiseMsg, promiseDateStr, capacityDays);
 
   // --- HANDLers ---
@@ -569,6 +589,18 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
               </div>
             </>
           )}
+
+          {showComingSoonBanner && comingSoonLabel && (
+            <div className={`absolute ${galleryImages.length > 1 ? 'top-3 left-3' : 'bottom-3 left-3'} right-3 sm:right-auto z-10 pointer-events-none`}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#060e18]/85 backdrop-blur-md border border-cyan-400/50 text-cyan-200 text-xs font-mono shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+                </span>
+                <span className="text-cyan-100 font-medium tracking-wide">{comingSoonLabel}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Middle: Info & Configuration */}
@@ -579,8 +611,14 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 <span className="font-mono text-xl sm:text-2xl text-[#f8fafc] font-medium tracking-tight">
                   {requiresCalculatedQuote ? (rawProduct.price > 0 ? `From NZ$${rawProduct.price.toFixed(2)}` : "Quote required") : `NZ$${activePrice.toFixed(2)}`}
                 </span>
-                <span className={`text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border ${isAvailable ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/40 bg-red-500/10'}`}>
-                  {isAvailable ? 'AVAILABLE NOW' : 'OUT OF STOCK'}
+                <span className={`text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border ${
+                  isComingSoon
+                    ? 'text-amber-300 border-amber-400/40 bg-amber-500/10'
+                    : isAvailable
+                      ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10'
+                      : 'text-red-300 border-red-400/40 bg-red-500/10'
+                }`}>
+                  {isComingSoon ? 'COMING SOON' : (isAvailable ? 'AVAILABLE NOW' : 'OUT OF STOCK')}
                 </span>
              </div>
              {product.description ? (

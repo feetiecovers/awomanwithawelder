@@ -49,8 +49,12 @@ export function formatCustomerPromise(
   promiseDateStr?: string | null,
   capacityDays?: number | null
 ): string {
-  const leadTime = formatPromiseLeadTime(promiseDateStr, capacityDays);
   const msg = (promiseMsg || "").trim();
+  let days = capacityDays;
+  if ((!days || days <= 0) && (msg.toLowerCase().includes("made to order") || msg.toLowerCase().includes("custom")) && !promiseDateStr) {
+    days = 10;
+  }
+  const leadTime = formatPromiseLeadTime(promiseDateStr, days);
 
   // If the message already says "dispatched within", return it directly
   if (msg.toLowerCase().includes("dispatched within")) {
