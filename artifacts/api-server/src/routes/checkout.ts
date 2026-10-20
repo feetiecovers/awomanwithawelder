@@ -34,7 +34,13 @@ function getFrontendBaseUrl(req: any): string {
 }
 
 router.post("/checkout", async (req: any, res) => {
-  const cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[] = req.session.cart ?? [];
+  const directItems = req.body?.items?.length
+    ? req.body.items
+    : req.body?.directItem
+    ? [req.body.directItem]
+    : null;
+  const cart: { productId: number; quantity: number; shippingLabel?: string; shippingPrice?: number; configuration?: any }[] =
+    directItems ?? req.session.cart ?? [];
 
   if (cart.length === 0) {
     return res.status(400).json({ error: "Cart is empty" });
@@ -71,22 +77,70 @@ router.post("/checkout", async (req: any, res) => {
 
     const totalShipping = cart.reduce((sum, item) => sum + (item.shippingPrice ?? 0) * item.quantity, 0);
 
-    const lineItems = cart
-      .map(item => {
-        const product = productMap.get(item.productId);
-        if (!product) return null;
-        const syncedEntry = syncedEntryMap.get(item.productId);
-        const itemPrice = Number(product.price);
-        const configAdj = Number((item as any).configuration?.totalPriceAdjustment || 0);
-        const resolvedPrice = (item as any).configuration?.resolvedPrice;
-        const finalPrice = resolvedPrice !== undefined ? Number(resolvedPrice) : (itemPrice + configAdj);
-        const itemName = product.name;
-        return {
+    const lineItems: any[] = [];
+    for (const item of cart) {
+      const product = productMap.get(item.productId);
+      if (!product) continue;
+      const syncedEntry = syncedEntryMap.get(item.productId);
+      const itemPrice = Number(product.price);
+      const configAdj = Number((item as any).configuration?.totalPriceAdjustment || 0);
+      const resolvedPrice = (item as any).configuration?.resolvedPrice;
+      const finalPrice = resolvedPrice !== undefined ? Number(resolvedPrice) : (itemPrice + configAdj);
+      const config = (item as any).configuration;
+
+      // Check if item is a custom build with individual build features to sell
+      if (config?.type === "build" && Array.isArray(config?.buildFeatures) && config.buildFeatures.length > 0) {
+        const buildFeatures: Array<{ groupName: string; optionName: string; price?: number; description?: string }> = config.buildFeatures;
+        const pricedFeatures = buildFeatures.filter(f => Number(f.price || 0) > 0);
+        const pricedFeaturesSum = pricedFeatures.reduce((sum, f) => sum + Number(f.price || 0), 0);
+        const parametricPrice = Number(config.parametricPrice || 0);
+        
+        // Base beam / axle assembly price
+        const beamPrice = parametricPrice > 0 
+          ? parametricPrice 
+          : Math.max(0, finalPrice - pricedFeaturesSum);
+
+        const includedZeroFeatures = buildFeatures
+          .filter(f => !f.price || Number(f.price) <= 0)
+          .map(f => `${f.groupName}: ${f.optionName}`)
+          .join(", ");
+
+        if (beamPrice > 0) {
+          lineItems.push({
+            price_data: {
+              currency: "nzd",
+              unit_amount: Math.round(beamPrice * 100),
+              product_data: {
+                name: `${config.buildName || product.name} - ${config.parametricSummary || 'Beam Assembly'}`,
+                description: includedZeroFeatures ? `Includes: ${includedZeroFeatures}` : "Custom fabricated track width",
+              },
+            },
+            quantity: item.quantity,
+          });
+        }
+
+        // Output each individual build feature as its own line item
+        for (const feat of pricedFeatures) {
+          lineItems.push({
+            price_data: {
+              currency: "nzd",
+              unit_amount: Math.round(Number(feat.price) * 100),
+              product_data: {
+                name: `${feat.groupName}: ${feat.optionName}`,
+                description: feat.description || `Build component for ${config.buildName || product.name}`,
+              },
+            },
+            quantity: item.quantity,
+          });
+        }
+      } else {
+        // Standard product or single-line configurable
+        lineItems.push({
           price_data: {
             currency: "nzd",
             unit_amount: Math.round(finalPrice * 100),
             product_data: {
-              name: itemName,
+              name: product.name,
               metadata: {
                 sku: typeof syncedEntry?.sku === "string" ? syncedEntry.sku : "",
                 productId: String(syncedEntry?.externalId ?? item.productId),
@@ -99,9 +153,9 @@ router.post("/checkout", async (req: any, res) => {
             },
           },
           quantity: item.quantity,
-        };
-      })
-      .filter(Boolean) as any[];
+        });
+      }
+    }
 
     if (totalShipping > 0) {
       lineItems.push({
@@ -128,6 +182,9 @@ router.post("/checkout", async (req: any, res) => {
     const [member] = hasDatabase && req.session.memberId
       ? await db.select().from(membersTable).where(inArray(membersTable.id, [req.session.memberId]))
       : [];
+    const directCustomerEmail = typeof req.body?.customerEmail === "string" && req.body.customerEmail.includes("@")
+      ? req.body.customerEmail.trim()
+      : undefined;
     const metadataItems = cart.map((item) => {
       const product = productMap.get(item.productId);
       const syncedEntry = syncedEntryMap.get(item.productId);
@@ -158,7 +215,7 @@ router.post("/checkout", async (req: any, res) => {
       mode: "payment",
       success_url: `${baseUrl}/?payment=success`,
       cancel_url: `${baseUrl}/?payment=cancel`,
-      customer_email: member?.email || undefined,
+      customer_email: directCustomerEmail || member?.email || undefined,
       billing_address_collection: "required",
       phone_number_collection: {
         enabled: true,
@@ -176,8 +233,8 @@ router.post("/checkout", async (req: any, res) => {
         brandDetails: brandName,
         memberRegistered: String(Boolean(member)),
         memberUserId: member ? String(member.id) : "",
-        memberName: member?.name || "",
-        memberEmail: member?.email || "",
+        memberName: (typeof req.body?.customerName === "string" ? req.body.customerName : member?.name) || "",
+        memberEmail: directCustomerEmail || member?.email || "",
         shippingTotal: String(totalShipping),
         items: JSON.stringify(
           metadataItems.map((item) => ({

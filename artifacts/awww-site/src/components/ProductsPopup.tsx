@@ -23,7 +23,7 @@ import type { BookingConfirmationData } from "@/lib/bookingConfirmation";
 import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { BookingCalendar } from "./BookingCalendar";
-import { recordLocalBooking, getDateAvailability, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
+import { recordLocalBooking, getDateAvailability, getMinimumBookingDateNZString, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
 import { getProductImages } from "@/lib/product-images";
 import { getCachedProducts, saveProductsToCache } from "@/lib/productsCache";
 import { formatCustomerPromise } from "@/lib/promiseFormatting";
@@ -498,12 +498,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const openBookingModal = (service: ProductCard) => {
     setSelectedService(service);
     const defaultVariant = service.variants?.find((v) => v.isDefault) ?? service.variants?.[0];
+    const minLienDate = getMinimumBookingDateNZString();
     setSelectedVariantId(defaultVariant ? defaultVariant.id : null);
     setBookingForm((current) => ({
       ...emptyBookingForm,
       fullName: member?.name ?? current.fullName,
       email: member?.email ?? current.email,
       phone: current.phone,
+      bookingDate: minLienDate,
       address1: current.address1,
       address2: current.address2,
       suburb: current.suburb,
@@ -530,6 +532,17 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const handleBookService = () => {
     if (!selectedService || !pricing) return;
     const serviceBookingFields = selectedService.bookingFields ?? [];
+
+    const minLienDate = getMinimumBookingDateNZString();
+    if (!bookingForm.bookingDate || bookingForm.bookingDate < minLienDate) {
+      updateBookingField("bookingDate", minLienDate);
+      toast({
+        title: "7-Day Notice Required",
+        description: `Bookings require at least 7 days advance notice. Your date has been set to ${formatBookingDate(minLienDate)}.`,
+        variant: "destructive"
+      });
+      return;
+    }
 
     const dateAvail = getDateAvailability(bookingForm.bookingDate, bookingCapacity);
     if (!dateAvail.available) {
@@ -1011,11 +1024,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${item.available !== false ? 'text-cyan-100 border-cyan-400/30 bg-cyan-500/10' : 'text-red-300 border-red-400/30 bg-red-500/10'}`}>
                                       {item.available !== false ? "AVAILABLE NOW" : "OUT OF STOCK"}
                                     </span>
-                                    {item.type === "build" ? (
-                                      <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-cyan-300 border-cyan-400/40 bg-cyan-500/15 shadow-[0_0_12px_rgba(26,161,224,0.3)]">
-                                        NO-CODE BUILDR
-                                      </span>
-                                    ) : (item.type === "parametric" || item.type === "configurable") && (
+                                    {(item.type === "parametric" || item.type === "configurable") && (
                                       <span className="font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 text-fuchsia-300 border-fuchsia-400/30 bg-fuchsia-500/10">
                                         CONFIGURABLE PRODUCT
                                       </span>
@@ -1076,7 +1085,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                       className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
                                       data-testid={`button-view-product-${item.id}`}
                                     >
-                                      {item.type === "build" ? "Customize Build" : "View Product"}
+                                      {item.type === "build" ? "Customize Axle" : "View Product"}
                                     </Button>
                                   </div>
                                 </div>

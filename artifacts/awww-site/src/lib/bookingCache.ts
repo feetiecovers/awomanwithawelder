@@ -104,20 +104,48 @@ export function getLocalBookingCount(dateStr: string): number {
   return cache[dateStr] || 0;
 }
 
+export const FRONTEND_BOOKING_LIEN_DAYS = 7;
+
+/**
+ * Returns the minimum selectable booking date string (YYYY-MM-DD) based on the 7-day frontend lien.
+ * e.g. If today in NZ is 2026-10-21, 7 days later is 2026-10-28.
+ */
+export function getMinimumBookingDateNZString(lienDays = FRONTEND_BOOKING_LIEN_DAYS): string {
+  const todayStr = getTodayNZString();
+  const [y, m, d] = todayStr.split("-").map(Number);
+  const targetDate = new Date(Date.UTC(y, m - 1, d + lienDays, 12, 0, 0));
+  const resYear = targetDate.getUTCFullYear();
+  const resMonth = String(targetDate.getUTCMonth() + 1).padStart(2, "0");
+  const resDay = String(targetDate.getUTCDate()).padStart(2, "0");
+  return `${resYear}-${resMonth}-${resDay}`;
+}
+
 /**
  * Evaluates date availability considering Denver's Desk projection, day of week capacity,
- * server booked counts, and local frontend booking cache.
+ * server booked counts, local frontend booking cache, and the 7-day frontend lien.
  */
 export function getDateAvailability(
   dateStr: string,
   projection: WebsiteBookingCapacityProjection | null
 ): DateAvailabilityResult {
   const todayStr = getTodayNZString();
+  const minLienDateStr = getMinimumBookingDateNZString(FRONTEND_BOOKING_LIEN_DAYS);
 
   if (dateStr < todayStr) {
     return {
       available: false,
       reason: "Past date",
+      capacity: 0,
+      bookedCount: 0,
+      remainingCapacity: 0,
+    };
+  }
+
+  // Frontend 7-day lien: require minimum 7 days advance notice
+  if (dateStr < minLienDateStr) {
+    return {
+      available: false,
+      reason: "Requires 7-day advance notice (earliest: 28 Oct)",
       capacity: 0,
       bookedCount: 0,
       remainingCapacity: 0,
@@ -130,7 +158,16 @@ export function getDateAvailability(
     const dayEntry = projection.days?.find((d) => d.date === dateStr);
 
     if (dayEntry) {
-      const dayAvailable = dayEntry.available !== false;
+      const isExplicitlyUnavailable =
+        dayEntry.available === false ||
+        (dayEntry.available as any) === "false" ||
+        (dayEntry as any).isAvailable === false ||
+        (dayEntry as any).isClosed === true ||
+        (dayEntry as any).status === "closed" ||
+        (dayEntry as any).status === "blocked" ||
+        (dayEntry as any).status === "unavailable" ||
+        Boolean(dayEntry.reason && dayEntry.reason.toLowerCase().includes("closed"));
+
       const capacity = typeof dayEntry.capacity === "number" && dayEntry.capacity > 0
         ? dayEntry.capacity
         : projection.weeklyBookingCap > 0
@@ -141,17 +178,17 @@ export function getDateAvailability(
       const totalBooked = serverBooked + localBooked;
       const remainingCapacity = Math.max(0, capacity - totalBooked);
 
-      if (!dayAvailable) {
+      if (isExplicitlyUnavailable) {
         return {
           available: false,
-          reason: dayEntry.reason || "No capacity for this day",
+          reason: dayEntry.reason === "closed_weekday" ? "Workshop Closed" : (dayEntry.reason || "No capacity for this day"),
           capacity,
           bookedCount: totalBooked,
           remainingCapacity: 0,
         };
       }
 
-      if (totalBooked >= capacity) {
+      if (totalBooked >= capacity || (dayEntry.remainingCapacity !== undefined && dayEntry.remainingCapacity <= 0)) {
         return {
           available: false,
           reason: capacity > 1 ? `Fully Booked (${totalBooked}/${capacity})` : "Fully Booked",

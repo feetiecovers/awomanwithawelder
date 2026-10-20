@@ -132,7 +132,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   // Parametric State: record of input name -> value
   const [parametricValues, setParametricValues] = useState<Record<string, any>>({});
   
-  const [isParametricOpen, setIsParametricOpen] = useState(true);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
   const [resolvedPromise, setResolvedPromise] = useState<{ message?: string; promiseDate?: string } | null>(null);
@@ -526,7 +526,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       <div className="flex-1 overflow-y-auto scroll-industrial flex flex-col">
         
         {/* Top: Boxed Image Gallery */}
-        <div className="relative w-full h-[175px] sm:h-[210px] bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15">
+        <div className={`relative w-full ${isStockProduct ? 'h-[230px] sm:h-[260px]' : 'h-[175px] sm:h-[210px]'} bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15`}>
           {galleryImages.length > 0 ? (
             <AnimatePresence mode="wait">
               <motion.img
@@ -537,7 +537,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="w-full h-full object-contain p-2"
+                className={`w-full h-full ${isStockProduct ? 'object-cover' : 'object-contain p-2'}`}
               />
             </AnimatePresence>
           ) : (
@@ -644,9 +644,9 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 </div>
               )}
 
-              {/* Parametric Product Controls */}
+              {/* Parametric Product Controls - Separated Individual Collapsible Category Cards */}
               {inputDefinitions.length > 0 && (
-                <div className="bg-[#09111b]/80 border border-primary/15 rounded-2xl p-5 space-y-6">
+                <div className="space-y-4">
                   {(() => {
                     const categoriesMap = PARAMETRIC_CATEGORIES_CONFIG[String(product.id)] || PARAMETRIC_CATEGORIES_CONFIG[rawProduct.sku] || {};
                     const categorizedInputs: Record<string, any[]> = {};
@@ -659,27 +659,41 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                     });
                     
                     let hasRenderedProductHelper = false;
-                    return Object.entries(categorizedInputs).map(([category, defs]) => {
+                    const categoryEntries = Object.entries(categorizedInputs);
+                    return categoryEntries.map(([category, defs], catIdx) => {
                       const categoryHelper = !hasRenderedProductHelper ? getCategoryHelper(rawProduct.sku, category, product.id) : null;
                       if (categoryHelper) {
                         hasRenderedProductHelper = true;
                       }
+                      const isCurrentOpen = openCategory === null ? catIdx === 0 : openCategory === category;
+
                       return (
-                        <div key={category} className="space-y-4">
-                          <div 
-                            className="flex items-center justify-between cursor-pointer border-b border-primary/10 pb-3"
-                            onClick={() => setIsParametricOpen(!isParametricOpen)}
+                        <div
+                          key={category}
+                          className="bg-[#09111b]/85 border border-primary/20 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all"
+                        >
+                          {/* Collapsible Accordion Header */}
+                          <button
+                            type="button"
+                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer hover:bg-primary/5 transition-colors focus:outline-none select-none"
+                            onClick={() => {
+                              setOpenCategory(isCurrentOpen ? "__NONE__" : category);
+                            }}
+                            aria-expanded={isCurrentOpen}
                           >
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{category}</h3>
+                            <div className="flex items-center gap-2.5">
+                              <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-primary font-bold">{category}</h3>
                               {categoryHelper && (
                                 <ParametricHelperBubble helper={categoryHelper} align="left" />
                               )}
                             </div>
-                            {isParametricOpen ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
-                          </div>
-                          {isParametricOpen && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-2">
+                            <div className="p-1 rounded-lg bg-primary/10 border border-primary/25 text-primary">
+                              {isCurrentOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </div>
+                          </button>
+                          {isCurrentOpen && (
+                            <div className="p-4 sm:p-5 pt-0 border-t border-primary/10">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 pt-4">
                               {defs.map((def: any, defIdx: number) => {
                                 const inputKey = getInputKey(def);
                                 const controlType = getInputControlType(def);
@@ -820,9 +834,10 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                  </div>
                   );
                 })}
-                  </div>
-                  )}
-                  </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       );
                     });
                   })()}

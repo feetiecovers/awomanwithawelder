@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import type { ParametricHelperEntry } from "@/content/parametricHelpers";
 
 interface ParametricHelperBubbleProps {
@@ -11,21 +12,13 @@ interface ParametricHelperBubbleProps {
 
 export function ParametricHelperBubble({
   helper,
-  align = "auto",
   className = "",
 }: ParametricHelperBubbleProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
+  // Close when pressing Escape
   useEffect(() => {
     if (!isOpen) return;
-
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -33,135 +26,115 @@ export function ParametricHelperBubble({
       }
     }
 
-    document.addEventListener("pointerdown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
-
     return () => {
-      document.removeEventListener("pointerdown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
-  // Determine alignment classes
-  const getBubbleAlignmentClasses = () => {
-    if (align === "right") {
-      return "right-0 origin-top-right";
-    }
-    if (align === "center") {
-      return "left-1/2 -translate-x-1/2 origin-top";
-    }
-    if (align === "left") {
-      return "left-0 origin-top-left";
-    }
-    // "auto" alignment: left-aligned on desktop, smart clamping
-    return "left-0 sm:left-0 origin-top-left";
-  };
-
-  const getArrowAlignmentClasses = () => {
-    if (align === "right") {
-      return "right-2.5";
-    }
-    if (align === "center") {
-      return "left-1/2 -translate-x-1/2";
-    }
-    return "left-2.5";
-  };
-
   return (
-    <div
-      ref={containerRef}
-      className={`relative inline-flex items-center text-left ${className}`}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Boxed Question Mark Button */}
-      <button
-        type="button"
-        aria-label={helper.title || "Help guide"}
-        aria-expanded={isOpen}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen((prev) => !prev);
-        }}
-        className={`relative inline-flex items-center justify-center w-[19px] h-[19px] rounded-[5px] transition-all duration-150 select-none shadow-[0_0_8px_rgba(26,157,224,0.2)] focus:outline-none ${
-          isOpen
-            ? "bg-primary/30 border border-primary text-white shadow-[0_0_12px_rgba(26,157,224,0.5)]"
-            : "bg-[#0b1b29] border border-primary/40 text-primary hover:bg-primary/20 hover:border-primary hover:text-white"
-        }`}
+    <>
+      {/* Boxed Question Mark Trigger Button */}
+      <div
+        className={`relative inline-flex items-center text-left ${className}`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <span className="font-mono text-[11px] font-black leading-none pointer-events-none">
-          ?
-        </span>
-      </button>
+        <button
+          type="button"
+          aria-label={helper.title || "Help guide"}
+          aria-expanded={isOpen}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen((prev) => !prev);
+          }}
+          className={`relative inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] transition-all duration-150 select-none shadow-[0_0_8px_rgba(26,157,224,0.2)] focus:outline-none cursor-pointer ${
+            isOpen
+              ? "bg-primary/30 border border-primary text-white shadow-[0_0_12px_rgba(26,157,224,0.5)]"
+              : "bg-[#0b1b29] border border-primary/40 text-primary hover:bg-primary/20 hover:border-primary hover:text-white"
+          }`}
+        >
+          <span className="font-mono text-[11px] font-black leading-none pointer-events-none">
+            ?
+          </span>
+        </button>
+      </div>
 
-      {/* Animated Attached Message Bubble */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.88, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.88, y: -4 }}
-            transition={{ type: "spring", stiffness: 480, damping: 28 }}
-            role="dialog"
-            aria-label={helper.title || "Parametric option helper"}
-            className={`absolute top-full mt-2 z-50 w-[260px] sm:w-[280px] max-w-[calc(100vw-32px)] ${getBubbleAlignmentClasses()}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Speech bubble beak / arrow pointing to the boxed ? */}
-            <div
-              className={`absolute -top-1.5 w-3 h-3 rotate-45 bg-[#081320] border-t border-l border-primary/40 z-10 ${getArrowAlignmentClasses()}`}
-            />
-
-            {/* Bubble Card Body */}
-            <div className="relative overflow-hidden rounded-xl bg-[#081320]/95 backdrop-blur-2xl border border-primary/40 p-3 text-white shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_24px_rgba(26,157,224,0.3)] flex flex-col gap-2.5">
-              {/* Subtle ambient glow inside card */}
-              <div className="absolute -top-8 -right-8 w-20 h-20 bg-primary/15 rounded-full blur-xl pointer-events-none" />
-
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 border-b border-primary/20 pb-2">
-                <h5 className="font-mono text-[11px] font-bold uppercase tracking-wider text-primary truncate">
-                  {helper.title || "Option Guide"}
-                </h5>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsOpen(false);
-                  }}
-                  aria-label="Close helper"
-                  className="shrink-0 p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+      {/* Centered Modal Popup in Portal */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {isOpen && (
+              <div
+                className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
+                role="dialog"
+                aria-modal="true"
+                aria-label={helper.title || "Dimension Guide"}
+                onClick={() => setIsOpen(false)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: 10 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                  className="relative w-full max-w-sm sm:max-w-md bg-[#081320] border-2 border-primary/45 rounded-2xl p-4 sm:p-5 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(26,157,224,0.35)] flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  {/* Subtle ambient glow inside card */}
+                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between gap-3 border-b border-primary/25 pb-2.5">
+                    <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-primary truncate">
+                      {helper.title || "Dimension Guide"}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      aria-label="Close guide"
+                      className="shrink-0 p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 border border-transparent hover:border-primary/30 transition-all cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* High-res sketch/illustration */}
+                  {helper.image && (
+                    <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden border border-primary/30 bg-black/70 shrink-0 flex items-center justify-center shadow-inner">
+                      <img
+                        src={helper.image}
+                        alt={helper.imageAlt || helper.title || "Helper illustration"}
+                        className="w-full h-full object-contain p-2"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget.parentElement as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Text definition */}
+                  {helper.definition && (
+                    <p className="text-xs sm:text-[13px] text-slate-200 leading-relaxed font-sans select-text">
+                      {helper.definition}
+                    </p>
+                  )}
+
+                  {/* Close button for effortless touch dismissal */}
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full mt-1 py-2 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary border border-primary/50 font-mono text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(26,157,224,0.2)]"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Got It
+                  </button>
+                </motion.div>
               </div>
-
-              {/* Small but visible image */}
-              {helper.image && (
-                <div className="relative w-full h-32 sm:h-36 rounded-lg overflow-hidden border border-primary/25 bg-black/60 shrink-0">
-                  <img
-                    src={helper.image}
-                    alt={helper.imageAlt || helper.title || "Helper illustration"}
-                    className="w-full h-full object-contain p-1"
-                    loading="lazy"
-                    onError={(e) => {
-                      // Fallback gracefully if image fails to load
-                      (e.currentTarget.parentElement as HTMLElement).style.display = "none";
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Text definition */}
-              {helper.definition && (
-                <p className="text-xs text-slate-200 leading-relaxed font-sans select-text">
-                  {helper.definition}
-                </p>
-              )}
-            </div>
-          </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
-    </div>
+    </>
   );
 }

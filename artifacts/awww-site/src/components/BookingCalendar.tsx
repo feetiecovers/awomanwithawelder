@@ -40,7 +40,6 @@ export function BookingCalendar({
 }: BookingCalendarProps) {
   const todayStr = useMemo(() => getTodayNZString(), []);
   
-  // Set initial displayed month to selected date or current month
   const [currentDisplayDate, setCurrentDisplayDate] = useState<Date>(() => {
     if (selectedDate && /^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
       const parts = selectedDate.split("-").map(Number);
@@ -49,6 +48,13 @@ export function BookingCalendar({
     const todayParts = todayStr.split("-").map(Number);
     return new Date(todayParts[0], todayParts[1] - 1, 1);
   });
+
+  useEffect(() => {
+    if (selectedDate && /^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+      const parts = selectedDate.split("-").map(Number);
+      setCurrentDisplayDate(new Date(parts[0], parts[1] - 1, 1));
+    }
+  }, [selectedDate]);
 
   const year = currentDisplayDate.getFullYear();
   const month = currentDisplayDate.getMonth();

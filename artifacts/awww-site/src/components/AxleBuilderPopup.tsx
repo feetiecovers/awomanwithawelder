@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -6,27 +6,25 @@ import {
   Wrench,
   Sliders,
   Ruler,
-  Truck,
   ShoppingCart,
   Send,
   PhoneCall,
   Info,
-  Sparkles,
   Maximize2,
   CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  ChevronRight,
   ShieldCheck,
   Layers,
   Disc,
   CircleDot,
+  CheckSquare,
+  CreditCard,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useAddToCart, useGetCart, getGetCartQueryKey } from "@workspace/api-client-react";
+import { useAddToCart, useGetCart, getGetCartQueryKey, useGetCurrentMember } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
@@ -53,57 +51,23 @@ const GST_RATE = 0.15;
 const DEFAULT_IMAGE = "/assets/products/trailer_axle_assembly.jpg";
 
 /**
- * Provides a clean display label for options, utilizing option name/label if set,
- * or intelligent inference from referenced features/descriptions.
+ * Pure display label reader — does not invent names.
+ * Uses exact name/label from the build payload.
  */
-function getOptionDisplayLabel(group: any, option: any): string {
-  if (option.name && String(option.name).trim()) return String(option.name).trim();
-  if (option.label && String(option.label).trim()) return String(option.label).trim();
-
-  const gName = (group?.name || "").toLowerCase();
-  const oid = String(option?.id || "").toLowerCase();
-  const desc = (option?.description || "").toLowerCase();
-
-  // Wheel Size
-  if (gName.includes("wheel size")) {
-    if (option.sortOrder === 1 || oid.includes("honi")) return "13\" – 14\" Wheels (Standard)";
-    return "15\"+ Wheels (Heavy Duty / Large)";
-  }
-
-  // Axle Size
-  if (gName.includes("axle size")) {
-    if (option.sortOrder === 1 || desc.includes("40mm") || oid.includes("ljd7")) return "40X40 Square Axle (40mm U-Bolts)";
-    return "50X50 Square Axle (Heavy Duty 50mm)";
-  }
-
-  // Brake System
-  if (gName.includes("brake")) {
-    if (option.sortOrder === 1 || oid.includes("ve7t")) return "Hydraulic Disc Brakes (Rotors & Calipers)";
-    return "Standard Idler (Unbraked)";
-  }
-
-  // PCD of wheels
-  if (gName.includes("pcd")) {
-    if (oid.includes("7hm2") || option.sortOrder === 1) return "4 x 114.3 PCD (4-Stud)";
-    if (oid.includes("7ewi") || option.sortOrder === 2) return "5 x 114.3 PCD (Ford / Standard 5-Stud)";
-    if (oid.includes("p94c") || option.sortOrder === 3) return "5 x 120 PCD (Commodore / European)";
-    if (oid.includes("1h16") || option.sortOrder === 4) return "6 x 139.7 PCD (Hilux / Landcruiser 6-Stud)";
-  }
-
-  if (option.description && option.description.trim()) {
-    return option.description.length > 35 ? option.description.slice(0, 32) + "..." : option.description;
-  }
-
-  return `Option ${option.sortOrder || 1}`;
+function getOptionDisplayLabel(option: any): string {
+  if (option?.name && String(option.name).trim()) return String(option.name).trim();
+  if (option?.label && String(option.label).trim()) return String(option.label).trim();
+  if (option?.title && String(option.title).trim()) return String(option.title).trim();
+  return String(option?.id || "Option");
 }
 
 function getGroupIcon(groupName: string) {
-  const name = groupName.toLowerCase();
+  const name = String(groupName || "").toLowerCase();
   if (name.includes("wheel")) return CircleDot;
-  if (name.includes("axle size") || name.includes("profile")) return Layers;
   if (name.includes("brake")) return Disc;
   if (name.includes("pcd")) return Wrench;
-  return Sliders;
+  if (name.includes("capacity") || name.includes("assembly")) return CheckSquare;
+  return Layers;
 }
 
 export function AxleBuilderPopup({
@@ -116,6 +80,7 @@ export function AxleBuilderPopup({
   const queryClient = useQueryClient();
   const addToCart = useAddToCart();
   const { data: cart } = useGetCart();
+  const { data: member } = useGetCurrentMember();
 
   // Selections: map of groupId -> optionId
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -129,7 +94,16 @@ export function AxleBuilderPopup({
   const [isQuoteSubmitted, setIsQuoteSubmitted] = useState(false);
   const [deliveryOption, setDeliveryOption] = useState<"pickup" | "delivery">("pickup");
 
-  // Form State
+  // Purchase Modal & Direct Checkout State
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isDirectCheckingOut, setIsDirectCheckingOut] = useState(false);
+  const [purchaseForm, setPurchaseForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+  });
+
+  // Quote Form State
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
     fullName: "",
     email: "",
@@ -141,13 +115,50 @@ export function AxleBuilderPopup({
     notes: "",
   });
 
-  // Extract option groups from build payload, filtering out pure length groups since that's handled by slider
+  // Sync logged in member details if available
+  useEffect(() => {
+    if (member) {
+      setPurchaseForm((prev) => ({
+        ...prev,
+        fullName: prev.fullName || member.name || "",
+        email: prev.email || member.email || "",
+      }));
+      setQuoteForm((prev) => ({
+        ...prev,
+        fullName: prev.fullName || member.name || "",
+        email: prev.email || member.email || "",
+      }));
+    }
+  }, [member]);
+
+  // Extract option groups directly from payload
   const optionGroups = useMemo(() => {
     if (!build?.optionGroups || !Array.isArray(build.optionGroups)) return [];
-    return build.optionGroups.filter((g: any) => !g.name?.toLowerCase().includes("beam (length)"));
+    return build.optionGroups;
   }, [build]);
 
-  // Reset or initialize from build payload
+  // Extract parametric configuration directly from payload
+  const parametricFeature = useMemo(() => {
+    const list = Array.isArray(build?.parametricFeatures)
+      ? build.parametricFeatures
+      : Array.isArray(build?.includedFeatures)
+        ? build.includedFeatures
+        : [];
+    return list.find((f: any) => f?.kind === "parametric" && f?.parametricProduct) || null;
+  }, [build]);
+
+  const parametricInput = parametricFeature?.parametricProduct?.inputDefinitions?.[0];
+  const parametricRule = parametricFeature?.parametricProduct?.rules?.[0];
+
+  const minLength = Number(parametricInput?.minimum ?? 1000);
+  const maxLength = Number(parametricInput?.maximum ?? 3000);
+  const defaultLength = Number(parametricInput?.defaultValue ?? 1000);
+  const step = Number(parametricInput?.step ?? 1);
+  const unit = String(parametricInput?.unit ?? "mm");
+  const ratePerMetre = Number(parametricRule?.pricePerUnit ?? 14.86);
+  const parametricLabel = String(parametricInput?.label ?? parametricFeature?.name ?? "Axle Length");
+
+  // Reset or initialize directly from build defaultSelections
   useEffect(() => {
     if (!isOpen) {
       setIsQuoteModalOpen(false);
@@ -169,52 +180,18 @@ export function AxleBuilderPopup({
 
     setSelectedOptions(initialSelections);
 
-    const defaultLength = Number(build?.parametricFeatures?.[0]?.parametricProduct?.defaultConfiguration?.measurement_mupe311o_3ygeq ?? 1000);
-    setLengthMm(defaultLength);
-    setLengthInputVal(String(defaultLength));
-  }, [isOpen, build, optionGroups]);
+    const initLength = Number(
+      parametricFeature?.parametricProduct?.defaultConfiguration?.[parametricInput?.key || ""] ?? defaultLength
+    );
+    setLengthMm(initLength);
+    setLengthInputVal(String(initLength));
+  }, [isOpen, build, optionGroups, parametricFeature, parametricInput, defaultLength]);
 
-  // Handle option selection with rules / blockedOptionIds check
   const handleSelectOption = (group: any, option: any) => {
-    const updated = { ...selectedOptions, [group.id]: option.id };
-
-    // Check if this option blocks any currently selected option in other groups
-    const blockedIds = new Set<string>([
-      ...(Array.isArray(option.blockedOptionIds) ? option.blockedOptionIds : []),
-    ]);
-
-    let hadConflict = false;
-    let switchedNotice = "";
-
-    optionGroups.forEach((otherGroup: any) => {
-      if (otherGroup.id === group.id) return;
-      const currentSelectedId = updated[otherGroup.id];
-      if (currentSelectedId && blockedIds.has(currentSelectedId)) {
-        // Find an alternative option in otherGroup that is NOT blocked
-        const alternative = otherGroup.options?.find((opt: any) => !blockedIds.has(opt.id) && opt.id !== currentSelectedId);
-        if (alternative) {
-          updated[otherGroup.id] = alternative.id;
-          hadConflict = true;
-          switchedNotice = `Switched ${otherGroup.name} to ${getOptionDisplayLabel(otherGroup, alternative)} for compatibility.`;
-        }
-      }
-    });
-
-    setSelectedOptions(updated);
-
-    if (hadConflict && switchedNotice) {
-      toast({
-        title: "Compatibility Rule Applied",
-        description: switchedNotice,
-      });
-    }
+    setSelectedOptions((prev) => ({ ...prev, [group.id]: option.id }));
   };
 
   // Length calculations
-  const minLength = 1000;
-  const maxLength = 3000;
-  const ratePerMetre = 14.86; // $14.86/m
-
   const handleSliderChange = (val: number) => {
     setLengthMm(val);
     setLengthInputVal(String(val));
@@ -237,7 +214,7 @@ export function AxleBuilderPopup({
     setLengthInputVal(String(parsed));
   };
 
-  // Price Calculation
+  // Price Calculation strictly from payload values
   const { optionsTotal, lengthAdjustment, totalIncGst, subtotalExGst, gstAmount, activeSpecs } = useMemo(() => {
     let optsTotal = 0;
     const specs: { groupName: string; optionName: string; price: number; description?: string }[] = [];
@@ -250,16 +227,16 @@ export function AxleBuilderPopup({
         optsTotal += price;
         specs.push({
           groupName: group.name,
-          optionName: getOptionDisplayLabel(group, opt),
+          optionName: getOptionDisplayLabel(opt),
           price,
           description: opt.description,
         });
       }
     });
 
-    const extraMetres = Math.max(0, (lengthMm - 1000) / 1000);
+    const extraMetres = Math.max(0, (lengthMm - defaultLength) / 1000);
     const lengthAdj = Number((extraMetres * ratePerMetre).toFixed(2));
-    const baseComponents = Number(build?.price || build?.basePrice || 14.86);
+    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
 
     const total = Number((baseComponents + optsTotal + lengthAdj).toFixed(2));
     const subtotal = Number((total / (1 + GST_RATE)).toFixed(2));
@@ -273,27 +250,40 @@ export function AxleBuilderPopup({
       gstAmount: gst,
       activeSpecs: specs,
     };
-  }, [optionGroups, selectedOptions, lengthMm, build]);
+  }, [optionGroups, selectedOptions, lengthMm, defaultLength, ratePerMetre, build]);
 
-  // Cart addition
-  const handleAddToCart = () => {
+  // Open the dedicated Purchase & Checkout Modal
+  const handleOpenPurchaseModal = () => {
+    setIsPurchaseModalOpen(true);
+  };
+
+  // Add to cart with all individual build features and specs
+  const handleAddToCartFromModal = () => {
     const buildId = build?.id ?? 12;
     const selectionsRecord: Record<string, string> = {};
     activeSpecs.forEach((s) => {
       selectionsRecord[s.groupName] = s.optionName;
     });
-    selectionsRecord["Hub-Face Track Length"] = `${lengthMm} mm`;
+    selectionsRecord[parametricLabel] = `${lengthMm} ${unit}`;
+
+    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
 
     const configuration = {
       type: "build",
       buildId: build?.buildId ?? "build-1792398167103",
-      buildName: "Trailer Axle Builder",
+      buildName: build?.name || "Trailer Axle Builder",
+      customerName: purchaseForm.fullName || undefined,
+      customerEmail: purchaseForm.email || undefined,
+      customerPhone: purchaseForm.phone || undefined,
+      parametricSummary: `${lengthMm}${unit} Track Axle Beam`,
+      parametricPrice: Number((baseComponents + lengthAdjustment).toFixed(2)),
+      buildFeatures: activeSpecs,
       selections: selectionsRecord,
-      parametricValues: {
-        measurement_mupe311o_3ygeq: lengthMm,
-      },
+      parametricValues: parametricInput?.key
+        ? { [parametricInput.key]: lengthMm }
+        : { length: lengthMm },
       resolvedPrice: totalIncGst,
-      totalPriceAdjustment: lengthAdjustment,
+      totalPriceAdjustment: Number((lengthAdjustment + optionsTotal).toFixed(2)),
     };
 
     addToCart.mutate(
@@ -308,9 +298,10 @@ export function AxleBuilderPopup({
         onSuccess: () => {
           toast({
             title: "Custom Axle Added to Cart",
-            description: `${lengthMm}mm Track Axle configured and ready in your cart.`,
+            description: `${lengthMm}${unit} Track Axle with all selected build features added to your cart.`,
           });
           queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+          setIsPurchaseModalOpen(false);
           onClose();
         },
         onError: () => {
@@ -322,6 +313,75 @@ export function AxleBuilderPopup({
         },
       }
     );
+  };
+
+  // Instant direct Stripe Checkout
+  const handleDirectCheckout = async () => {
+    if (!purchaseForm.fullName.trim() || !purchaseForm.email.trim()) {
+      toast({
+        title: "Name & Email Required",
+        description: "Please enter your name and email to proceed to Stripe checkout.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDirectCheckingOut(true);
+    const buildId = build?.id ?? 12;
+    const selectionsRecord: Record<string, string> = {};
+    activeSpecs.forEach((s) => {
+      selectionsRecord[s.groupName] = s.optionName;
+    });
+    selectionsRecord[parametricLabel] = `${lengthMm} ${unit}`;
+
+    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
+
+    const configuration = {
+      type: "build",
+      buildId: build?.buildId ?? "build-1792398167103",
+      buildName: build?.name || "Trailer Axle Builder",
+      parametricSummary: `${lengthMm}${unit} Track Axle Beam`,
+      parametricPrice: Number((baseComponents + lengthAdjustment).toFixed(2)),
+      buildFeatures: activeSpecs,
+      selections: selectionsRecord,
+      parametricValues: parametricInput?.key
+        ? { [parametricInput.key]: lengthMm }
+        : { length: lengthMm },
+      resolvedPrice: totalIncGst,
+      totalPriceAdjustment: Number((lengthAdjustment + optionsTotal).toFixed(2)),
+    };
+
+    try {
+      const res = await fetch(buildApiUrl("/checkout"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          customerName: purchaseForm.fullName.trim(),
+          customerEmail: purchaseForm.email.trim(),
+          directItem: {
+            productId: buildId,
+            quantity: 1,
+            configuration,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data?.error || "Failed to initialize Stripe checkout session");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Checkout Issue",
+        description: err.message || "Could not launch Stripe checkout. You can add to cart or request a formal quote.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDirectCheckingOut(false);
+    }
   };
 
   // Quote Submission
@@ -342,7 +402,7 @@ export function AxleBuilderPopup({
     activeSpecs.forEach((s) => {
       selectionsPayload[s.groupName] = [s.optionName];
     });
-    selectionsPayload["Track Length"] = [`${lengthMm} mm`];
+    selectionsPayload[parametricLabel] = [`${lengthMm} ${unit}`];
 
     try {
       const response = await fetch(buildApiUrl("/api/build-quote-request"), {
@@ -352,7 +412,7 @@ export function AxleBuilderPopup({
         body: JSON.stringify({
           buildId: build?.buildId ?? "build-1792398167103",
           buildCode: build?.buildCode || "AXLEBUILDER-BLD01",
-          buildName: "Trailer Axle Builder",
+          buildName: build?.name || "Trailer Axle Builder",
           selections: selectionsPayload,
           fullName: quoteForm.fullName,
           email: quoteForm.email,
@@ -369,9 +429,11 @@ export function AxleBuilderPopup({
           selectedAddons: [
             {
               groupName: "Parametric Dimensions",
-              optionName: `Track Length: ${lengthMm}mm`,
+              optionName: `${parametricLabel}: ${lengthMm}${unit}`,
               price: lengthAdjustment,
-              parametricFeatureValues: { measurement_mupe311o_3ygeq: lengthMm },
+              parametricFeatureValues: parametricInput?.key
+                ? { [parametricInput.key]: lengthMm }
+                : { length: lengthMm },
             },
             ...activeSpecs.map((s) => ({
               groupName: s.groupName,
@@ -404,6 +466,10 @@ export function AxleBuilderPopup({
 
   if (!isOpen) return null;
 
+  const buildTitle = build?.name || "Trailer Axle Builder";
+  const buildDescription = build?.description || "";
+  const displayImage = build?.imageUrl || build?.image || DEFAULT_IMAGE;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md"
@@ -428,10 +494,7 @@ export function AxleBuilderPopup({
             <div>
               <div className="flex items-center gap-2">
                 <h2 id="axle-builder-title" className="font-bold text-base sm:text-lg text-white tracking-wide flex items-center gap-2">
-                  Trailer Axle Builder
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#1aa1e0]/20 text-[#1aa1e0] border border-[#1aa1e0]/40 font-semibold tracking-wider">
-                    NO-CODE BUILDR
-                  </span>
+                  {buildTitle}
                 </h2>
               </div>
               <p className="text-xs text-slate-400 font-mono hidden sm:block">
@@ -465,7 +528,7 @@ export function AxleBuilderPopup({
 
         {/* Content Area - 2 Columns on desktop, scrollable on mobile */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Visual Blueprint & Dynamic Configuration Groups (Cols 1-7) */}
+          {/* Left Column: Visual Blueprint & Option Groups (Cols 1-7) */}
           <div className="lg:col-span-7 flex flex-col gap-5">
             {/* Engineering Blueprint Display Card */}
             <div className="rounded-xl border border-[#1aa1e0]/30 bg-[#04080e]/80 overflow-hidden relative group shadow-[0_0_20px_rgba(0,0,0,0.6)]">
@@ -473,7 +536,7 @@ export function AxleBuilderPopup({
               <div className="px-4 py-2 bg-[#09121d] border-b border-[#1aa1e0]/20 flex items-center justify-between text-xs font-mono">
                 <span className="flex items-center gap-1.5 text-[#1aa1e0] font-semibold">
                   <Ruler className="w-3.5 h-3.5" />
-                  SPEC: {lengthMm}mm Track Length
+                  SPEC: {lengthMm}{unit} {parametricLabel}
                 </span>
                 <span className="text-slate-400 text-[11px]">
                   Precision Fabricated Assembly
@@ -482,19 +545,19 @@ export function AxleBuilderPopup({
 
               {/* Technical Drawing Image */}
               <div
-                className="relative h-48 sm:h-60 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
+                className="relative h-44 sm:h-56 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
                 onClick={() => setIsPreviewImageOpen(true)}
               >
                 <img
-                  src={DEFAULT_IMAGE}
-                  alt="Trailer Axle Blueprint Assembly"
+                  src={displayImage}
+                  alt={buildTitle}
                   className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                 />
 
                 {/* Dimension Overlay Badge */}
                 <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#1aa1e0]/40 text-xs font-mono text-[#1aa1e0] flex items-center gap-2 shadow-lg">
                   <span className="w-2 h-2 rounded-full bg-[#1aa1e0] animate-pulse" />
-                  Hub-Face to Hub-Face: <strong className="text-white">{lengthMm} mm</strong>
+                  {parametricLabel}: <strong className="text-white">{lengthMm} {unit}</strong>
                 </div>
 
                 <button
@@ -508,29 +571,43 @@ export function AxleBuilderPopup({
               </div>
             </div>
 
-            {/* Dynamic Option Groups Configurator */}
+            {/* Build Description from Payload */}
+            {buildDescription && (
+              <p className="text-xs text-slate-300 font-mono leading-relaxed bg-[#060c14]/80 p-3 rounded-lg border border-slate-800">
+                {buildDescription}
+              </p>
+            )}
+
+            {/* Option Groups from Payload */}
             {optionGroups.map((group: any, groupIndex: number) => {
               const GroupIcon = getGroupIcon(group.name);
               const selectedOptionId = selectedOptions[group.id];
+              const isDenseGroup = Array.isArray(group.options) && group.options.length > 4;
 
               return (
                 <div key={group.id} className="flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs uppercase font-mono tracking-wider text-slate-300 font-semibold flex items-center gap-1.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
                       <GroupIcon className="w-3.5 h-3.5 text-[#1aa1e0]" />
                       {groupIndex + 1}. {group.name}
                     </label>
                     {group.description && (
-                      <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                      <span className="text-[11px] text-slate-400 leading-tight">
                         {group.description}
                       </span>
                     )}
                   </div>
 
-                  <div className={`grid grid-cols-1 ${group.options?.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-2.5`}>
+                  <div
+                    className={
+                      isDenseGroup
+                        ? "grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"
+                        : `grid grid-cols-1 ${group.options?.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-2.5`
+                    }
+                  >
                     {group.options?.map((option: any) => {
                       const isSelected = selectedOptionId === option.id;
-                      const displayLabel = getOptionDisplayLabel(group, option);
+                      const displayLabel = getOptionDisplayLabel(option);
 
                       return (
                         <button
@@ -558,7 +635,7 @@ export function AxleBuilderPopup({
                               </p>
                             )}
                           </div>
-                          <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono">
+                          <div className="mt-2 flex items-center justify-between text-[11px] font-mono">
                             <span className="text-slate-500">
                               {isSelected ? "Selected" : "Select"}
                             </span>
@@ -576,87 +653,67 @@ export function AxleBuilderPopup({
               );
             })}
 
-            {/* Parametric Length Specification */}
-            <div className="flex flex-col gap-3 p-4 rounded-xl border border-[#1aa1e0]/30 bg-[#060d16]/90 shadow-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-[#1aa1e0]" />
-                    {optionGroups.length + 1}. Specify Hub-Face Track Length
-                  </label>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Exact hub face to hub face measurement (1,000mm &ndash; 3,000mm)
-                  </p>
+            {/* Parametric Dimension Slider from Payload */}
+            {parametricInput && (
+              <div className="flex flex-col gap-3 p-4 rounded-xl border border-[#1aa1e0]/30 bg-[#060d16]/90 shadow-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
+                      <Sliders className="w-3.5 h-3.5 text-[#1aa1e0]" />
+                      {optionGroups.length + 1}. {parametricLabel}
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Measurement range ({minLength}{unit} &ndash; {maxLength}{unit})
+                    </p>
+                  </div>
+
+                  {/* Direct Number Input */}
+                  <div className="flex items-center gap-1 bg-black/60 border border-[#1aa1e0]/40 rounded-lg px-2.5 py-1">
+                    <input
+                      type="number"
+                      min={minLength}
+                      max={maxLength}
+                      step={step}
+                      value={lengthInputVal}
+                      onChange={handleLengthInputChange}
+                      onBlur={handleLengthInputBlur}
+                      className="w-16 bg-transparent text-right font-mono font-bold text-sm text-[#1aa1e0] focus:outline-none"
+                    />
+                    <span className="font-mono text-xs text-slate-400">{unit}</span>
+                  </div>
                 </div>
 
-                {/* Direct Number Input */}
-                <div className="flex items-center gap-1 bg-black/60 border border-[#1aa1e0]/40 rounded-lg px-2.5 py-1">
+                {/* Range Slider */}
+                <div className="py-2">
                   <input
-                    type="number"
+                    type="range"
                     min={minLength}
                     max={maxLength}
-                    step={1}
-                    value={lengthInputVal}
-                    onChange={handleLengthInputChange}
-                    onBlur={handleLengthInputBlur}
-                    className="w-16 bg-transparent text-right font-mono font-bold text-sm text-[#1aa1e0] focus:outline-none"
+                    step={step}
+                    value={lengthMm}
+                    onChange={(e) => handleSliderChange(parseInt(e.target.value, 10))}
+                    className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#1aa1e0]"
                   />
-                  <span className="font-mono text-xs text-slate-400">mm</span>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                    <span>{minLength} {unit} (Min)</span>
+                    <span>{Math.round((minLength + maxLength) / 2)} {unit}</span>
+                    <span>{maxLength} {unit} (Max)</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Range Slider */}
-              <div className="py-2">
-                <input
-                  type="range"
-                  min={minLength}
-                  max={maxLength}
-                  step={1}
-                  value={lengthMm}
-                  onChange={(e) => handleSliderChange(parseInt(e.target.value, 10))}
-                  className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#1aa1e0]"
-                />
-                <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
-                  <span>1,000 mm (Min)</span>
-                  <span>2,000 mm</span>
-                  <span>3,000 mm (Max)</span>
-                </div>
+                {/* Dynamic Formula Indicator from Payload */}
+                {ratePerMetre > 0 && (
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-400 bg-black/40 px-3 py-2 rounded-lg border border-slate-800">
+                    <span>Rate: ${ratePerMetre.toFixed(2)} per metre</span>
+                    <span className="text-[#1aa1e0] font-semibold">
+                      {lengthMm > defaultLength
+                        ? `+NZ$${lengthAdjustment.toFixed(2)} (${((lengthMm - defaultLength) / 1000).toFixed(3)}m extra)`
+                        : "Included in Baseline"}
+                    </span>
+                  </div>
+                )}
               </div>
-
-              {/* Quick Select Presets */}
-              <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-800/80">
-                <span className="text-[10px] font-mono uppercase text-slate-400">Quick Presets:</span>
-                {[
-                  { label: "1,220mm (4ft Box)", val: 1220 },
-                  { label: "1,525mm (5ft Box)", val: 1525 },
-                  { label: "1,830mm (6ft Deck)", val: 1830 },
-                  { label: "2,100mm (Car Trailer)", val: 2100 },
-                ].map((preset) => (
-                  <button
-                    key={preset.val}
-                    type="button"
-                    onClick={() => handleSliderChange(preset.val)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-mono transition-all cursor-pointer ${
-                      lengthMm === preset.val
-                        ? "bg-[#1aa1e0] text-black font-bold shadow-[0_0_10px_rgba(26,161,224,0.5)]"
-                        : "bg-slate-800/80 text-slate-300 hover:bg-[#1aa1e0]/20 hover:text-white"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Dynamic Formula Indicator */}
-              <div className="flex items-center justify-between text-xs font-mono text-slate-400 bg-black/40 px-3 py-2 rounded-lg border border-slate-800">
-                <span>Formula Rate: $14.86 per metre</span>
-                <span className="text-[#1aa1e0] font-semibold">
-                  {lengthMm > 1000
-                    ? `+NZ$${lengthAdjustment.toFixed(2)} (${((lengthMm - 1000) / 1000).toFixed(3)}m extra)`
-                    : "Included in Baseline"}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column: Build Specification & Actions (Cols 8-12) */}
@@ -665,7 +722,7 @@ export function AxleBuilderPopup({
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 className="text-sm font-bold uppercase font-mono tracking-wider text-white flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#1aa1e0]" />
-                  Axle Specification Summary
+                  Specification Summary
                 </h3>
                 <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   Ready to Build
@@ -682,21 +739,23 @@ export function AxleBuilderPopup({
                     </span>
                   </div>
                 ))}
-                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-slate-400">Hub-Face Measurement:</span>
-                  <span className="text-[#1aa1e0] font-bold">{lengthMm} mm</span>
-                </div>
+                {parametricInput && (
+                  <div className="flex justify-between py-1 border-b border-slate-800/60">
+                    <span className="text-slate-400">{parametricLabel}:</span>
+                    <span className="text-[#1aa1e0] font-bold">{lengthMm} {unit}</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-1 border-b border-slate-800/60">
                   <span className="text-slate-400">Fulfilment:</span>
                   <span className="text-slate-300">Custom Built to Order</span>
                 </div>
               </div>
 
-              {/* Cost Itemization */}
+              {/* Cost Itemization from Payload */}
               <div className="bg-[#04080e] p-3.5 rounded-lg border border-slate-800/80 flex flex-col gap-2 text-xs font-mono mt-1">
                 <div className="flex justify-between text-slate-400">
-                  <span>Base Axle Assembly:</span>
-                  <span>NZ${Number(build?.price || 14.86).toFixed(2)}</span>
+                  <span>Base Assembly:</span>
+                  <span>NZ${Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? 0).toFixed(2)}</span>
                 </div>
                 {optionsTotal > 0 && (
                   <div className="flex justify-between text-slate-400">
@@ -704,12 +763,14 @@ export function AxleBuilderPopup({
                     <span>+NZ${optionsTotal.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-slate-400">
-                  <span>Length Adjustment ({lengthMm}mm):</span>
-                  <span className={lengthAdjustment > 0 ? "text-[#1aa1e0]" : ""}>
-                    +NZ${lengthAdjustment.toFixed(2)}
-                  </span>
-                </div>
+                {lengthAdjustment > 0 && (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Length Adjustment ({lengthMm}{unit}):</span>
+                    <span className="text-[#1aa1e0]">
+                      +NZ${lengthAdjustment.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t border-slate-800 pt-2 flex justify-between text-slate-300">
                   <span>Subtotal (excl. GST):</span>
                   <span>NZ${subtotalExGst.toFixed(2)}</span>
@@ -726,7 +787,7 @@ export function AxleBuilderPopup({
                 </div>
               </div>
 
-              {/* Charlotte Guarantee */}
+              {/* Direct Workshop Guarantee */}
               <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#1aa1e0]/5 border border-[#1aa1e0]/20 text-[11px] text-slate-300">
                 <Info className="w-4 h-4 text-[#1aa1e0] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
@@ -738,12 +799,11 @@ export function AxleBuilderPopup({
             {/* Actions CTA */}
             <div className="flex flex-col gap-2.5 pt-4 border-t border-slate-800">
               <Button
-                onClick={handleAddToCart}
-                disabled={addToCart.isPending}
-                className="w-full h-11 bg-[#1aa1e0] hover:bg-[#1aa1e0]/90 text-black font-bold uppercase tracking-wider font-mono text-xs shadow-[0_0_20px_rgba(26,161,224,0.4)] flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all"
+                onClick={handleOpenPurchaseModal}
+                className="w-full h-12 bg-gradient-to-r from-[#1aa1e0] to-[#00b4d8] hover:from-[#1aa1e0]/90 hover:to-[#00b4d8]/90 text-black font-bold uppercase tracking-wider font-mono text-xs sm:text-sm shadow-[0_0_25px_rgba(26,161,224,0.45)] flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all rounded-xl"
               >
                 <ShoppingCart className="w-4 h-4" />
-                {addToCart.isPending ? "Adding to Cart..." : `Add to Cart &middot; NZ$${totalIncGst.toFixed(2)}`}
+                Add to Cart / Order &middot; NZ${totalIncGst.toFixed(2)}
               </Button>
 
               <Button
@@ -761,7 +821,7 @@ export function AxleBuilderPopup({
                   className="inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-400 hover:text-[#1aa1e0] transition-colors"
                 >
                   <PhoneCall className="w-3 h-3 text-[#1aa1e0]" />
-                  Need a custom PCD or electric brakes? Call Charlotte on 03 562 6024
+                  Need something custom? Call Charlotte on 03 562 6024
                 </a>
               </div>
             </div>
@@ -777,12 +837,12 @@ export function AxleBuilderPopup({
             >
               <div className="max-w-4xl max-h-[85vh] relative flex flex-col items-center">
                 <img
-                  src={DEFAULT_IMAGE}
-                  alt="Axle Technical Illustration"
+                  src={displayImage}
+                  alt={buildTitle}
                   className="max-w-full max-h-[75vh] object-contain rounded-xl border border-[#1aa1e0]/40 shadow-[0_0_40px_rgba(26,161,224,0.3)]"
                 />
                 <p className="mt-3 text-xs font-mono text-[#1aa1e0] text-center">
-                  Trailer Axle Assembly &middot; Hub-Face Track: {lengthMm}mm
+                  {buildTitle} &middot; {lengthMm}{unit} {parametricLabel}
                 </p>
                 <button
                   onClick={() => setIsPreviewImageOpen(false)}
@@ -812,7 +872,7 @@ export function AxleBuilderPopup({
                       Request Formal Axle Quote
                     </h3>
                     <p className="text-xs text-slate-400 font-mono mt-0.5">
-                      Custom Axle &middot; {lengthMm}mm Track &middot; NZ${totalIncGst.toFixed(2)} incl GST
+                      {buildTitle} &middot; {lengthMm}{unit} &middot; NZ${totalIncGst.toFixed(2)} incl GST
                     </p>
                   </div>
                   <button
@@ -948,6 +1008,162 @@ export function AxleBuilderPopup({
                     </div>
                   </form>
                 )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Dedicated Purchase & Cart Checkout Modal */}
+        <AnimatePresence>
+          {isPurchaseModalOpen && (
+            <div className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg bg-[#080d14] border border-[#1aa1e0]/50 rounded-2xl p-5 sm:p-6 shadow-[0_0_50px_rgba(26,161,224,0.35)] text-slate-100 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h3 className="font-bold text-base text-white flex items-center gap-2">
+                      <ShoppingCart className="w-4 h-4 text-[#1aa1e0]" />
+                      Order Custom Trailer Axle
+                    </h3>
+                    <p className="text-xs text-slate-400 font-mono mt-0.5">
+                      {buildTitle} &middot; {lengthMm}{unit} &middot; NZ${totalIncGst.toFixed(2)} incl GST
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsPurchaseModalOpen(false)}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Big Technical Blueprint Image Preview */}
+                <div className="relative h-44 sm:h-52 w-full rounded-xl overflow-hidden border border-[#1aa1e0]/40 bg-black/75 flex items-center justify-center p-2 shadow-inner shrink-0">
+                  <img
+                    src={displayImage}
+                    alt={buildTitle}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                  <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-[#09121d]/90 border border-[#1aa1e0]/40 text-[10px] font-mono text-[#1aa1e0] font-semibold flex items-center gap-1.5 backdrop-blur-md shadow-md">
+                    <Ruler className="w-3 h-3" />
+                    {lengthMm}{unit} {parametricLabel}
+                  </div>
+                </div>
+
+                {/* Accommodate the Individual Build Features */}
+                <div className="p-3.5 rounded-xl border border-[#1aa1e0]/25 bg-[#04080e]/80 flex flex-col gap-2 font-mono text-xs">
+                  <span className="text-[10px] uppercase tracking-wider text-[#1aa1e0] font-bold border-b border-[#1aa1e0]/20 pb-1.5 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" /> Included Custom Build Features:
+                  </span>
+                  
+                  {/* Base Beam Assembly */}
+                  <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
+                    <div>
+                      <span className="text-slate-200 font-medium block">
+                        Precision Axle Beam ({lengthMm}{unit})
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        Turned and welded beam assembly
+                      </span>
+                    </div>
+                    <span className="text-[#1aa1e0] font-semibold">
+                      NZ${(Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? 0) + lengthAdjustment).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Individual Build Features */}
+                  {activeSpecs.map((spec, i) => (
+                    <div key={i} className="flex justify-between items-center py-1 border-b border-slate-800/40 text-slate-300">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{spec.groupName}:</span>
+                        <span className="text-slate-200">{spec.optionName}</span>
+                      </div>
+                      <span className={spec.price > 0 ? "text-[#1aa1e0] font-semibold" : "text-emerald-400 text-[11px]"}>
+                        {spec.price > 0 ? `+NZ$${spec.price.toFixed(2)}` : "Included"}
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Total */}
+                  <div className="pt-2 flex justify-between items-center text-sm font-bold text-white border-t border-[#1aa1e0]/30">
+                    <span>Total (incl. GST):</span>
+                    <span className="text-base text-[#1aa1e0] drop-shadow-[0_0_8px_rgba(26,161,224,0.5)]">
+                      NZ${totalIncGst.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Customer Contact Details */}
+                <div className="space-y-3">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block font-semibold">
+                    Contact & Order Details:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="font-mono text-[10px] uppercase text-slate-400 block mb-1">
+                        Full Name *
+                      </label>
+                      <Input
+                        required
+                        value={purchaseForm.fullName}
+                        onChange={(e) => setPurchaseForm({ ...purchaseForm, fullName: e.target.value })}
+                        placeholder="Charlotte Welder"
+                        className="bg-black/50 border-slate-700 h-9 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[10px] uppercase text-slate-400 block mb-1">
+                        Email Address *
+                      </label>
+                      <Input
+                        required
+                        type="email"
+                        value={purchaseForm.email}
+                        onChange={(e) => setPurchaseForm({ ...purchaseForm, email: e.target.value })}
+                        placeholder="charlotte@example.co.nz"
+                        className="bg-black/50 border-slate-700 h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="font-mono text-[10px] uppercase text-slate-400 block mb-1">
+                      Phone Number (Optional)
+                    </label>
+                    <Input
+                      type="tel"
+                      value={purchaseForm.phone}
+                      onChange={(e) => setPurchaseForm({ ...purchaseForm, phone: e.target.value })}
+                      placeholder="021 000 0000"
+                      className="bg-black/50 border-slate-700 h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Direct Checkout & Add to Cart Action Buttons */}
+                <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
+                  <Button
+                    onClick={handleDirectCheckout}
+                    disabled={isDirectCheckingOut || !purchaseForm.fullName.trim() || !purchaseForm.email.trim()}
+                    className="w-full h-11 bg-[#1aa1e0] hover:bg-[#1aa1e0]/90 text-black font-bold uppercase tracking-wider font-mono text-xs shadow-[0_0_20px_rgba(26,161,224,0.4)] flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {isDirectCheckingOut ? "Connecting to Stripe..." : `Proceed to Instant Stripe Checkout &middot; NZ$${totalIncGst.toFixed(2)}`}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleAddToCartFromModal}
+                    disabled={addToCart.isPending}
+                    className="w-full h-10 border border-[#1aa1e0]/40 text-[#1aa1e0] bg-[#1aa1e0]/10 hover:bg-[#1aa1e0]/20 hover:text-white uppercase tracking-wider font-mono text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    {addToCart.isPending ? "Adding..." : "Add to Cart & Keep Browsing"}
+                  </Button>
+                </div>
               </motion.div>
             </div>
           )}
