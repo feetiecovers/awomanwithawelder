@@ -585,7 +585,7 @@
     "categoryId": "cat-prod-1779871511498",
     "subcategory": "",
     "subcategoryId": "",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
+    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
@@ -715,7 +715,7 @@
     "_sourceType": "product",
     "_syncKey": "product:pp-1791190561826-cdom",
     "images": [],
-    "image": null,
+    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "shippingPresets": []
   },
   {
@@ -775,7 +775,7 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Coffee Tables",
     "subcategoryId": "sub-prod-1783334225266-875",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "conditionalImageRules": [
       {
@@ -1055,7 +1055,7 @@
     "_sourceType": "product",
     "_syncKey": "product:pp-1790141374941-bor5",
     "images": [],
-    "image": null,
+    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "shippingPresets": []
   },
   {
@@ -1115,7 +1115,7 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Outdoor Furniture",
     "subcategoryId": "sub-prod-1789386589503-695",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
+    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
@@ -1259,7 +1259,7 @@
     "_sourceType": "product",
     "_syncKey": "product:pp-1789616572481-ropa",
     "images": [],
-    "image": null,
+    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "shippingPresets": []
   },
   {
@@ -1300,8 +1300,8 @@
     "sellPrice": 14.86,
     "unitPrice": 14.86,
     "costPrice": 0,
-    "image": null,
-    "imageUrl": "",
+    "image": "/assets/products/trailer_axle_assembly.jpg",
+    "imageUrl": "/assets/products/trailer_axle_assembly.jpg",
     "images": [],
     "available": true,
     "inStock": true,

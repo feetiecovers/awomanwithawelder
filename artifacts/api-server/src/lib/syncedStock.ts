@@ -85,7 +85,12 @@ function mapImages(value: unknown): unknown[] {
 
 function rewriteImageUrl(url: unknown): unknown {
   if (typeof url !== "string") return url;
-  return url.replace(/^https?:\/\/localhost:\d+\//i, "/");
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
+    return trimmed.replace(/^https?:\/\/localhost:\d+\//i, "https://denver-s-desk.onrender.com/");
+  }
+  return trimmed;
 }
 
 function rewriteImageObject(image: unknown): unknown {
@@ -397,9 +402,10 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry, websiteId?: str
   const publicType = declaredType === "parametric_product" ? "parametric_product" : entry._sourceType;
   const websiteImages = getWebsiteImageCandidates(entry.websiteImageMap, websiteId);
 
+  const candidateImage = entry.image ?? entry.imageUrl ?? entry.defaultImageUrl ?? (entry as any).image_url;
   const rawImages = Array.isArray(entry.images) && entry.images.length > 0
     ? entry.images
-    : mapImages(entry.image);
+    : mapImages(candidateImage);
   const images = rawImages.length
     ? rawImages.filter(Boolean).map(rewriteImageObject)
     : websiteImages.filter(Boolean).map(rewriteImageObject);
@@ -439,7 +445,7 @@ export function mapEntryToStockResponse(entry: SyncedStockEntry, websiteId?: str
     available: computeAvailability(entry, entry._sourceType),
     inStock: computeAvailability(entry, entry._sourceType),
     images,
-    image: resolveImageCandidate(images[0]) ?? resolveImageCandidate(entry.image) ?? resolveImageCandidate(websiteImages[0]),
+    image: resolveImageCandidate(images[0]) ?? resolveImageCandidate(candidateImage) ?? resolveImageCandidate(websiteImages[0]),
     shippingPresets,
   };
 }

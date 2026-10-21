@@ -24,7 +24,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import { BookingCalendar } from "./BookingCalendar";
 import { recordLocalBooking, getDateAvailability, getMinimumBookingDateNZString, type WebsiteBookingCapacityProjection } from "@/lib/bookingCache";
-import { getProductImages } from "@/lib/product-images";
+import { getProductImages, normalizeImageUrl } from "@/lib/product-images";
 import { getCachedProducts, saveProductsToCache } from "@/lib/productsCache";
 import { formatCustomerPromise } from "@/lib/promiseFormatting";
 
@@ -131,7 +131,13 @@ const emptyBookingForm: BookingFormState = {
 };
 
 function getProductImage(record: Record<string, unknown>): string | null {
-  return getProductImages(record, "medium")[0] ?? null;
+  const resolved = getProductImages(record, "large")[0];
+  if (resolved) return resolved;
+  const candidate = record.image ?? record.imageUrl ?? (record as any).defaultImageUrl;
+  if (typeof candidate === "string" && candidate.trim()) {
+    return normalizeImageUrl(candidate);
+  }
+  return null;
 }
 
 function normalizeProducts(value: unknown): ProductCard[] {

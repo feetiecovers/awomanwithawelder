@@ -92,6 +92,11 @@ app.get("/api/stripe/status", async (_req, res) => {
   }
 });
 
+app.get(["/api/images/*", "/images/*"], (req, res) => {
+  const targetUrl = `https://denver-s-desk.onrender.com${req.originalUrl}`;
+  res.redirect(302, targetUrl);
+});
+
 app.use(
   pinoHttp({
     logger,

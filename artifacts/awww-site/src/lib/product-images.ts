@@ -12,7 +12,9 @@ const VARIANT_KEYS: Record<ProductImageVariant, string[]> = {
 export function normalizeImageUrl(value: unknown): string {
   if (typeof value !== "string") return "";
   const trimmed = value.trim();
-  if (!trimmed) return "";
+  if (trimmed.startsWith("/assets/") || trimmed.startsWith("assets/")) {
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  }
 
   if (/^https?:\/\/localhost:\d+\//i.test(trimmed)) {
     return `${SHARED_IMAGE_BASE_URL}/${trimmed.replace(/^https?:\/\/localhost:\d+\//i, "")}`;
@@ -26,7 +28,7 @@ export function normalizeImageUrl(value: unknown): string {
     return `${SHARED_IMAGE_BASE_URL}/${trimmed}`;
   }
 
-  if (trimmed.startsWith("/")) {
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
     return `${SHARED_IMAGE_BASE_URL}${trimmed}`;
   }
 
@@ -51,7 +53,7 @@ export function getProductImages(record: Record<string, unknown> | null | undefi
 
   const rawImages = Array.isArray(record.images) && record.images.length > 0
     ? record.images
-    : [record.image, record.imageUrl, record.image_url];
+    : [record.image, record.imageUrl, record.image_url, (record as any).defaultImageUrl, (record as any).default_image_url];
 
   const urls = rawImages
     .map((candidate) => resolveImageCandidate(candidate, variant))
