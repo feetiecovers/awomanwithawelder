@@ -28,6 +28,15 @@ import { useAddToCart, useGetCart, getGetCartQueryKey, useGetCurrentMember } fro
 import { useQueryClient } from "@tanstack/react-query";
 import { buildApiUrl } from "@/lib/api-base";
 import ddIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
+import { ParametricHelperBubble } from "./ParametricHelperBubble";
+
+const PCD_MEASUREMENT_HELPER = {
+  title: "How to Measure Trailer Hub PCD",
+  definition:
+    "Pitch Circle Diameter (PCD) is the diameter of the circle passing through the center of all wheel studs.\n\n• 4-Stud & 6-Stud Patterns: Measure directly from the center of one stud across through the hub center to the opposite stud.\n• 5-Stud Patterns: Measure from the center of one stud to the center of an adjacent stud (distance 'A'). Then PCD = A ÷ sin(36°) (e.g. 67.2mm between adjacent studs gives 5×114.3mm / 5×4.5\" Ford/Toyota).",
+  image: "/assets/helpers/pcd_measurement_guide.jpg",
+  imageAlt: "Technical workshop pencil sketch illustrating how to measure 4-stud, 5-stud, and 6-stud trailer hub PCD bolt patterns with callouts and dimension arrows",
+};
 
 interface AxleBuilderPopupProps {
   isOpen: boolean;
@@ -66,8 +75,146 @@ function getGroupIcon(groupName: string) {
   if (name.includes("wheel")) return CircleDot;
   if (name.includes("brake")) return Disc;
   if (name.includes("pcd")) return Wrench;
-  if (name.includes("capacity") || name.includes("assembly")) return CheckSquare;
+  if (name.includes("capacity") || name.includes("assembl")) return CheckSquare;
   return Layers;
+}
+
+function isCapacityGroup(group: any): boolean {
+  if (!group) return false;
+  const id = String(group.id || "").toLowerCase();
+  const name = String(group.name || "").toLowerCase();
+  return (
+    id === "bog-axle-capacity" ||
+    name.includes("capacity") ||
+    name.includes("assembl") ||
+    id.includes("capacity") ||
+    id.includes("assembl")
+  );
+}
+
+function isPcdGroup(group: any): boolean {
+  if (!group) return false;
+  const id = String(group.id || "").toLowerCase();
+  const name = String(group.name || "").toLowerCase();
+  return name.includes("pcd") || id.includes("pcd") || id === "bog-1792497483124-7hm2";
+}
+
+function isBrakeGroup(group: any): boolean {
+  if (!group) return false;
+  const id = String(group.id || "").toLowerCase();
+  const name = String(group.name || "").toLowerCase();
+  return name.includes("brake") || id.includes("brake");
+}
+
+function isWheelGroup(group: any): boolean {
+  if (!group) return false;
+  const id = String(group.id || "").toLowerCase();
+  const name = String(group.name || "").toLowerCase();
+  return name.includes("wheel") || id.includes("wheel");
+}
+
+function normalizePcdString(val?: string | null): string {
+  if (!val) return "";
+  const m = String(val).match(/([456])\s*[x×X]\s*([0-9]+(?:\.[0-9]+)?)/);
+  return m ? `${m[1]}x${m[2]}` : "";
+}
+
+function getOptionPcd(option: any): string {
+  const raw = `${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`;
+  return normalizePcdString(raw);
+}
+
+function getOptionBrakeKind(option: any): "idler" | "hydraulic" | "electric" | "" {
+  const lower = `${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`.toLowerCase();
+  if (lower.includes("idler") || lower.includes("unbraked")) return "idler";
+  if (lower.includes("hydraulic")) return "hydraulic";
+  if (lower.includes("electric")) return "electric";
+  return "";
+}
+
+/**
+ * Validates if an assembly option in the capacity/assemblies group
+ * is compatible with the user's current selections in Wheel Size, Brake Type, and PCD.
+ */
+function isAssemblyOptionCompatible(
+  option: any,
+  selectedOptions: Record<string, string>,
+  allGroups: any[]
+): boolean {
+  const optPcd = getOptionPcd(option);
+  const optBrake = getOptionBrakeKind(option);
+
+  const pcdGroup = allGroups.find(isPcdGroup);
+  const brakeGroup = allGroups.find(isBrakeGroup);
+  const wheelGroup = allGroups.find(isWheelGroup);
+
+  // 1. PCD Filter: If PCD selected, only matching PCD assemblies remain visible
+  if (pcdGroup && selectedOptions[pcdGroup.id]) {
+    const selPcdOpt = pcdGroup.options?.find((o: any) => o.id === selectedOptions[pcdGroup.id]);
+    const selPcd = getOptionPcd(selPcdOpt);
+    if (selPcd && optPcd && optPcd !== selPcd) {
+      return false;
+    }
+  }
+
+  // 2. Brake Type Filter:
+  // If you don't select a brake type it will just show idlers; if brakes chosen no idlers
+  const selectedBrakeOptId = brakeGroup ? selectedOptions[brakeGroup.id] : undefined;
+  if (!selectedBrakeOptId) {
+    // No brake selected -> only show unbraked idlers
+    if (optBrake !== "idler") {
+      return false;
+    }
+  } else {
+    // Brake selected -> show matching braked assemblies, no idlers!
+    if (optBrake === "idler") {
+      return false;
+    }
+    const selBrakeOpt = brakeGroup?.options?.find((o: any) => o.id === selectedBrakeOptId);
+    const selBrakeKind = getOptionBrakeKind(selBrakeOpt);
+    if (selBrakeKind && optBrake !== selBrakeKind) {
+      return false;
+    }
+  }
+
+  // 3. Two-way blockedOptionIds check
+  for (const [groupId, selOptId] of Object.entries(selectedOptions)) {
+    if (!selOptId) continue;
+    if (Array.isArray(option.blockedOptionIds) && option.blockedOptionIds.includes(selOptId)) {
+      return false;
+    }
+    const grp = allGroups.find((g: any) => g.id === groupId);
+    const selOpt = grp?.options?.find((o: any) => o.id === selOptId);
+    if (Array.isArray(selOpt?.blockedOptionIds) && selOpt.blockedOptionIds.includes(option.id)) {
+      return false;
+    }
+  }
+
+  // 4. Wheel Size Filter:
+  // 14–22" wheel is limited to idlers and 4x114.3 / 5x114.3 hydraulic disc combinations.
+  // 15–22" is required for 5x120, 6x139.7 hydraulic and all electric drum combinations.
+  if (wheelGroup && selectedOptions[wheelGroup.id]) {
+    const selWheelOpt = wheelGroup.options?.find((o: any) => o.id === selectedOptions[wheelGroup.id]);
+    const wheelName = String(selWheelOpt?.name || "").toLowerCase();
+    if (wheelName.includes("14")) {
+      if (optBrake === "electric") return false;
+      if (optBrake === "hydraulic" && (optPcd === "5x120" || optPcd === "6x139.7")) return false;
+    }
+  }
+
+  return true;
+}
+
+function parseAssemblyParts(label: string) {
+  const parts = label.split(" - ").map((s) => s.trim());
+  if (parts.length >= 3) {
+    return {
+      capacity: parts[0],
+      pcd: parts[1],
+      brake: parts[2],
+    };
+  }
+  return null;
 }
 
 export function AxleBuilderPopup({
@@ -158,7 +305,8 @@ export function AxleBuilderPopup({
   const ratePerMetre = Number(parametricRule?.pricePerUnit ?? 14.86);
   const parametricLabel = String(parametricInput?.label ?? parametricFeature?.name ?? "Axle Length");
 
-  // Reset or initialize directly from build defaultSelections
+  // Reset or initialize directly when modal opens
+  // Starts with nothing chosen so all 20 assemblies are visible in the bottom group
   useEffect(() => {
     if (!isOpen) {
       setIsQuoteModalOpen(false);
@@ -166,29 +314,61 @@ export function AxleBuilderPopup({
       return;
     }
 
-    const initialSelections: Record<string, string> = {};
-
-    optionGroups.forEach((group: any) => {
-      const defaultOptionId = build?.defaultSelections?.[group.id]?.[0];
-      const foundDefault = group.options?.find((o: any) => o.id === defaultOptionId);
-      if (foundDefault) {
-        initialSelections[group.id] = foundDefault.id;
-      } else if (group.options?.[0]) {
-        initialSelections[group.id] = group.options[0].id;
-      }
-    });
-
-    setSelectedOptions(initialSelections);
+    // Start with empty selections so all features in the bottom group appear initially
+    setSelectedOptions({});
 
     const initLength = Number(
       parametricFeature?.parametricProduct?.defaultConfiguration?.[parametricInput?.key || ""] ?? defaultLength
     );
     setLengthMm(initLength);
     setLengthInputVal(String(initLength));
-  }, [isOpen, build, optionGroups, parametricFeature, parametricInput, defaultLength]);
+  }, [isOpen, parametricFeature, parametricInput, defaultLength]);
 
   const handleSelectOption = (group: any, option: any) => {
-    setSelectedOptions((prev) => ({ ...prev, [group.id]: option.id }));
+    setSelectedOptions((prev) => {
+      const isCurrentlySelected = prev[group.id] === option.id;
+      const next: Record<string, string> = { ...prev };
+
+      if (isCurrentlySelected) {
+        // Toggle off if already selected
+        delete next[group.id];
+      } else {
+        next[group.id] = option.id;
+      }
+
+      // If we modified Wheel Size, Brake Type, or PCD, check if the currently selected capacity assembly is still compatible
+      const capGroup = optionGroups.find(isCapacityGroup);
+      if (capGroup && next[capGroup.id]) {
+        const currentCapOpt = capGroup.options?.find((o: any) => o.id === next[capGroup.id]);
+        if (currentCapOpt && !isAssemblyOptionCompatible(currentCapOpt, next, optionGroups)) {
+          delete next[capGroup.id];
+        }
+      }
+
+      return next;
+    });
+  };
+
+  const handleDeselectGroup = (group: any) => {
+    setSelectedOptions((prev) => {
+      const next = { ...prev };
+      delete next[group.id];
+
+      // Re-validate capacity selection
+      const capGroup = optionGroups.find(isCapacityGroup);
+      if (capGroup && next[capGroup.id]) {
+        const currentCapOpt = capGroup.options?.find((o: any) => o.id === next[capGroup.id]);
+        if (currentCapOpt && !isAssemblyOptionCompatible(currentCapOpt, next, optionGroups)) {
+          delete next[capGroup.id];
+        }
+      }
+
+      return next;
+    });
+  };
+
+  const handleClearAllSelections = () => {
+    setSelectedOptions({});
   };
 
   // Length calculations
@@ -252,8 +432,38 @@ export function AxleBuilderPopup({
     };
   }, [optionGroups, selectedOptions, lengthMm, defaultLength, ratePerMetre, build]);
 
+  // Check whether minimum essential configuration is completed (PCD + Capacity assembly)
+  const isReadyToBuild = useMemo(() => {
+    const pcdGroup = optionGroups.find(isPcdGroup);
+    const capGroup = optionGroups.find(isCapacityGroup);
+    const hasPcd = !pcdGroup || Boolean(selectedOptions[pcdGroup.id]);
+    const hasCap = !capGroup || Boolean(selectedOptions[capGroup.id]);
+    return hasPcd && hasCap;
+  }, [optionGroups, selectedOptions]);
+
   // Open the dedicated Purchase & Checkout Modal
   const handleOpenPurchaseModal = () => {
+    const pcdGroup = optionGroups.find(isPcdGroup);
+    const capGroup = optionGroups.find(isCapacityGroup);
+
+    if (pcdGroup && !selectedOptions[pcdGroup.id]) {
+      toast({
+        title: "PCD Selection Required",
+        description: "Please choose your wheel stud pattern (PCD) to configure your axle.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (capGroup && !selectedOptions[capGroup.id]) {
+      toast({
+        title: "Axle Assembly Required",
+        description: "Please choose an available capacity and assembly from the list below.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsPurchaseModalOpen(true);
   };
 
@@ -582,73 +792,155 @@ export function AxleBuilderPopup({
             {optionGroups.map((group: any, groupIndex: number) => {
               const GroupIcon = getGroupIcon(group.name);
               const selectedOptionId = selectedOptions[group.id];
-              const isDenseGroup = Array.isArray(group.options) && group.options.length > 4;
+              const selectedOption = group.options?.find((o: any) => o.id === selectedOptionId);
+              const isCapacity = isCapacityGroup(group);
+              const isPcd = isPcdGroup(group);
+
+              // Filter options for capacity/assembly group based on PCD, Brake Type, and Wheel Size
+              const visibleOptions = isCapacity
+                ? (group.options?.filter((opt: any) =>
+                    isAssemblyOptionCompatible(opt, selectedOptions, optionGroups)
+                  ) ?? [])
+                : (group.options ?? []);
+
+              const isDenseGroup = visibleOptions.length > 4;
 
               return (
                 <div key={group.id} className="flex flex-col gap-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
-                      <GroupIcon className="w-3.5 h-3.5 text-[#1aa1e0]" />
-                      {groupIndex + 1}. {group.name}
-                    </label>
-                    {group.description && (
-                      <span className="text-[11px] text-slate-400 leading-tight">
-                        {group.description}
-                      </span>
-                    )}
-                  </div>
-
-                  <div
-                    className={
-                      isDenseGroup
-                        ? "grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"
-                        : `grid grid-cols-1 ${group.options?.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-2.5`
-                    }
-                  >
-                    {group.options?.map((option: any) => {
-                      const isSelected = selectedOptionId === option.id;
-                      const displayLabel = getOptionDisplayLabel(option);
-
-                      return (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="text-xs uppercase font-mono tracking-wider text-slate-200 font-semibold flex items-center gap-1.5">
+                        <GroupIcon className="w-3.5 h-3.5 text-[#1aa1e0]" />
+                        {groupIndex + 1}. {group.name}
+                      </label>
+                      {isPcd && (
+                        <ParametricHelperBubble
+                          helper={PCD_MEASUREMENT_HELPER}
+                          className="ml-0.5"
+                        />
+                      )}
+                      {selectedOption && (
+                        <span className="text-[10px] font-mono text-[#1aa1e0] bg-[#1aa1e0]/10 border border-[#1aa1e0]/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Check className="w-2.5 h-2.5" />
+                          {getOptionDisplayLabel(selectedOption)}
+                        </span>
+                      )}
+                      {isCapacity && (
+                        <span className="text-[10px] font-mono text-slate-400 bg-black/40 border border-slate-800 px-2 py-0.5 rounded-full">
+                          {!selectedOptions[optionGroups.find(isBrakeGroup)?.id || ""]
+                            ? `Showing ${visibleOptions.length} unbraked idler assemblies`
+                            : `Showing ${visibleOptions.length} compatible braked assemblies`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedOption && (
                         <button
-                          key={option.id}
                           type="button"
-                          onClick={() => handleSelectOption(group, option)}
-                          className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
-                            isSelected
-                              ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_18px_rgba(26,161,224,0.25)] ring-1 ring-[#1aa1e0]"
-                              : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
-                          }`}
+                          onClick={() => handleDeselectGroup(group)}
+                          className="text-[10px] font-mono text-slate-400 hover:text-rose-400 flex items-center gap-0.5 transition-colors cursor-pointer"
+                          title={`Deselect ${group.name}`}
                         >
-                          <div>
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
-                                {displayLabel}
-                                {isSelected && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1aa1e0] shrink-0" />
-                                )}
-                              </span>
-                            </div>
-                            {option.description && (
-                              <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                                {option.description}
-                              </p>
-                            )}
-                          </div>
-                          <div className="mt-2 flex items-center justify-between text-[11px] font-mono">
-                            <span className="text-slate-500">
-                              {isSelected ? "Selected" : "Select"}
-                            </span>
-                            {Number(option.price) > 0 && (
-                              <span className="text-[#1aa1e0] font-semibold">
-                                +NZ${Number(option.price).toFixed(2)}
-                              </span>
-                            )}
-                          </div>
+                          <X className="w-3 h-3" /> Clear
                         </button>
-                      );
-                    })}
+                      )}
+                      {group.description && (
+                        <span className="text-[11px] text-slate-400 leading-tight hidden sm:inline">
+                          {group.description}
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {group.description && (
+                    <span className="text-[11px] text-slate-400 leading-tight sm:hidden">
+                      {group.description}
+                    </span>
+                  )}
+
+                  {/* Empty state when 0 assemblies match */}
+                  {isCapacity && visibleOptions.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-slate-300 text-xs flex flex-col gap-2">
+                      <div className="flex items-center gap-2 text-amber-400 font-semibold font-mono">
+                        <Info className="w-4 h-4 shrink-0" />
+                        No assemblies match this specific combination
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        The selected stud pattern and brake combination does not have a physical axle assembly manufactured. Try clearing or changing your Brake Type selection.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleClearAllSelections}
+                        className="self-start text-[11px] font-mono text-[#1aa1e0] hover:underline cursor-pointer"
+                      >
+                        Reset All Selections
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        isDenseGroup
+                          ? "grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1"
+                          : `grid grid-cols-1 ${visibleOptions.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-2.5`
+                      }
+                    >
+                      {visibleOptions.map((option: any) => {
+                        const isSelected = selectedOptionId === option.id;
+                        const displayLabel = getOptionDisplayLabel(option);
+                        const parts = isCapacity ? parseAssemblyParts(displayLabel) : null;
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => handleSelectOption(group, option)}
+                            className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                              isSelected
+                                ? "border-[#1aa1e0] bg-[#1aa1e0]/10 shadow-[0_0_18px_rgba(26,161,224,0.25)] ring-1 ring-[#1aa1e0]"
+                                : "border-slate-800 bg-[#09121d]/70 hover:border-slate-700 hover:bg-[#0c1827]"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1">
+                                {parts ? (
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="px-2 py-0.5 rounded bg-[#1aa1e0]/15 text-[#1aa1e0] font-mono font-bold text-xs border border-[#1aa1e0]/30 shrink-0">
+                                      {parts.capacity}
+                                    </span>
+                                    <span className="font-bold text-xs sm:text-sm text-white">
+                                      {parts.pcd} &middot; {parts.brake}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+                                    {displayLabel}
+                                  </span>
+                                )}
+                                {isSelected && (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1aa1e0] shrink-0 ml-auto" />
+                                )}
+                              </div>
+                              {option.description && (
+                                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                  {option.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="mt-2 flex items-center justify-between text-[11px] font-mono">
+                              <span className={isSelected ? "text-[#1aa1e0] font-semibold" : "text-slate-500"}>
+                                {isSelected ? "Selected (tap to deselect)" : "Select"}
+                              </span>
+                              {Number(option.price) > 0 && (
+                                <span className="text-[#1aa1e0] font-semibold">
+                                  +NZ${Number(option.price).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -724,8 +1016,12 @@ export function AxleBuilderPopup({
                   <ShieldCheck className="w-4 h-4 text-[#1aa1e0]" />
                   Specification Summary
                 </h3>
-                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  Ready to Build
+                <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${
+                  isReadyToBuild
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                    : "bg-[#1aa1e0]/10 text-[#1aa1e0] border-[#1aa1e0]/30"
+                }`}>
+                  {isReadyToBuild ? "Ready to Build" : "Configuring"}
                 </span>
               </div>
 
@@ -739,6 +1035,12 @@ export function AxleBuilderPopup({
                     </span>
                   </div>
                 ))}
+                {!isReadyToBuild && (
+                  <div className="text-[11px] font-mono text-amber-400/90 italic py-1 flex items-center gap-1.5 border-b border-slate-800/60">
+                    <Info className="w-3 h-3 shrink-0" />
+                    <span>Select PCD &amp; an assembly to complete build</span>
+                  </div>
+                )}
                 {parametricInput && (
                   <div className="flex justify-between py-1 border-b border-slate-800/60">
                     <span className="text-slate-400">{parametricLabel}:</span>
@@ -803,7 +1105,9 @@ export function AxleBuilderPopup({
                 className="w-full h-12 bg-gradient-to-r from-[#1aa1e0] to-[#00b4d8] hover:from-[#1aa1e0]/90 hover:to-[#00b4d8]/90 text-black font-bold uppercase tracking-wider font-mono text-xs sm:text-sm shadow-[0_0_25px_rgba(26,161,224,0.45)] flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all rounded-xl"
               >
                 <ShoppingCart className="w-4 h-4" />
-                Add to Cart / Order &middot; NZ${totalIncGst.toFixed(2)}
+                {isReadyToBuild
+                  ? `Add to Cart / Order · NZ$${totalIncGst.toFixed(2)}`
+                  : `Select Assembly to Order · NZ$${totalIncGst.toFixed(2)}`}
               </Button>
 
               <Button
