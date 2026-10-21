@@ -398,26 +398,37 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     }
 
     const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      setBookingCapacityLoading(false);
+    }, 6000);
+
     setBookingCapacityLoading(true);
-    void fetch(buildApiUrl("/booking-availability?days=120"), {
-      signal: controller.signal,
-    })
+    const targetUrl = buildApiUrl("/api/booking-availability?days=120");
+
+    void fetch(targetUrl, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(`Availability request failed: ${response.status}`);
         return response.json() as Promise<WebsiteBookingCapacityProjection>;
       })
       .then((projection) => {
-        if (!controller.signal.aborted) setBookingCapacity(projection);
+        if (!controller.signal.aborted && projection && Array.isArray(projection.days)) {
+          setBookingCapacity(projection);
+        }
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setBookingCapacity(null);
+      .catch((err) => {
+        console.warn("Failed to load booking capacity projection, using local availability:", err);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setBookingCapacityLoading(false);
+        clearTimeout(timeoutId);
+        setBookingCapacityLoading(false);
       });
 
-    return () => controller.abort();
-  }, [selectedService]);
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [selectedService?.id]);
 
   const goToPage = (next: number) => {
     const target = Math.max(0, Math.min(next, totalPages - 1));

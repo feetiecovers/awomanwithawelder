@@ -139,11 +139,17 @@ export function BookingCalendar({
     <div className="w-full rounded-2xl border border-primary/20 bg-[#060b12]/90 backdrop-blur-md p-4 sm:p-5 shadow-[0_0_30px_rgba(26,157,224,0.08)]">
       {/* Calendar Header / Month Controls */}
       <div className="flex items-center justify-between pb-4 mb-3 border-b border-primary/15">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
           <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-primary">
             {monthLabel}
           </h4>
+          {isLoading && (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-mono text-primary animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+              Syncing live slots...
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -173,13 +179,7 @@ export function BookingCalendar({
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="py-12 text-center font-mono text-xs text-muted-foreground animate-pulse">
-          Loading booking capacity calendar...
-        </div>
-      ) : (
-        <>
-          {/* Weekday Labels Header */}
+      {/* Weekday Labels Header */}
           <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-2">
             {WEEKDAY_NAMES.map((w) => (
               <div
@@ -292,8 +292,6 @@ export function BookingCalendar({
               </div>
             </div>
           </div>
-        </>
-      )}
 
       {/* Selected Date Summary Notice */}
       <div className="mt-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-2 font-mono text-xs">
