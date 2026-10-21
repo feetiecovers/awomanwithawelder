@@ -71,16 +71,22 @@ function getOptionDisplayLabel(option: any): string {
 }
 
 /**
- * Resolves option price either directly from option fields (price, sellPrice, displayPrice, priceAdjustment)
- * or through mapped build features in build.features, build.includedFeatures, or build.buildFeatures.
+ * Resolves option price either directly from option fields (price, sellPrice, displayPrice, priceAdjustment, priceDelta)
+ * or through mapped build features in build.features, build.includedFeatures, build.buildFeatures, or build.availableFeatures.
  */
 function getOptionPrice(option: any, build?: any): number {
   if (!option) return 0;
   const directPrice = Number(
-    option.price ?? option.sellPrice ?? option.displayPrice ?? option.priceAdjustment ?? 0
+    option.price ?? option.sellPrice ?? option.displayPrice ?? option.priceAdjustment ?? option.priceDelta ?? 0
   );
   if (!isNaN(directPrice) && directPrice > 0) {
     return directPrice;
+  }
+
+  // Check build optionPriceAdjustments if present
+  if (build?.optionPriceAdjustments && typeof build.optionPriceAdjustments === "object") {
+    const adj = Number(build.optionPriceAdjustments[option.id]);
+    if (!isNaN(adj) && adj > 0) return adj;
   }
 
   // Resolve through linked featureIds if present
@@ -96,7 +102,7 @@ function getOptionPrice(option: any, build?: any): number {
       const match = allFeatures.find((f: any) => f?.id === fid);
       if (match) {
         const featPrice = Number(
-          match.price ?? match.sellPrice ?? match.displayPrice ?? match.priceAdjustment ?? 0
+          match.price ?? match.sellPrice ?? match.displayPrice ?? match.priceAdjustment ?? match.unitCost ?? match.cost ?? 0
         );
         if (!isNaN(featPrice) && featPrice > 0) {
           featTotal += featPrice;
@@ -721,14 +727,14 @@ export function AxleBuilderPopup({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-3 sm:pb-4 pb-safe bg-black/85 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-labelledby="axle-builder-title"
     >
       {/* Outer Card with Electric Blue glow styling */}
       <div
-        className="w-full max-w-5xl h-[94vh] sm:h-[90vh] flex flex-col bg-[#080d14]/98 border border-[#1aa1e0]/40 rounded-2xl shadow-[0_0_50px_rgba(26,161,224,0.25)] overflow-hidden text-slate-100 relative"
+        className="w-full max-w-5xl h-[88dvh] sm:h-[90vh] max-h-[calc(100dvh-1.5rem)] flex flex-col bg-[#080d14]/98 border border-[#1aa1e0]/40 rounded-2xl shadow-[0_0_50px_rgba(26,161,224,0.25)] overflow-hidden text-slate-100 relative"
       >
         {/* Subtle decorative background gradients */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#1aa1e0]/10 rounded-full blur-3xl pointer-events-none -z-10" />

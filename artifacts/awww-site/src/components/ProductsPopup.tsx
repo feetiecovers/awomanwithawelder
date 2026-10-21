@@ -992,7 +992,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[180px] sm:min-h-[220px] md:min-h-[260px] bg-black/40 cursor-pointer"
+                                className="w-full h-36 xs:h-44 sm:h-52 md:h-64 sm:flex-1 shrink-0 flex items-center justify-center relative overflow-hidden group bg-black/40 cursor-pointer"
                                 onClick={() => {
                                   if (item.type === "build") {
                                     if (onOpenBuildProduct) onOpenBuildProduct(item);
@@ -1062,9 +1062,9 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 )}
                               </div>
 
-                              <div className="flex flex-col sm:flex-row justify-between p-5 gap-4 bg-[#0a1018]/80 shrink-0 border-t border-primary/10">
-                                <div className="flex flex-col justify-start gap-2 flex-1 min-w-0">
-                                  <h3 className="font-bold text-lg sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
+                              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col sm:flex-row justify-between p-3.5 sm:p-5 gap-2.5 sm:gap-4 bg-[#0a1018]/80 border-t border-primary/10 overscroll-contain">
+                                <div className="flex flex-col justify-start gap-1.5 sm:gap-2 flex-1 min-w-0">
+                                  <h3 className="font-bold text-base sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className={`font-mono text-[10px] tracking-wider uppercase inline-flex items-center px-2 py-0.5 rounded border shrink-0 ${
                                       item.comingSoon
@@ -1082,27 +1082,27 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     )}
                                   </div>
                                   {item.description && (
-                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 mt-1 pr-2">
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-3 mt-0.5 sm:mt-1 pr-2">
                                       {item.description}
                                     </p>
                                   )}
                                   {item.customerMessage && (
-                                    <p className="font-mono text-[11px] text-cyan-100/70 leading-relaxed">
+                                    <p className="font-mono text-[10px] sm:text-[11px] text-cyan-100/70 leading-snug sm:leading-relaxed">
                                       {item.customerMessage}
                                     </p>
                                   )}
                                 </div>
                                 
-                                <div className="flex flex-col gap-2.5 shrink-0 sm:w-[180px]">
+                                <div className="flex flex-col gap-2 sm:gap-2.5 shrink-0 sm:w-[180px] pt-1 sm:pt-0">
                                   <div className="text-left sm:text-right">
-                                    <span className="font-mono text-cyan-100 font-bold text-xl sm:text-2xl">
+                                    <span className="font-mono text-cyan-100 font-bold text-lg sm:text-2xl">
                                       {item.type === "parametric" || item.type === "configurable" || item.type === "build"
                                         ? (item.price > 0 ? `From ${formatCurrency(item.price)}` : "Configure for price") 
                                         : formatCurrency(item.price)}
                                     </span>
                                   </div>
                                   
-                                  <div className="flex flex-col gap-2">
+                                  <div className="flex flex-col gap-1.5 sm:gap-2">
                                     <Button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1121,7 +1121,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                         }
                                         onAddToCartClick(item);
                                       }}
-                                      className="w-full font-mono uppercase tracking-widest text-[11px] h-10"
+                                      className="w-full font-mono uppercase tracking-widest text-[11px] h-9 sm:h-10"
                                       disabled={addToCart.isPending || (!item.comingSoon && item.type !== "parametric" && item.type !== "build" && item.available === false)}
                                       data-testid={`button-add-to-cart-${item.id}`}
                                     >
@@ -1137,7 +1137,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                           setSelectedWorkspaceProduct(item);
                                         }
                                       }}
-                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
+                                      className="w-full font-mono uppercase tracking-widest text-[10px] h-8 sm:h-9 border border-primary/50 text-primary bg-primary/5 hover:bg-primary/20 hover:text-white transition-all shadow-[0_0_15px_rgba(26,157,224,0.1)] hover:shadow-[0_0_25px_rgba(26,157,224,0.3)]"
                                       data-testid={`button-view-product-${item.id}`}
                                     >
                                       {item.type === "build" ? "Customize Axle" : "View Product"}

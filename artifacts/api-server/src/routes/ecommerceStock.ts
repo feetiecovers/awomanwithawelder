@@ -182,11 +182,34 @@ router.post("/ecommerce/stock", async (req, res): Promise<void> => {
     configurableProducts,
     parametricProducts,
   );
-  const stockBuilds = Array.isArray(payload.stockBuilds)
-    ? payload.stockBuilds
-    : Array.isArray(payload.builds)
-      ? payload.builds
-      : incomingBuildEntries;
+  const rawBuildFeatures = [
+    ...(Array.isArray(payload.buildFeatures) ? payload.buildFeatures : []),
+    ...(Array.isArray(payload.features) ? payload.features : []),
+    ...(Array.isArray(payload.stockBuildFeatures) ? payload.stockBuildFeatures : []),
+  ];
+  const stockBuilds = (
+    Array.isArray(payload.stockBuilds)
+      ? payload.stockBuilds
+      : Array.isArray(payload.builds)
+        ? payload.builds
+        : incomingBuildEntries
+  ).map((b: any) => {
+    if (!b || typeof b !== "object") return b;
+    const existingFeatures = Array.isArray(b.features)
+      ? b.features
+      : Array.isArray(b.buildFeatures)
+        ? b.buildFeatures
+        : [];
+    const mergedFeatures = [
+      ...existingFeatures,
+      ...rawBuildFeatures.filter((rf: any) => !existingFeatures.some((ef: any) => ef?.id === rf?.id)),
+    ];
+    return {
+      ...b,
+      features: mergedFeatures,
+      buildFeatures: mergedFeatures,
+    };
+  });
   const stockServiceProducts = Array.isArray(payload.stockServiceProducts)
     ? payload.stockServiceProducts
     : Array.isArray(payload.stockServices)

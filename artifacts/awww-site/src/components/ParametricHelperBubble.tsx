@@ -66,7 +66,7 @@ export function ParametricHelperBubble({
           <AnimatePresence>
             {isOpen && (
               <div
-                className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
+                className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-x-hidden overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
                 aria-label={helper.title || "Dimension Guide"}
@@ -77,11 +77,13 @@ export function ParametricHelperBubble({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 10 }}
                   transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                  className="relative w-full max-w-sm sm:max-w-md bg-[#081320] border-2 border-primary/45 rounded-2xl p-4 sm:p-5 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(26,157,224,0.35)] flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto"
+                  className="relative w-full max-w-sm sm:max-w-md bg-[#081320] border-2 border-primary/45 rounded-2xl p-4 sm:p-5 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(26,157,224,0.35)] flex flex-col gap-3.5 max-h-[85vh] overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Subtle ambient glow inside card */}
-                  <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+                  {/* Subtle ambient glow clipped inside card */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl -z-0">
+                    <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-2xl" />
+                  </div>
 
                   {/* Header */}
                   <div className="flex items-center justify-between gap-3 border-b border-primary/25 pb-2.5">
