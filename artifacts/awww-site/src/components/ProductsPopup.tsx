@@ -986,7 +986,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[160px] bg-black/40 cursor-pointer"
+                                className="w-full flex-1 flex items-center justify-center relative overflow-hidden group min-h-[180px] sm:min-h-[220px] md:min-h-[260px] bg-black/40 cursor-pointer"
                                 onClick={() => {
                                   if (item.type === "build") {
                                     if (onOpenBuildProduct) onOpenBuildProduct(item);
@@ -1001,7 +1001,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     <img
                                       src={item.image}
                                       alt={item.name}
-                                      className="absolute inset-0 w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                                      className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                                       loading="eager"
                                       decoding="async"
                                       onClick={() => {

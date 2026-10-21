@@ -546,7 +546,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
       <div className="flex-1 overflow-y-auto scroll-industrial flex flex-col">
         
         {/* Top: Boxed Image Gallery */}
-        <div className={`relative w-full ${isStockProduct ? 'h-[230px] sm:h-[260px]' : 'h-[175px] sm:h-[210px]'} bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15`}>
+        <div className="relative w-full h-[260px] sm:h-[340px] md:h-[380px] bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15">
           {galleryImages.length > 0 ? (
             <AnimatePresence mode="wait">
               <motion.img
@@ -557,7 +557,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className={`w-full h-full ${isStockProduct ? 'object-cover' : 'object-contain p-2'}`}
+                className="w-full h-full object-cover object-center"
               />
             </AnimatePresence>
           ) : (

@@ -70,6 +70,45 @@ function getOptionDisplayLabel(option: any): string {
   return String(option?.id || "Option");
 }
 
+/**
+ * Resolves option price either directly from option fields (price, sellPrice, displayPrice, priceAdjustment)
+ * or through mapped build features in build.features, build.includedFeatures, or build.buildFeatures.
+ */
+function getOptionPrice(option: any, build?: any): number {
+  if (!option) return 0;
+  const directPrice = Number(
+    option.price ?? option.sellPrice ?? option.displayPrice ?? option.priceAdjustment ?? 0
+  );
+  if (!isNaN(directPrice) && directPrice > 0) {
+    return directPrice;
+  }
+
+  // Resolve through linked featureIds if present
+  if (Array.isArray(option.featureIds) && option.featureIds.length > 0 && build) {
+    const allFeatures = [
+      ...(Array.isArray(build.features) ? build.features : []),
+      ...(Array.isArray(build.includedFeatures) ? build.includedFeatures : []),
+      ...(Array.isArray(build.buildFeatures) ? build.buildFeatures : []),
+      ...(Array.isArray(build.availableFeatures) ? build.availableFeatures : []),
+    ];
+    let featTotal = 0;
+    for (const fid of option.featureIds) {
+      const match = allFeatures.find((f: any) => f?.id === fid);
+      if (match) {
+        const featPrice = Number(
+          match.price ?? match.sellPrice ?? match.displayPrice ?? match.priceAdjustment ?? 0
+        );
+        if (!isNaN(featPrice) && featPrice > 0) {
+          featTotal += featPrice;
+        }
+      }
+    }
+    if (featTotal > 0) return featTotal;
+  }
+
+  return 0;
+}
+
 function getGroupIcon(groupName: string) {
   const name = String(groupName || "").toLowerCase();
   if (name.includes("wheel")) return CircleDot;
@@ -403,7 +442,7 @@ export function AxleBuilderPopup({
       const selectedId = selectedOptions[group.id];
       const opt = group.options?.find((o: any) => o.id === selectedId);
       if (opt) {
-        const price = Number(opt.price || 0);
+        const price = getOptionPrice(opt, build);
         optsTotal += price;
         specs.push({
           groupName: group.name,
@@ -755,13 +794,13 @@ export function AxleBuilderPopup({
 
               {/* Technical Drawing Image */}
               <div
-                className="relative h-44 sm:h-56 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
+                className="relative h-52 sm:h-64 md:h-72 w-full bg-black/60 flex items-center justify-center cursor-pointer overflow-hidden"
                 onClick={() => setIsPreviewImageOpen(true)}
               >
                 <img
                   src={displayImage}
                   alt={buildTitle}
-                  className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 />
 
                 {/* Dimension Overlay Badge */}
@@ -888,6 +927,7 @@ export function AxleBuilderPopup({
                         const isSelected = selectedOptionId === option.id;
                         const displayLabel = getOptionDisplayLabel(option);
                         const parts = isCapacity ? parseAssemblyParts(displayLabel) : null;
+                        const optPrice = getOptionPrice(option, build);
 
                         return (
                           <button
@@ -930,9 +970,9 @@ export function AxleBuilderPopup({
                               <span className={isSelected ? "text-[#1aa1e0] font-semibold" : "text-slate-500"}>
                                 {isSelected ? "Selected (tap to deselect)" : "Select"}
                               </span>
-                              {Number(option.price) > 0 && (
+                              {optPrice > 0 && (
                                 <span className="text-[#1aa1e0] font-semibold">
-                                  +NZ${Number(option.price).toFixed(2)}
+                                  +NZ${optPrice.toFixed(2)}
                                 </span>
                               )}
                             </div>
