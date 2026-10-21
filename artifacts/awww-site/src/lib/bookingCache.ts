@@ -143,9 +143,14 @@ export function getDateAvailability(
 
   // Frontend 7-day lien: require minimum 7 days advance notice
   if (dateStr < minLienDateStr) {
+    let formattedEarliest = "28 Oct";
+    try {
+      const d = new Date(`${minLienDateStr}T12:00:00`);
+      formattedEarliest = new Intl.DateTimeFormat("en-NZ", { day: "numeric", month: "short" }).format(d);
+    } catch {}
     return {
       available: false,
-      reason: "Requires 7-day advance notice (earliest: 28 Oct)",
+      reason: `Requires 7-day advance notice (earliest: ${formattedEarliest})`,
       capacity: 0,
       bookedCount: 0,
       remainingCapacity: 0,

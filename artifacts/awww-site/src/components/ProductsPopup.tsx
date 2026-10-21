@@ -527,7 +527,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       suburb: current.suburb,
       city: current.city,
       zipCode: current.zipCode,
-      customFields: Object.fromEntries((service.bookingFields ?? []).map((field) => [field.id, current.customFields[field.id] ?? ""])),
+      customFields: Object.fromEntries((service.bookingFields ?? []).map((field) => [field.id, (current.customFields || {})[field.id] ?? ""])),
     }));
   };
 
@@ -1439,10 +1439,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               </label>
                               {field.type === "select" ? (
                                 <select
-                                  value={bookingForm.customFields[field.id] ?? ""}
+                                  value={(bookingForm.customFields || {})[field.id] ?? ""}
                                   onChange={(e) => setBookingForm((current) => ({
                                     ...current,
-                                    customFields: { ...current.customFields, [field.id]: e.target.value },
+                                    customFields: { ...(current.customFields || {}), [field.id]: e.target.value },
                                   }))}
                                   className="input-field w-full bg-[#0d1520] border border-primary/20 text-foreground rounded-lg p-2.5 text-xs font-mono outline-none focus:border-primary h-10"
                                 >
@@ -1455,10 +1455,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 </select>
                               ) : field.type === "checkbox" ? (
                                 <select
-                                  value={bookingForm.customFields[field.id] ?? ""}
+                                  value={(bookingForm.customFields || {})[field.id] ?? ""}
                                   onChange={(e) => setBookingForm((current) => ({
                                     ...current,
-                                    customFields: { ...current.customFields, [field.id]: e.target.value },
+                                    customFields: { ...(current.customFields || {}), [field.id]: e.target.value },
                                   }))}
                                   className="input-field w-full bg-[#0d1520] border border-primary/20 text-foreground rounded-lg p-2.5 text-xs font-mono outline-none focus:border-primary h-10"
                                 >
@@ -1470,10 +1470,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 <Input
                                   type={field.type === "number" ? "number" : "text"}
                                   placeholder={field.placeholder || field.label}
-                                  value={bookingForm.customFields[field.id] ?? ""}
+                                  value={(bookingForm.customFields || {})[field.id] ?? ""}
                                   onChange={(e) => setBookingForm((current) => ({
                                     ...current,
-                                    customFields: { ...current.customFields, [field.id]: e.target.value },
+                                    customFields: { ...(current.customFields || {}), [field.id]: e.target.value },
                                   }))}
                                   className="bg-primary/5 border-primary/20 focus:border-primary/50 font-mono text-sm h-10"
                                 />
