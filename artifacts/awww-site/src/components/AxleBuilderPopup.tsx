@@ -510,9 +510,65 @@ export function AxleBuilderPopup({
     setLengthInputVal(String(parsed));
   };
 
+  // Find default assembly price from build payload to derive the baseline axle beam fabrication cost
+  const defaultAssemblyPrice = useMemo(() => {
+    const capGroup = optionGroups.find(isCapacityGroup);
+    if (!capGroup || !Array.isArray(capGroup.options)) return 240.8;
+
+    // 1. Try build.defaultSelections
+    const defaultId = build?.defaultSelections?.[capGroup.id]?.[0];
+    if (defaultId) {
+      const opt = capGroup.options.find((o: any) => o.id === defaultId);
+      if (opt) {
+        const p = getOptionPrice(opt, build);
+        if (p > 0) return p;
+      }
+    }
+
+    // 2. Try option with isIncluded === true
+    const incOpt = capGroup.options.find((o: any) => o.isIncluded);
+    if (incOpt) {
+      const p = getOptionPrice(incOpt, build);
+      if (p > 0) return p;
+    }
+
+    // 3. Try includedFeatureIds
+    if (Array.isArray(build?.includedFeatureIds)) {
+      const match = capGroup.options.find((o: any) =>
+        Array.isArray(o.featureIds) && o.featureIds.some((fid: string) => build.includedFeatureIds.includes(fid))
+      );
+      if (match) {
+        const p = getOptionPrice(match, build);
+        if (p > 0) return p;
+      }
+    }
+
+    // 4. Fallback to lowest priced capacity option or 240.8
+    const priced = capGroup.options
+      .map((o: any) => getOptionPrice(o, build))
+      .filter((p: number) => p > 0);
+    if (priced.length > 0) {
+      return Math.min(...priced);
+    }
+
+    return 240.8;
+  }, [optionGroups, build]);
+
   // Price Calculation strictly from payload values
-  const { optionsTotal, lengthAdjustment, totalIncGst, subtotalExGst, gstAmount, activeSpecs } = useMemo(() => {
-    let optsTotal = 0;
+  const {
+    baseAxleBeamPrice,
+    chosenAssemblyPrice,
+    otherOptionsTotal,
+    lengthAdjustment,
+    totalIncGst,
+    subtotalExGst,
+    gstAmount,
+    activeSpecs,
+    selectedAssemblyOpt,
+  } = useMemo(() => {
+    let assemblyPrice = 0;
+    let otherOptsTotal = 0;
+    let selectedAssembly: any = null;
     const specs: { groupName: string; optionName: string; price: number; description?: string }[] = [];
 
     optionGroups.forEach((group: any) => {
@@ -520,7 +576,15 @@ export function AxleBuilderPopup({
       const opt = group.options?.find((o: any) => o.id === selectedId);
       if (opt) {
         const price = getOptionPrice(opt, build);
-        optsTotal += price;
+        const isCap = isCapacityGroup(group);
+
+        if (isCap) {
+          assemblyPrice = price;
+          selectedAssembly = opt;
+        } else {
+          otherOptsTotal += price;
+        }
+
         specs.push({
           groupName: group.name,
           optionName: getOptionDisplayLabel(opt),
@@ -532,21 +596,28 @@ export function AxleBuilderPopup({
 
     const extraMetres = Math.max(0, (lengthMm - defaultLength) / 1000);
     const lengthAdj = Number((extraMetres * ratePerMetre).toFixed(2));
-    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
+    const baseConfigPrice = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 281.23);
+    const beamBasePrice = Math.max(0, Number((baseConfigPrice - defaultAssemblyPrice).toFixed(2)));
 
-    const total = Number((baseComponents + optsTotal + lengthAdj).toFixed(2));
+    // When an assembly is selected, total is: beamBasePrice + chosenAssemblyPrice + otherOptsTotal + lengthAdj
+    // When no assembly is selected yet, preview base configuration price + lengthAdj
+    const effectiveAssemblyPrice = selectedAssembly ? assemblyPrice : defaultAssemblyPrice;
+    const total = Number((beamBasePrice + effectiveAssemblyPrice + otherOptsTotal + lengthAdj).toFixed(2));
     const subtotal = Number((total / (1 + GST_RATE)).toFixed(2));
     const gst = Number((total - subtotal).toFixed(2));
 
     return {
-      optionsTotal: optsTotal,
+      baseAxleBeamPrice: beamBasePrice,
+      chosenAssemblyPrice: assemblyPrice,
+      otherOptionsTotal: otherOptsTotal,
       lengthAdjustment: lengthAdj,
       totalIncGst: total,
       subtotalExGst: subtotal,
       gstAmount: gst,
       activeSpecs: specs,
+      selectedAssemblyOpt: selectedAssembly,
     };
-  }, [optionGroups, selectedOptions, lengthMm, defaultLength, ratePerMetre, build]);
+  }, [optionGroups, selectedOptions, lengthMm, defaultLength, ratePerMetre, build, defaultAssemblyPrice]);
 
   // Check whether minimum essential configuration is completed (PCD + Capacity assembly)
   const isReadyToBuild = useMemo(() => {
@@ -592,7 +663,7 @@ export function AxleBuilderPopup({
     });
     selectionsRecord[parametricLabel] = `${lengthMm} ${unit}`;
 
-    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
+    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 281.23);
 
     const configuration = {
       type: "build",
@@ -602,14 +673,16 @@ export function AxleBuilderPopup({
       customerEmail: purchaseForm.email || undefined,
       customerPhone: purchaseForm.phone || undefined,
       parametricSummary: `${lengthMm}${unit} Track Axle Beam`,
-      parametricPrice: Number((baseComponents + lengthAdjustment).toFixed(2)),
+      parametricPrice: Number((baseAxleBeamPrice + lengthAdjustment).toFixed(2)),
       buildFeatures: activeSpecs,
       selections: selectionsRecord,
       parametricValues: parametricInput?.key
         ? { [parametricInput.key]: lengthMm }
         : { length: lengthMm },
       resolvedPrice: totalIncGst,
-      totalPriceAdjustment: Number((lengthAdjustment + optionsTotal).toFixed(2)),
+      totalPriceAdjustment: Number(
+        (lengthAdjustment + (chosenAssemblyPrice > 0 ? chosenAssemblyPrice - defaultAssemblyPrice : 0)).toFixed(2)
+      ),
     };
 
     addToCart.mutate(
@@ -660,21 +733,23 @@ export function AxleBuilderPopup({
     });
     selectionsRecord[parametricLabel] = `${lengthMm} ${unit}`;
 
-    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 0);
+    const baseComponents = Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? build?.basePrice ?? 281.23);
 
     const configuration = {
       type: "build",
       buildId: build?.buildId ?? "build-1792398167103",
       buildName: build?.name || "Trailer Axle Builder",
       parametricSummary: `${lengthMm}${unit} Track Axle Beam`,
-      parametricPrice: Number((baseComponents + lengthAdjustment).toFixed(2)),
+      parametricPrice: Number((baseAxleBeamPrice + lengthAdjustment).toFixed(2)),
       buildFeatures: activeSpecs,
       selections: selectionsRecord,
       parametricValues: parametricInput?.key
         ? { [parametricInput.key]: lengthMm }
         : { length: lengthMm },
       resolvedPrice: totalIncGst,
-      totalPriceAdjustment: Number((lengthAdjustment + optionsTotal).toFixed(2)),
+      totalPriceAdjustment: Number(
+        (lengthAdjustment + (chosenAssemblyPrice > 0 ? chosenAssemblyPrice - defaultAssemblyPrice : 0)).toFixed(2)
+      ),
     };
 
     try {
@@ -836,7 +911,7 @@ export function AxleBuilderPopup({
                 Calculated Price (inc GST)
               </span>
               <span className="font-mono text-lg sm:text-xl font-bold text-[#1aa1e0] drop-shadow-[0_0_10px_rgba(26,161,224,0.6)]">
-                NZ${totalIncGst.toFixed(2)}
+                {isReadyToBuild ? `NZ$${totalIncGst.toFixed(2)}` : `From NZ$${totalIncGst.toFixed(2)}`}
               </span>
             </div>
 
@@ -1051,7 +1126,7 @@ export function AxleBuilderPopup({
                               </span>
                               {optPrice > 0 && (
                                 <span className="text-[#1aa1e0] font-semibold">
-                                  +NZ${optPrice.toFixed(2)}
+                                  {isCapacity ? `NZ$${optPrice.toFixed(2)}` : `+NZ$${optPrice.toFixed(2)}`}
                                 </span>
                               )}
                             </div>
@@ -1175,13 +1250,21 @@ export function AxleBuilderPopup({
               {/* Cost Itemization from Payload */}
               <div className="bg-[#04080e] p-3.5 rounded-lg border border-slate-800/80 flex flex-col gap-2 text-xs font-mono mt-1">
                 <div className="flex justify-between text-slate-400">
-                  <span>Base Assembly:</span>
-                  <span>NZ${Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? 0).toFixed(2)}</span>
+                  <span>Base Axle Beam ({defaultLength}{unit}):</span>
+                  <span>NZ${baseAxleBeamPrice.toFixed(2)}</span>
                 </div>
-                {optionsTotal > 0 && (
+                <div className="flex justify-between text-slate-400">
+                  <span>Hub / Brake Assembly:</span>
+                  <span className={selectedAssemblyOpt ? "text-slate-200" : "text-slate-400"}>
+                    {selectedAssemblyOpt
+                      ? `NZ$${chosenAssemblyPrice.toFixed(2)}`
+                      : `From NZ$${defaultAssemblyPrice.toFixed(2)}`}
+                  </span>
+                </div>
+                {otherOptionsTotal > 0 && (
                   <div className="flex justify-between text-slate-400">
                     <span>Options Adjustment:</span>
-                    <span>+NZ${optionsTotal.toFixed(2)}</span>
+                    <span>+NZ${otherOptionsTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {lengthAdjustment > 0 && (
@@ -1203,7 +1286,9 @@ export function AxleBuilderPopup({
                 <div className="border-t border-[#1aa1e0]/30 pt-2 flex justify-between items-center text-sm font-bold text-white">
                   <span>Total (incl. GST):</span>
                   <span className="text-lg text-[#1aa1e0] drop-shadow-[0_0_8px_rgba(26,161,224,0.5)]">
-                    NZ${totalIncGst.toFixed(2)}
+                    {isReadyToBuild
+                      ? `NZ$${totalIncGst.toFixed(2)}`
+                      : `From NZ$${totalIncGst.toFixed(2)}`}
                   </span>
                 </div>
               </div>
@@ -1226,7 +1311,7 @@ export function AxleBuilderPopup({
                 <ShoppingCart className="w-4 h-4" />
                 {isReadyToBuild
                   ? `Add to Cart / Order · NZ$${totalIncGst.toFixed(2)}`
-                  : `Select Assembly to Order · NZ$${totalIncGst.toFixed(2)}`}
+                  : `Select Assembly to Order · From NZ$${totalIncGst.toFixed(2)}`}
               </Button>
 
               <Button
@@ -1495,7 +1580,7 @@ export function AxleBuilderPopup({
                       </span>
                     </div>
                     <span className="text-[#1aa1e0] font-semibold">
-                      NZ${(Number(build?.price ?? build?.displayPrice ?? build?.sellPrice ?? 0) + lengthAdjustment).toFixed(2)}
+                      NZ${(baseAxleBeamPrice + lengthAdjustment).toFixed(2)}
                     </span>
                   </div>
 
@@ -1507,7 +1592,7 @@ export function AxleBuilderPopup({
                         <span className="text-slate-200">{spec.optionName}</span>
                       </div>
                       <span className={spec.price > 0 ? "text-[#1aa1e0] font-semibold" : "text-emerald-400 text-[11px]"}>
-                        {spec.price > 0 ? `+NZ$${spec.price.toFixed(2)}` : "Included"}
+                        {spec.price > 0 ? `NZ$${spec.price.toFixed(2)}` : "Included"}
                       </span>
                     </div>
                   ))}
