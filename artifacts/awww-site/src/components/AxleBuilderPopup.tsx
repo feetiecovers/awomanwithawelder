@@ -203,20 +203,44 @@ function isWheelGroup(group: any): boolean {
 
 function normalizePcdString(val?: string | null): string {
   if (!val) return "";
-  const m = String(val).match(/([456])\s*[x×X]\s*([0-9]+(?:\.[0-9]+)?)/);
-  return m ? `${m[1]}x${m[2]}` : "";
+  const s = String(val).toLowerCase().replace(/×/g, "x").replace(/\s+/g, "");
+
+  if (s.includes("4x114.3") || s.includes("4x1143") || s.includes("4x114")) return "4x114.3";
+  if (s.includes("5x114.3") || s.includes("5x1143") || s.includes("5x114")) return "5x114.3";
+  if (s.includes("5x120")) return "5x120";
+  if (s.includes("6x139.7") || s.includes("6x1397") || s.includes("6x139")) return "6x139.7";
+
+  const m = s.match(/([456])x([0-9]+(?:\.[0-9]+)?)/);
+  if (m) {
+    let num = m[2];
+    if (num === "1143") num = "114.3";
+    if (num === "1397") num = "139.7";
+    return `${m[1]}x${num}`;
+  }
+  return "";
 }
 
 function getOptionPcd(option: any): string {
-  const raw = `${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`;
+  if (!option) return "";
+  const displayLabel = getOptionDisplayLabel(option);
+  const raw = `${displayLabel} ${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`;
   return normalizePcdString(raw);
 }
 
 function getOptionBrakeKind(option: any): "idler" | "hydraulic" | "electric" | "" {
-  const lower = `${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`.toLowerCase();
-  if (lower.includes("idler") || lower.includes("unbraked")) return "idler";
-  if (lower.includes("hydraulic")) return "hydraulic";
-  if (lower.includes("electric")) return "electric";
+  if (!option) return "";
+  const displayLabel = getOptionDisplayLabel(option).toLowerCase();
+  const raw = `${displayLabel} ${option?.name || ""} ${option?.label || ""} ${option?.id || ""}`.toLowerCase();
+
+  if (raw.includes("hydraulic") || raw.includes("disc")) return "hydraulic";
+  if (raw.includes("electric") || raw.includes("drum")) return "electric";
+  if (raw.includes("idler") || raw.includes("unbraked")) return "idler";
+
+  const id = String(option?.id || "").toLowerCase();
+  if (id === "bo-1792497289583-ve7t" || id.includes("hydraulic")) return "hydraulic";
+  if (id === "bo-1792497423715-obpd" || id.includes("electric")) return "electric";
+  if (id === "bo-axle-brake-idler" || id.includes("idler")) return "idler";
+
   return "";
 }
 
@@ -236,9 +260,13 @@ function isAssemblyOptionCompatible(
   const brakeGroup = allGroups.find(isBrakeGroup);
   const wheelGroup = allGroups.find(isWheelGroup);
 
+  const selectedBrakeOptId = brakeGroup ? selectedOptions[brakeGroup.id] : undefined;
+  const selectedPcdOptId = pcdGroup ? selectedOptions[pcdGroup.id] : undefined;
+  const selectedWheelOptId = wheelGroup ? selectedOptions[wheelGroup.id] : undefined;
+
   // 1. PCD Filter: If PCD selected, only matching PCD assemblies remain visible
-  if (pcdGroup && selectedOptions[pcdGroup.id]) {
-    const selPcdOpt = pcdGroup.options?.find((o: any) => o.id === selectedOptions[pcdGroup.id]);
+  if (pcdGroup && selectedPcdOptId) {
+    const selPcdOpt = pcdGroup.options?.find((o: any) => o.id === selectedPcdOptId);
     const selPcd = getOptionPcd(selPcdOpt);
     if (selPcd && optPcd && optPcd !== selPcd) {
       return false;
@@ -246,21 +274,19 @@ function isAssemblyOptionCompatible(
   }
 
   // 2. Brake Type Filter:
-  // If you don't select a brake type it will just show idlers; if brakes chosen no idlers
-  const selectedBrakeOptId = brakeGroup ? selectedOptions[brakeGroup.id] : undefined;
-  if (!selectedBrakeOptId) {
-    // No brake selected -> only show unbraked idlers
-    if (optBrake !== "idler") {
-      return false;
-    }
-  } else {
-    // Brake selected -> show matching braked assemblies, no idlers!
-    if (optBrake === "idler") {
-      return false;
-    }
+  // - If user chose a brake option: show only assemblies matching that brake system (no idlers if braked)
+  // - If user has NOT chosen a brake option:
+  //   * If other filters (PCD or Wheel) are chosen: default to unbraked idlers ("if you don't select a brake type it will just show idlers")
+  //   * If NOTHING is chosen yet: show all assemblies initially so user sees the full catalog
+  if (selectedBrakeOptId) {
     const selBrakeOpt = brakeGroup?.options?.find((o: any) => o.id === selectedBrakeOptId);
     const selBrakeKind = getOptionBrakeKind(selBrakeOpt);
     if (selBrakeKind && optBrake !== selBrakeKind) {
+      return false;
+    }
+  } else {
+    const hasOtherFilter = Boolean(selectedPcdOptId || selectedWheelOptId);
+    if (hasOtherFilter && optBrake !== "idler") {
       return false;
     }
   }
@@ -281,10 +307,12 @@ function isAssemblyOptionCompatible(
   // 4. Wheel Size Filter:
   // 14–22" wheel is limited to idlers and 4x114.3 / 5x114.3 hydraulic disc combinations.
   // 15–22" is required for 5x120, 6x139.7 hydraulic and all electric drum combinations.
-  if (wheelGroup && selectedOptions[wheelGroup.id]) {
-    const selWheelOpt = wheelGroup.options?.find((o: any) => o.id === selectedOptions[wheelGroup.id]);
-    const wheelName = String(selWheelOpt?.name || "").toLowerCase();
-    if (wheelName.includes("14")) {
+  if (wheelGroup && selectedWheelOptId) {
+    const selWheelOpt = wheelGroup.options?.find((o: any) => o.id === selectedWheelOptId);
+    const wheelLabel = getOptionDisplayLabel(selWheelOpt).toLowerCase();
+    const wheelId = String(selWheelOpt?.id || "").toLowerCase();
+    const is14Inch = wheelLabel.includes("14") || wheelId === "bo-1792496800618-honi";
+    if (is14Inch) {
       if (optBrake === "electric") return false;
       if (optBrake === "hydraulic" && (optPcd === "5x120" || optPcd === "6x139.7")) return false;
     }
@@ -916,7 +944,9 @@ export function AxleBuilderPopup({
                       {isCapacity && (
                         <span className="text-[10px] font-mono text-slate-400 bg-black/40 border border-slate-800 px-2 py-0.5 rounded-full">
                           {!selectedOptions[optionGroups.find(isBrakeGroup)?.id || ""]
-                            ? `Showing ${visibleOptions.length} unbraked idler assemblies`
+                            ? (!selectedOptions[optionGroups.find(isPcdGroup)?.id || ""] && !selectedOptions[optionGroups.find(isWheelGroup)?.id || ""]
+                                ? `Showing all ${visibleOptions.length} assemblies`
+                                : `Showing ${visibleOptions.length} unbraked idler assemblies`)
                             : `Showing ${visibleOptions.length} compatible braked assemblies`}
                         </span>
                       )}
