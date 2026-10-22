@@ -57,7 +57,7 @@ interface QuoteFormState {
 }
 
 const GST_RATE = 0.15;
-const DEFAULT_IMAGE = "/assets/products/trailer_axle_assembly.jpg";
+const DEFAULT_IMAGE = "/assets/products/trailer_axle_composite.png";
 
 const KNOWN_OPTION_LABELS: Record<string, string> = {
   // Wheel size
@@ -954,6 +954,17 @@ export function AxleBuilderPopup({
                   alt={buildTitle}
                   className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 />
+
+                {/* Accurately Priced Tag identical to Ride-On trailer */}
+                <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#060e18]/85 backdrop-blur-md border border-cyan-400/50 text-cyan-200 text-xs font-mono shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+                    </span>
+                    <span className="font-medium text-cyan-100 tracking-wide">Accurately Priced for Quick Purchase</span>
+                  </div>
+                </div>
 
                 {/* Dimension Overlay Badge */}
                 <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#1aa1e0]/40 text-xs font-mono text-[#1aa1e0] flex items-center gap-2 shadow-lg">

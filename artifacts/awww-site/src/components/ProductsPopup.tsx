@@ -1059,14 +1059,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   </>
                                 )}
 
-                                {item.showComingSoonBanner && item.comingSoonLabel && (
+                                {((item.showComingSoonBanner && item.comingSoonLabel) || item.code === "AXL-BLDR-01" || item.id === 12) && (
                                   <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-10 pointer-events-none">
                                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#060e18]/85 backdrop-blur-md border border-cyan-400/50 text-cyan-200 text-xs font-mono shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
                                       <span className="relative flex h-2 w-2 shrink-0">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
                                       </span>
-                                      <span className="font-medium text-cyan-100 tracking-wide">{item.comingSoonLabel}</span>
+                                      <span className="font-medium text-cyan-100 tracking-wide">{item.code === "AXL-BLDR-01" || item.id === 12 ? "Accurately Priced for Quick Purchase" : item.comingSoonLabel}</span>
                                     </div>
                                   </div>
                                 )}
@@ -1092,7 +1092,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     )}
                                   </div>
                                   {item.description && (
-                                    <p className="text-xs sm:text-sm text-slate-300/90 leading-snug sm:leading-relaxed line-clamp-2 mt-0.5 sm:mt-1 pr-1">
+                                    <p className="text-xs sm:text-sm text-slate-300/90 leading-snug sm:leading-relaxed line-clamp-5 sm:line-clamp-6 mt-0.5 sm:mt-1 pr-1">
                                       {item.description}
                                     </p>
                                   )}
