@@ -59,15 +59,58 @@ interface QuoteFormState {
 const GST_RATE = 0.15;
 const DEFAULT_IMAGE = "/assets/products/trailer_axle_assembly.jpg";
 
+const KNOWN_OPTION_LABELS: Record<string, string> = {
+  // Wheel size
+  "bo-1792496800618-honi": "14–22 inch wheel",
+  "bo-1792496931854-qz2j": "15–22 inch wheel",
+  // Brake type
+  "bo-axle-brake-idler": "Idler (Unbraked)",
+  "bo-1792497289583-ve7t": "Hydraulic disc",
+  "bo-1792497423715-obpd": "Electric drum",
+  // PCD
+  "bo-1792497483124-7hm2": "4×114.3",
+  "bo-1792497559955-7ewi": "5×114.3",
+  "bo-1792497629197-p94c": "5×120",
+  "bo-1792497711139-1h16": "6×139.7",
+};
+
+function formatAssemblyId(id: string): string {
+  const m = id.match(/^bo-axle-(idler|hydraulic|electric)-([456]x[0-9]+)-([0-9]+)$/i);
+  if (!m) return "";
+  const [, type, rawPcd, cap] = m;
+  let pcd = rawPcd;
+  if (rawPcd === "4x1143") pcd = "4×114.3";
+  else if (rawPcd === "5x1143") pcd = "5×114.3";
+  else if (rawPcd === "5x120") pcd = "5×120";
+  else if (rawPcd === "6x1397") pcd = "6×139.7";
+
+  let brake = "Unbraked idler";
+  if (type.toLowerCase() === "hydraulic") brake = "Hydraulic disc";
+  else if (type.toLowerCase() === "electric") brake = "Electric drum";
+
+  return `${cap} kg · ${pcd} · ${brake}`;
+}
+
 /**
- * Pure display label reader — does not invent names.
- * Uses exact name/label from the build payload.
+ * Display label reader — uses exact name/label from the build payload if present,
+ * or gracefully falls back to canonical human-readable option labels.
+ * If Denver's Desk syncer set the internal code (bo-...) as the name/label,
+ * this function catches it and resolves the proper human-readable label.
  */
 function getOptionDisplayLabel(option: any): string {
-  if (option?.name && String(option.name).trim()) return String(option.name).trim();
-  if (option?.label && String(option.label).trim()) return String(option.label).trim();
-  if (option?.title && String(option.title).trim()) return String(option.title).trim();
-  return String(option?.id || "Option");
+  const candidate = String(option?.name ?? option?.label ?? option?.title ?? "").trim();
+  if (candidate && !candidate.startsWith("bo-")) {
+    return candidate;
+  }
+
+  const id = String(option?.id ?? candidate ?? "").trim();
+  if (KNOWN_OPTION_LABELS[id]) return KNOWN_OPTION_LABELS[id];
+
+  const assembly = formatAssemblyId(id);
+  if (assembly) return assembly;
+
+  if (candidate) return candidate;
+  return id || "Option";
 }
 
 /**
@@ -251,7 +294,7 @@ function isAssemblyOptionCompatible(
 }
 
 function parseAssemblyParts(label: string) {
-  const parts = label.split(" - ").map((s) => s.trim());
+  const parts = label.split(/\s*[-·]\s*/).map((s) => s.trim());
   if (parts.length >= 3) {
     return {
       capacity: parts[0],
@@ -727,14 +770,14 @@ export function AxleBuilderPopup({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 pb-3 sm:pb-4 pb-safe bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-1 sm:p-4 pb-1.5 sm:pb-4 pb-safe bg-black/85 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-labelledby="axle-builder-title"
     >
       {/* Outer Card with Electric Blue glow styling */}
       <div
-        className="w-full max-w-5xl h-[88dvh] sm:h-[90vh] max-h-[calc(100dvh-1.5rem)] flex flex-col bg-[#080d14]/98 border border-[#1aa1e0]/40 rounded-2xl shadow-[0_0_50px_rgba(26,161,224,0.25)] overflow-hidden text-slate-100 relative"
+        className="w-full max-w-5xl h-[96dvh] sm:h-[92vh] max-h-[calc(100dvh-0.5rem)] flex flex-col bg-[#080d14]/98 border border-[#1aa1e0]/40 rounded-2xl shadow-[0_0_50px_rgba(26,161,224,0.25)] overflow-hidden text-slate-100 relative"
       >
         {/* Subtle decorative background gradients */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#1aa1e0]/10 rounded-full blur-3xl pointer-events-none -z-10" />

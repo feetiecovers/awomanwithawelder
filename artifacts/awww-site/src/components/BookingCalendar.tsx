@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, memo } from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle2, XCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,7 @@ function formatFriendlyDate(dateStr: string): string {
   }
 }
 
-export function BookingCalendar({
+function BookingCalendarComponent({
   selectedDate,
   onSelectDate,
   projection,
@@ -312,3 +312,5 @@ export function BookingCalendar({
     </div>
   );
 }
+
+export const BookingCalendar = memo(BookingCalendarComponent);

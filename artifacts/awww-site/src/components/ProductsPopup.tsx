@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart, Calendar, ChevronLeft, ChevronRight, ReceiptText, User, Phone, PhoneCall, Mail, MapPin, ShoppingBag, Wrench, Maximize2 } from "lucide-react";
@@ -353,9 +353,15 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     sessionStorage.setItem("awww_custom_call_prompt_dismissed", "true");
   };
 
-  const products = normalizeProducts(productsData);
-  const shopItems = products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric" || p.type === "build");
-  const serviceItems = products.filter((p) => p.type === "service");
+  const products = useMemo(() => normalizeProducts(productsData), [productsData]);
+  const shopItems = useMemo(
+    () => products.filter((p) => p.type === "product" || p.type === "configurable" || p.type === "parametric" || p.type === "build"),
+    [products]
+  );
+  const serviceItems = useMemo(
+    () => products.filter((p) => p.type === "service"),
+    [products]
+  );
   const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
   const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
   const currentShopItems = shopItems.slice(safeShopPage * ITEMS_PER_PAGE, (safeShopPage + 1) * ITEMS_PER_PAGE);
@@ -369,7 +375,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   })();
   const pricing = selectedService ? getPricingBreakdown(activePrice) : null;
 
-  const cartTotal = (() => {
+  const cartTotal = useMemo(() => {
     if (!cart?.items || (cart.items as any[]).length === 0) return cart?.total ?? 0;
     return (cart.items as any[]).reduce((sum, item) => {
       const itemConfig = item.configuration || {};
@@ -377,7 +383,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
       const shipping = item.shippingPrice ?? 0;
       return sum + (itemPrice + shipping) * item.quantity;
     }, 0);
-  })();
+  }, [cart]);
 
   useEffect(() => {
     setBookingForm((current) => ({
@@ -558,9 +564,13 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     }));
   };
 
-  const updateBookingField = <K extends keyof BookingFormState>(field: K, value: BookingFormState[K]) => {
+  const updateBookingField = useCallback(<K extends keyof BookingFormState>(field: K, value: BookingFormState[K]) => {
     setBookingForm((current) => ({ ...current, [field]: value }));
-  };
+  }, []);
+
+  const handleSelectBookingDate = useCallback((dateStr: string) => {
+    setBookingForm((current) => ({ ...current, bookingDate: dateStr }));
+  }, []);
 
   const handleBookService = () => {
     if (!selectedService || !pricing) return;
@@ -992,7 +1002,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full h-36 xs:h-44 sm:h-52 md:h-64 sm:flex-1 shrink-0 flex items-center justify-center relative overflow-hidden group bg-black/40 cursor-pointer"
+                                className="w-full h-44 xs:h-52 sm:h-60 md:h-64 sm:flex-1 shrink-0 flex items-center justify-center relative overflow-hidden group bg-black/40 cursor-pointer"
                                 onClick={() => {
                                   if (item.type === "build") {
                                     if (onOpenBuildProduct) onOpenBuildProduct(item);
@@ -1062,7 +1072,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 )}
                               </div>
 
-                              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col sm:flex-row justify-between p-3.5 sm:p-5 gap-2.5 sm:gap-4 bg-[#0a1018]/80 border-t border-primary/10 overscroll-contain">
+                              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col sm:flex-row justify-between p-3.5 sm:p-5 gap-3 sm:gap-4 bg-[#0a1018]/80 border-t border-primary/10 overscroll-contain">
                                 <div className="flex flex-col justify-start gap-1.5 sm:gap-2 flex-1 min-w-0">
                                   <h3 className="font-bold text-base sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
                                   <div className="flex items-center gap-2 flex-wrap">
@@ -1082,7 +1092,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     )}
                                   </div>
                                   {item.description && (
-                                    <p className="text-xs sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-3 mt-0.5 sm:mt-1 pr-2">
+                                    <p className="text-xs sm:text-sm text-slate-300/90 leading-relaxed line-clamp-4 xs:line-clamp-5 sm:line-clamp-4 mt-0.5 sm:mt-1 pr-1">
                                       {item.description}
                                     </p>
                                   )}
@@ -1376,7 +1386,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                     <div className="space-y-2 sm:col-span-2">
                       <BookingCalendar
                         selectedDate={bookingForm.bookingDate}
-                        onSelectDate={(dateStr) => updateBookingField("bookingDate", dateStr)}
+                        onSelectDate={handleSelectBookingDate}
                         projection={bookingCapacity}
                         isLoading={bookingCapacityLoading}
                       />

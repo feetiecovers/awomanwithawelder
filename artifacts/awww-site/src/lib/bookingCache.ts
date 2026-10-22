@@ -25,37 +25,65 @@ export type DateAvailabilityResult = {
 
 const LOCAL_BOOKINGS_STORAGE_KEY = "awww_booked_dates_count_cache";
 
+let cachedTodayNZ: { dateStr: string; timestamp: number } | null = null;
+let cachedLocalBookings: { data: Record<string, number>; timestamp: number } | null = null;
+let cachedMinLien: { key: string; dateStr: string; timestamp: number } | null = null;
+
 /**
  * Returns today's date string in NZ format (YYYY-MM-DD).
+ * Cached in memory for 60 seconds to avoid repeating Intl timezone calculations.
  */
 export function getTodayNZString(): string {
+  const now = Date.now();
+  if (cachedTodayNZ && now - cachedTodayNZ.timestamp < 60000) {
+    return cachedTodayNZ.dateStr;
+  }
+
+  let dateStr = "";
   try {
     const d = new Date();
     const nzDateStr = d.toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" }); // "YYYY-MM-DD"
     if (/^\d{4}-\d{2}-\d{2}$/.test(nzDateStr)) {
-      return nzDateStr;
+      dateStr = nzDateStr;
     }
   } catch {
     // Fallback if timeZone formatting fails
   }
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+
+  if (!dateStr) {
+    const nowObj = new Date();
+    const year = nowObj.getFullYear();
+    const month = String(nowObj.getMonth() + 1).padStart(2, "0");
+    const day = String(nowObj.getDate()).padStart(2, "0");
+    dateStr = `${year}-${month}-${day}`;
+  }
+
+  cachedTodayNZ = { dateStr, timestamp: now };
+  return dateStr;
 }
 
 /**
  * Loads and automatically prunes local booking cache from localStorage.
- * Removes any date keys older than today in real life.
+ * Cached in memory for 10 seconds to avoid blocking main thread when rendering calendars.
  */
 export function getLocalBookingsCache(): Record<string, number> {
+  const now = Date.now();
+  if (cachedLocalBookings && now - cachedLocalBookings.timestamp < 10000) {
+    return cachedLocalBookings.data;
+  }
+
   if (typeof window === "undefined" || !window.localStorage) return {};
   try {
     const raw = localStorage.getItem(LOCAL_BOOKINGS_STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) {
+      cachedLocalBookings = { data: {}, timestamp: now };
+      return {};
+    }
     const parsed = JSON.parse(raw) as Record<string, number>;
-    if (!parsed || typeof parsed !== "object") return {};
+    if (!parsed || typeof parsed !== "object") {
+      cachedLocalBookings = { data: {}, timestamp: now };
+      return {};
+    }
 
     const todayStr = getTodayNZString();
     let hasExpired = false;
@@ -75,6 +103,7 @@ export function getLocalBookingsCache(): Record<string, number> {
       localStorage.setItem(LOCAL_BOOKINGS_STORAGE_KEY, JSON.stringify(cleanCache));
     }
 
+    cachedLocalBookings = { data: cleanCache, timestamp: now };
     return cleanCache;
   } catch {
     return {};
@@ -88,9 +117,10 @@ export function getLocalBookingsCache(): Record<string, number> {
 export function recordLocalBooking(dateStr: string): void {
   if (!dateStr || typeof window === "undefined" || !window.localStorage) return;
   try {
-    const cache = getLocalBookingsCache();
+    const cache = { ...getLocalBookingsCache() };
     cache[dateStr] = (cache[dateStr] || 0) + 1;
     localStorage.setItem(LOCAL_BOOKINGS_STORAGE_KEY, JSON.stringify(cache));
+    cachedLocalBookings = { data: cache, timestamp: Date.now() };
   } catch {
     // Ignore storage write errors
   }
@@ -108,16 +138,25 @@ export const FRONTEND_BOOKING_LIEN_DAYS = 7;
 
 /**
  * Returns the minimum selectable booking date string (YYYY-MM-DD) based on the 7-day frontend lien.
- * e.g. If today in NZ is 2026-10-21, 7 days later is 2026-10-28.
+ * Cached in memory for 60 seconds.
  */
 export function getMinimumBookingDateNZString(lienDays = FRONTEND_BOOKING_LIEN_DAYS): string {
+  const cacheKey = `${lienDays}`;
+  const now = Date.now();
+  if (cachedMinLien && cachedMinLien.key === cacheKey && now - cachedMinLien.timestamp < 60000) {
+    return cachedMinLien.dateStr;
+  }
+
   const todayStr = getTodayNZString();
   const [y, m, d] = todayStr.split("-").map(Number);
   const targetDate = new Date(Date.UTC(y, m - 1, d + lienDays, 12, 0, 0));
   const resYear = targetDate.getUTCFullYear();
   const resMonth = String(targetDate.getUTCMonth() + 1).padStart(2, "0");
   const resDay = String(targetDate.getUTCDate()).padStart(2, "0");
-  return `${resYear}-${resMonth}-${resDay}`;
+  const dateStr = `${resYear}-${resMonth}-${resDay}`;
+
+  cachedMinLien = { key: cacheKey, dateStr, timestamp: now };
+  return dateStr;
 }
 
 /**
