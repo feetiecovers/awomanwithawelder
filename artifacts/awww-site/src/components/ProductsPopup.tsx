@@ -1002,7 +1002,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                               data-testid={`card-product-${item.id}`}
                             >
                               <div
-                                className="w-full h-44 xs:h-52 sm:h-60 md:h-64 sm:flex-1 shrink-0 flex items-center justify-center relative overflow-hidden group bg-black/40 cursor-pointer"
+                                className="w-full h-40 xs:h-46 sm:h-56 md:h-64 sm:flex-1 shrink-0 flex items-center justify-center relative overflow-hidden group bg-black/40 cursor-pointer"
                                 onClick={() => {
                                   if (item.type === "build") {
                                     if (onOpenBuildProduct) onOpenBuildProduct(item);
@@ -1072,7 +1072,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                 )}
                               </div>
 
-                              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col sm:flex-row justify-between p-3.5 sm:p-5 gap-3 sm:gap-4 bg-[#0a1018]/80 border-t border-primary/10 overscroll-contain">
+                              <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col sm:flex-row justify-between p-3.5 sm:p-5 gap-2.5 sm:gap-4 bg-[#0a1018]/80 border-t border-primary/10 overscroll-contain">
                                 <div className="flex flex-col justify-start gap-1.5 sm:gap-2 flex-1 min-w-0">
                                   <h3 className="font-bold text-base sm:text-xl text-foreground leading-tight truncate sm:whitespace-normal">{item.name}</h3>
                                   <div className="flex items-center gap-2 flex-wrap">
@@ -1092,7 +1092,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                     )}
                                   </div>
                                   {item.description && (
-                                    <p className="text-xs sm:text-sm text-slate-300/90 leading-relaxed line-clamp-4 xs:line-clamp-5 sm:line-clamp-4 mt-0.5 sm:mt-1 pr-1">
+                                    <p className="text-xs sm:text-sm text-slate-300/90 leading-snug sm:leading-relaxed line-clamp-2 mt-0.5 sm:mt-1 pr-1">
                                       {item.description}
                                     </p>
                                   )}
