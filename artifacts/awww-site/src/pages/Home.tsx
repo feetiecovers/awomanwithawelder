@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
@@ -22,7 +22,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useGetCart, useListProducts, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { saveProductsToCache } from "@/lib/productsCache";
+import { saveProductsToCache, getCachedProducts } from "@/lib/productsCache";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -53,7 +53,9 @@ export default function Home() {
   const { data: liveProducts } = useListProducts({
     query: {
       queryKey: getListProductsQueryKey(),
-      staleTime: 0,
+      initialData: getCachedProducts,
+      initialDataUpdatedAt: Date.now(),
+      staleTime: 60_000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
@@ -64,6 +66,14 @@ export default function Home() {
       saveProductsToCache(liveProducts);
     }
   }, [liveProducts]);
+
+  const activeAxleBuild = useMemo(() => {
+    if (Array.isArray(liveProducts)) {
+      const match = liveProducts.find((p: any) => p.id === 12 || p.type === "build" || Boolean(p.buildId));
+      if (match) return match;
+    }
+    return selectedAxleBuild;
+  }, [liveProducts, selectedAxleBuild]);
   const queryClient = useQueryClient();
   const cartCount = (cart?.items as { id: number }[] | undefined)?.length ?? 0;
 
@@ -256,7 +266,7 @@ export default function Home() {
       {hasMountedAxleBuilder && <AxleBuilderPopup
         isOpen={isAxleBuilderOpen}
         onClose={() => setIsAxleBuilderOpen(false)}
-        build={selectedAxleBuild}
+        build={activeAxleBuild}
         onRequireSignIn={handleOpenMembers}
       />}
 

@@ -305,8 +305,8 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
     query: {
       queryKey: getListProductsQueryKey(),
       initialData: getCachedProducts,
-      initialDataUpdatedAt: 0,
-      staleTime: 0,
+      initialDataUpdatedAt: Date.now(),
+      staleTime: 60_000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },

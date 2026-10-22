@@ -29,10 +29,10 @@
       "backorderedQuantity": 1,
       "shortageClassification": "backorder",
       "availableQuantity": 0,
-      "estimatedDispatchDate": "2026-10-30",
-      "estimatedDispatchDateLabel": "Estimated dispatch: 30 October",
-      "estimatedPromiseDate": "2026-10-30",
-      "promiseDate": "2026-10-30",
+      "estimatedDispatchDate": "2026-11-01",
+      "estimatedDispatchDateLabel": "Estimated dispatch: 1 November",
+      "estimatedPromiseDate": "2026-11-01",
+      "promiseDate": "2026-11-01",
       "capacityQuantity": 1,
       "capacityDays": 10,
       "outstandingQuantityAhead": 0,
@@ -40,19 +40,19 @@
         {
           "fromQuantity": 1,
           "toQuantity": 1,
-          "promiseDate": "2026-10-30",
+          "promiseDate": "2026-11-01",
           "days": 10
         },
         {
           "fromQuantity": 2,
           "toQuantity": 2,
-          "promiseDate": "2026-11-09",
+          "promiseDate": "2026-11-11",
           "days": 20
         },
         {
           "fromQuantity": 3,
           "toQuantity": 3,
-          "promiseDate": "2026-11-19",
+          "promiseDate": "2026-11-21",
           "days": 30
         }
       ]
@@ -112,12 +112,12 @@
     "purchaseAllowed": true,
     "allowBackorder": true,
     "availableQuantity": 0,
-    "stockRevision": "5e0a2a07",
+    "stockRevision": "754ad675",
     "externalId": "sp-1780139922566",
     "_sourceType": "product",
     "_syncKey": "product:sp-1780139922566",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.376Z",
+    "updatedAt": "2026-10-22T07:09:16.376Z",
     "productType": "product",
     "type": "product",
     "available": false
@@ -166,8 +166,8 @@
     "externalId": "svc-1790046775620",
     "_sourceType": "service",
     "_syncKey": "service:svc-1790046775620",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -216,8 +216,8 @@
     "externalId": "svc-1789468855892",
     "_sourceType": "service",
     "_syncKey": "service:svc-1789468855892",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -266,8 +266,8 @@
     "externalId": "svc-1789467907182",
     "_sourceType": "service",
     "_syncKey": "service:svc-1789467907182",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -339,8 +339,8 @@
     "externalId": "svc-1783166810182",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166810182",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -401,8 +401,8 @@
     "externalId": "svc-1783166554908",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166554908",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -463,8 +463,8 @@
     "externalId": "svc-1783166188316",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783166188316",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -525,8 +525,8 @@
     "externalId": "svc-1783165606392",
     "_sourceType": "service",
     "_syncKey": "service:svc-1783165606392",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "productType": "service",
     "type": "service",
     "available": true
@@ -585,7 +585,7 @@
     "categoryId": "cat-prod-1779871511498",
     "subcategory": "",
     "subcategoryId": "",
-    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
+    "imageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
@@ -710,11 +710,13 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1791190561826-cdom",
-    "images": [],
+    "images": [
+      "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png"
+    ],
     "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
     "shippingPresets": []
   },
@@ -775,7 +777,7 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Coffee Tables",
     "subcategoryId": "sub-prod-1783334225266-875",
-    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "conditionalImageRules": [
       {
@@ -1050,11 +1052,13 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.377Z",
+    "updatedAt": "2026-10-22T07:09:16.377Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1790141374941-bor5",
-    "images": [],
+    "images": [
+      "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png"
+    ],
     "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
     "shippingPresets": []
   },
@@ -1115,7 +1119,7 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Outdoor Furniture",
     "subcategoryId": "sub-prod-1789386589503-695",
-    "imageUrl": "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
+    "imageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
@@ -1254,54 +1258,61 @@
       "web-1782561404289"
     ],
     "websiteId": "web-1782561404289",
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.378Z",
+    "updatedAt": "2026-10-22T07:09:16.378Z",
     "_sourceType": "product",
     "_syncKey": "product:pp-1789616572481-ropa",
-    "images": [],
+    "images": [
+      "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png"
+    ],
     "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
     "shippingPresets": []
   },
   {
     "id": 12,
-    "externalId": "build-1792398167103",
+    "externalId": "build-1792573440528",
     "type": "build",
     "productType": "build",
     "buildType": "build",
-    "buildId": "build-1792398167103",
-    "buildCode": "AXLEBUILDER-BLD01",
+    "buildId": "build-1792573440528",
+    "buildCode": "AXL-BLDR-01",
     "purchaseMode": "build",
     "commercialProductId": null,
-    "commercialProductCode": "AXLEBUILDER-BLD01",
-    "commercialProductName": "Trailer Axle Builder",
-    "definitionId": "build-1792398167103",
+    "commercialProductCode": "AXL-BLDR-01",
+    "commercialProductName": "Trailer Axle Builder (Hollow)",
+    "definitionId": "build-1792573440528",
     "definitionVersion": 1,
     "fulfilmentIntent": "build_to_order",
     "promiseSettings": {
-      "strategy": "own"
+      "strategy": "own",
+      "ownProfile": {
+        "capacityQuantity": 1,
+        "capacityDays": 7,
+        "capacityMode": "distributed"
+      }
     },
     "configurationResolver": {
       "type": "build",
       "selectionField": "selections",
-      "definitionId": "build-1792398167103",
+      "definitionId": "build-1792573440528",
       "version": 1
     },
-    "sku": "AXLEBUILDER-BLD01",
-    "code": "AXLEBUILDER-BLD01",
-    "name": "Trailer Axle Builder",
-    "title": "Trailer Axle Builder",
-    "description": "Need a specifically sized Axle for your trailer? Resolve a true price using the configurations below and A Woman With a Welder will build you the axle you desire. ",
+    "sku": "AXL-BLDR-01",
+    "code": "AXL-BLDR-01",
+    "name": "Trailer Axle Builder (Hollow)",
+    "title": "Trailer Axle Builder (Hollow)",
+    "description": "Need a new axle for your trailer? Have a look at the custom axle builder and A Woman With a Welder will whip one up for you. If it's not resolving your requirements just get in touch with me!",
     "category": "Trailer Component",
     "categoryId": "build-cat-1791714386528",
     "trailerType": "Trailer Component",
     "sizeLabel": "",
-    "price": 14.86,
-    "displayPrice": 14.86,
-    "sellPrice": 14.86,
-    "unitPrice": 14.86,
-    "costPrice": 0,
-    "image": "/assets/products/trailer_axle_assembly.jpg",
-    "imageUrl": "/assets/products/trailer_axle_assembly.jpg",
+    "price": 281.23,
+    "displayPrice": 281.23,
+    "sellPrice": 281.23,
+    "unitPrice": 281.23,
+    "costPrice": 240.8,
+    "image": null,
+    "imageUrl": "",
     "images": [],
     "available": true,
     "inStock": true,
@@ -1321,13 +1332,13 @@
           {
             "id": "bo-1792496800618-honi",
             "featureGroupId": "bog-1792496686911-i81n",
-            "name": "14–22 inch wheel",
             "description": "Available for all Idler combinations and the 4×114.3 or 5×114.3 hydraulic-disc combinations.",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 1,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1335,13 +1346,13 @@
           {
             "id": "bo-1792496931854-qz2j",
             "featureGroupId": "bog-1792496686911-i81n",
-            "name": "15–22 inch wheel",
             "description": "Required for 5×120 and 6×139.7 hydraulic-disc assemblies and all electric-drum assemblies.",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 2,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1351,35 +1362,21 @@
       {
         "id": "bog-axle-brake-type",
         "name": "Brake type",
-        "description": "Choose the braking system first; capacity choices then reveal the valid assembly.",
+        "description": "Optional. Leave blank for an unbraked idler axle; choose a braking system to reveal matching braked assemblies.",
         "selectionType": "single",
-        "required": true,
+        "required": false,
         "sortOrder": 2,
         "options": [
           {
-            "id": "bo-axle-brake-idler",
+            "id": "bo-1792497289583-ve7t",
             "featureGroupId": "bog-axle-brake-type",
-            "name": "Idler",
-            "description": "Unbraked idler axle.",
+            "description": "Hydraulic disc brake axle.",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 1,
             "requiredFeatureIds": [],
-            "blockedFeatureIds": [],
-            "blockedOptionIds": [],
-            "featureIds": []
-          },
-          {
-            "id": "bo-1792497289583-ve7t",
-            "featureGroupId": "bog-axle-brake-type",
-            "name": "Hydraulic disc",
-            "description": "Hydraulic disc brake axle.",
-            "imageUrl": "",
-            "price": 0,
-            "isIncluded": false,
-            "sortOrder": 2,
-            "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1387,13 +1384,13 @@
           {
             "id": "bo-1792497423715-obpd",
             "featureGroupId": "bog-axle-brake-type",
-            "name": "Electric drum",
             "description": "Electric drum brake axle.",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
-            "sortOrder": 3,
+            "sortOrder": 2,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1411,13 +1408,13 @@
           {
             "id": "bo-1792497483124-7hm2",
             "featureGroupId": "bog-1792497483124-7hm2",
-            "name": "4×114.3",
             "description": "",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 1,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1425,13 +1422,13 @@
           {
             "id": "bo-1792497559955-7ewi",
             "featureGroupId": "bog-1792497483124-7hm2",
-            "name": "5×114.3",
             "description": "",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 2,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1439,13 +1436,13 @@
           {
             "id": "bo-1792497629197-p94c",
             "featureGroupId": "bog-1792497483124-7hm2",
-            "name": "5×120",
             "description": "",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 3,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1453,13 +1450,13 @@
           {
             "id": "bo-1792497711139-1h16",
             "featureGroupId": "bog-1792497483124-7hm2",
-            "name": "6×139.7",
             "description": "",
             "imageUrl": "",
             "price": 0,
             "isIncluded": false,
             "sortOrder": 4,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": []
@@ -1468,8 +1465,8 @@
       },
       {
         "id": "bog-axle-capacity",
-        "name": "Capacity & compatible assembly",
-        "description": "Every choice represents one real stock-component configuration. The Resolver tab explains any rejected selection.",
+        "name": "Available axle assemblies",
+        "description": "After wheel, optional brake and PCD are chosen, this list shows every physically available capacity. Choose an assembly only when more than one capacity remains; each choice resolves one real stock-component configuration.",
         "selectionType": "single",
         "required": true,
         "sortOrder": 4,
@@ -1477,15 +1474,21 @@
           {
             "id": "bo-axle-idler-4x1143-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 4x114.3 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 240.8,
             "isIncluded": false,
             "sortOrder": 1,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497483124-7hm2"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-eq9j"
             ]
@@ -1493,15 +1496,21 @@
           {
             "id": "bo-axle-idler-5x1143-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 5x114.3 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 240.8,
             "isIncluded": false,
             "sortOrder": 2,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-bels"
             ]
@@ -1509,15 +1518,21 @@
           {
             "id": "bo-axle-idler-5x1143-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 5x114.3 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 240.8,
             "isIncluded": false,
             "sortOrder": 3,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-p5xx"
             ]
@@ -1525,15 +1540,21 @@
           {
             "id": "bo-axle-idler-5x1143-2000",
             "featureGroupId": "bog-axle-capacity",
-            "name": "2000 kg · 5x114.3 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 424.79,
             "isIncluded": false,
             "sortOrder": 4,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-j63h"
             ]
@@ -1541,15 +1562,21 @@
           {
             "id": "bo-axle-idler-5x120-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 5x120 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 240.8,
             "isIncluded": false,
             "sortOrder": 5,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497629197-p94c"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-b4bf"
             ]
@@ -1557,15 +1584,21 @@
           {
             "id": "bo-axle-idler-6x1397-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 6x139.7 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 307.59,
             "isIncluded": false,
             "sortOrder": 6,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-6auu"
             ]
@@ -1573,15 +1606,21 @@
           {
             "id": "bo-axle-idler-6x1397-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 6x139.7 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 366.55,
             "isIncluded": false,
             "sortOrder": 7,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-twpu"
             ]
@@ -1589,15 +1628,21 @@
           {
             "id": "bo-axle-idler-6x1397-2000",
             "featureGroupId": "bog-axle-capacity",
-            "name": "2000 kg · 6x139.7 · Idler",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible unbraked axle assembly. Available only while no brake type is selected.",
             "imageUrl": "",
-            "price": 0,
+            "price": 427.66,
             "isIncluded": false,
             "sortOrder": 8,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
-            "blockedOptionIds": [],
+            "blockedOptionIds": [
+              "bo-1792497289583-ve7t",
+              "bo-1792497423715-obpd"
+            ],
             "featureIds": [
               "bf-1792496635376-qu4x"
             ]
@@ -1605,13 +1650,17 @@
           {
             "id": "bo-axle-hydraulic-4x1143-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 4x114.3 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 823.63,
             "isIncluded": false,
             "sortOrder": 9,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497289583-ve7t",
+              "bo-1792497483124-7hm2"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1621,13 +1670,17 @@
           {
             "id": "bo-axle-hydraulic-5x1143-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 5x114.3 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 858.27,
             "isIncluded": false,
             "sortOrder": 10,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496800618-honi",
+              "bo-1792497289583-ve7t",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1637,13 +1690,17 @@
           {
             "id": "bo-axle-hydraulic-5x1143-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 5x114.3 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 858.27,
             "isIncluded": false,
             "sortOrder": 11,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1653,13 +1710,17 @@
           {
             "id": "bo-axle-hydraulic-5x1143-2000",
             "featureGroupId": "bog-axle-capacity",
-            "name": "2000 kg · 5x114.3 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1155.56,
             "isIncluded": false,
             "sortOrder": 12,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1669,13 +1730,17 @@
           {
             "id": "bo-axle-hydraulic-5x120-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 5x120 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 910.61,
             "isIncluded": false,
             "sortOrder": 13,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497629197-p94c"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1685,13 +1750,17 @@
           {
             "id": "bo-axle-hydraulic-6x1397-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 6x139.7 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 960.02,
             "isIncluded": false,
             "sortOrder": 14,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1701,13 +1770,17 @@
           {
             "id": "bo-axle-hydraulic-6x1397-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 6x139.7 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1018.98,
             "isIncluded": false,
             "sortOrder": 15,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1717,13 +1790,17 @@
           {
             "id": "bo-axle-hydraulic-6x1397-2000",
             "featureGroupId": "bog-axle-capacity",
-            "name": "2000 kg · 6x139.7 · Hydraulic disc",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1080.09,
             "isIncluded": false,
             "sortOrder": 16,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497289583-ve7t",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1733,13 +1810,17 @@
           {
             "id": "bo-axle-electric-5x1143-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 5x114.3 · Electric drum",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1125.45,
             "isIncluded": false,
             "sortOrder": 17,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497423715-obpd",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1749,13 +1830,17 @@
           {
             "id": "bo-axle-electric-5x1143-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 5x114.3 · Electric drum",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 850.94,
             "isIncluded": false,
             "sortOrder": 18,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497423715-obpd",
+              "bo-1792497559955-7ewi"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1765,13 +1850,17 @@
           {
             "id": "bo-axle-electric-6x1397-1500",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1500 kg · 6x139.7 · Electric drum",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1135.01,
             "isIncluded": false,
             "sortOrder": 19,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497423715-obpd",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1781,13 +1870,17 @@
           {
             "id": "bo-axle-electric-6x1397-1750",
             "featureGroupId": "bog-axle-capacity",
-            "name": "1750 kg · 6x139.7 · Electric drum",
-            "description": "Compatible axle assembly. The resolver only accepts this choice when its wheel, brake and PCD selections match.",
+            "description": "Compatible braked axle assembly. Available only when its wheel, brake and PCD selections match.",
             "imageUrl": "",
-            "price": 0,
+            "price": 1154.15,
             "isIncluded": false,
             "sortOrder": 20,
             "requiredFeatureIds": [],
+            "requiredOptionIds": [
+              "bo-1792496931854-qz2j",
+              "bo-1792497423715-obpd",
+              "bo-1792497711139-1h16"
+            ],
             "blockedFeatureIds": [],
             "blockedOptionIds": [],
             "featureIds": [
@@ -1801,9 +1894,7 @@
       "bog-1792496686911-i81n": [
         "bo-1792496800618-honi"
       ],
-      "bog-axle-brake-type": [
-        "bo-axle-brake-idler"
-      ],
+      "bog-axle-brake-type": [],
       "bog-1792497483124-7hm2": [
         "bo-1792497483124-7hm2"
       ],
@@ -1849,7 +1940,7 @@
               "defaultValue": 1000,
               "required": true,
               "helperText": "",
-              "choices": ""
+              "choices": []
             }
           ],
           "defaultConfiguration": {
@@ -1884,7 +1975,7 @@
         "kind": "component",
         "parametricProductId": null,
         "parametricProduct": null,
-        "price": 0
+        "price": 240.8
       }
     ],
     "parametricFeatures": [
@@ -1918,7 +2009,7 @@
               "defaultValue": 1000,
               "required": true,
               "helperText": "",
-              "choices": ""
+              "choices": []
             }
           ],
           "defaultConfiguration": {
@@ -1948,9 +2039,9 @@
     ],
     "optionPriceAdjustments": 0,
     "warnings": [],
-    "createdAt": "2026-10-20T20:56:55.821Z",
-    "updatedAt": "2026-10-20T20:56:55.821Z",
+    "createdAt": "2026-10-22T07:09:16.378Z",
+    "updatedAt": "2026-10-22T07:09:16.378Z",
     "_sourceType": "build",
-    "_syncKey": "build:build-1792398167103"
+    "_syncKey": "build:build-1792573440528"
   }
 ]
