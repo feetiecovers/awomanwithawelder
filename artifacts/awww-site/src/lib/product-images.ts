@@ -59,5 +59,14 @@ export function getProductImages(record: Record<string, unknown> | null | undefi
     .map((candidate) => resolveImageCandidate(candidate, variant))
     .filter(Boolean);
 
+  if (urls.length === 0) {
+    const code = String(record.code || record.sku || record.buildCode || (record as any).build_code || "").trim().toUpperCase();
+    const name = String(record.name || record.title || "").toLowerCase();
+    const id = record.id;
+    if (code === "AXL-BLDR-01" || id === 12 || name.includes("axle builder")) {
+      return ["/assets/products/trailer_axle_composite.png"];
+    }
+  }
+
   return Array.from(new Set(urls));
 }

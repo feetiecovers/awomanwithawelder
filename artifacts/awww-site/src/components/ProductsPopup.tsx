@@ -1012,10 +1012,10 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   }
                                 }}
                               >
-                                {item.image && !failedImages[item.id] ? (
+                                  {((item.image && !failedImages[item.id]) || item.code === "AXL-BLDR-01" || item.id === 12) ? (
                                   <>
                                     <img
-                                      src={item.image}
+                                        src={(item.code === "AXL-BLDR-01" || item.id === 12) && (!item.image || failedImages[item.id]) ? "/assets/products/trailer_axle_composite.png" : item.image}
                                       alt={item.name}
                                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                                       loading="eager"

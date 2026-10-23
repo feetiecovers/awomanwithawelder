@@ -1,6 +1,6 @@
 import liveCatalogSnapshot from "@/content/currentLiveCatalog.json";
 
-export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v11";
+export const PRODUCTS_CACHE_KEY = "awww_products_offerings_cache_v12";
 
 /**
  * Purge outdated/stale cache keys from previous deployments
@@ -18,6 +18,7 @@ function purgeLegacyCaches() {
     localStorage.removeItem("awww_products_offerings_cache_v8");
     localStorage.removeItem("awww_products_offerings_cache_v9");
     localStorage.removeItem("awww_products_offerings_cache_v10");
+    localStorage.removeItem("awww_products_offerings_cache_v11");
   } catch {}
 }
 
@@ -36,7 +37,8 @@ function isValidProductsList(items: unknown): items is any[] {
 }
 
 /**
- * Ensures build items from snapshot are preserved if remote products payload hasn't synced builds yet
+ * Ensures build items from snapshot are preserved if remote products payload hasn't synced builds yet,
+ * and enriches remote build records with images/badges if remote payload is missing them.
  */
 function mergeWithBuildSnapshots(items: any[]): any[] {
   if (!Array.isArray(liveCatalogSnapshot)) return items;
@@ -48,11 +50,26 @@ function mergeWithBuildSnapshots(items: any[]): any[] {
   const result = [...items];
   for (const buildItem of snapshotBuilds) {
     const buildId = buildItem.buildId || buildItem.id;
-    const exists = result.some(
+    const existingIndex = result.findIndex(
       (p) => (p.buildId && p.buildId === buildId) || (p.id && p.id === buildItem.id) || p.name === buildItem.name
     );
-    if (!exists) {
+    if (existingIndex === -1) {
       result.push(buildItem);
+    } else {
+      // Enrich existing build item with image & badges if remote payload has null/empty image
+      const existing = result[existingIndex];
+      if ((!existing.image && !existing.imageUrl) || existing.image === "/placeholder.svg") {
+        result[existingIndex] = {
+          ...buildItem,
+          ...existing,
+          image: buildItem.image || existing.image,
+          imageUrl: buildItem.imageUrl || existing.imageUrl,
+          primaryImageUrl: buildItem.primaryImageUrl || existing.primaryImageUrl,
+          images: Array.isArray(buildItem.images) && buildItem.images.length > 0 ? buildItem.images : existing.images,
+          badgeLabel: buildItem.badgeLabel || existing.badgeLabel,
+          comingSoonLabel: buildItem.comingSoonLabel || existing.comingSoonLabel,
+        };
+      }
     }
   }
   return result;
