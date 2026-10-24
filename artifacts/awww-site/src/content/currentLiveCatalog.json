@@ -85,7 +85,7 @@
     "stock": 0,
     "code": "MINITOW-01",
     "sku": "MINITOW-01",
-    "image": "https://denver-s-desk.onrender.com/api/images/products/sp-1780139922566/1791194986955-12752j.png",
+    "image": "/assets/products/product_1_lawnmower_trailer.jpg",
     "description": "The ultimate in versatility around the lifestyle block. Designed to haul big loads on the back of your Ride-On so you don't have to drive your vehicle into a paddock or large block.",
     "businessId": "biz-default",
     "websiteIds": [
@@ -120,7 +120,9 @@
     "updatedAt": "2026-10-22T07:09:16.376Z",
     "productType": "product",
     "type": "product",
-    "available": false
+    "available": false,
+    "imageUrl": "/assets/products/product_1_lawnmower_trailer.jpg",
+    "primaryImageUrl": "/assets/products/product_1_lawnmower_trailer.jpg"
   },
   {
     "id": 2,
@@ -585,8 +587,8 @@
     "categoryId": "cat-prod-1779871511498",
     "subcategory": "",
     "subcategoryId": "",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
-    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
+    "imageUrl": "/assets/products/product_9_drawbar_boxes.jpg",
+    "primaryImageUrl": "/assets/products/product_9_drawbar_boxes.jpg",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
     "measurementUnit": "Measurement",
@@ -717,7 +719,7 @@
     "images": [
       "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png"
     ],
-    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1791190561826-cdom/1791190627169-0ss6u3.png",
+    "image": "/assets/products/product_9_drawbar_boxes.jpg",
     "shippingPresets": []
   },
   {
@@ -777,8 +779,8 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Coffee Tables",
     "subcategoryId": "sub-prod-1783334225266-875",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
-    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "imageUrl": "/assets/products/product_10_coffee_tables.jpg",
+    "primaryImageUrl": "/assets/products/product_10_coffee_tables.jpg",
     "conditionalImageRules": [
       {
         "id": "mto-image-1792482931765-yt9f",
@@ -1059,7 +1061,7 @@
     "images": [
       "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png"
     ],
-    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1790141374941-bor5/1792482896149-nc1uph.png",
+    "image": "/assets/products/product_10_coffee_tables.jpg",
     "shippingPresets": []
   },
   {
@@ -1119,8 +1121,8 @@
     "categoryId": "cat-prod-1783334216579",
     "subcategory": "Outdoor Furniture",
     "subcategoryId": "sub-prod-1789386589503-695",
-    "imageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
-    "primaryImageUrl": "http://localhost:4028/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
+    "imageUrl": "/assets/products/product_11_planter_boxes.jpg",
+    "primaryImageUrl": "/assets/products/product_11_planter_boxes.jpg",
     "conditionalImageRules": [],
     "measurementLabel": "Measurement",
     "measurementUnit": "m",
@@ -1265,7 +1267,7 @@
     "images": [
       "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png"
     ],
-    "image": "https://denver-s-desk.onrender.com/api/images/products/pp-1789616572481-ropa/1792482854168-yikjtj.png",
+    "image": "/assets/products/product_11_planter_boxes.jpg",
     "shippingPresets": []
   },
   {
@@ -1310,11 +1312,11 @@
     "displayPrice": 281.23,
     "sellPrice": 281.23,
     "unitPrice": 281.23,
-    "image": "/assets/products/trailer_axle_composite.png",
-    "imageUrl": "/assets/products/trailer_axle_composite.png",
-    "primaryImageUrl": "/assets/products/trailer_axle_composite.png",
+    "image": "/assets/products/trailer_axle_composite.jpg",
+    "imageUrl": "/assets/products/trailer_axle_composite.jpg",
+    "primaryImageUrl": "/assets/products/trailer_axle_composite.jpg",
     "images": [
-      "/assets/products/trailer_axle_composite.png"
+      "/assets/products/trailer_axle_composite.jpg"
     ],
     "showComingSoonBanner": true,
     "comingSoonLabel": "Accurately Priced for Quick Purchase",

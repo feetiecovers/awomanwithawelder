@@ -48,8 +48,21 @@ export function resolveImageCandidate(candidate: unknown, variant: ProductImageV
   return "";
 }
 
+export const LOCAL_OPTIMIZED_PRODUCT_IMAGES: Record<number, string> = {
+  1: "/assets/products/product_1_lawnmower_trailer.jpg",
+  9: "/assets/products/product_9_drawbar_boxes.jpg",
+  10: "/assets/products/product_10_coffee_tables.jpg",
+  11: "/assets/products/product_11_planter_boxes.jpg",
+  12: "/assets/products/trailer_axle_composite.jpg",
+};
+
 export function getProductImages(record: Record<string, unknown> | null | undefined, variant: ProductImageVariant = "original"): string[] {
   if (!record || typeof record !== "object") return [];
+
+  const rawId = Number(record.id);
+  if (Number.isFinite(rawId) && LOCAL_OPTIMIZED_PRODUCT_IMAGES[rawId]) {
+    return [LOCAL_OPTIMIZED_PRODUCT_IMAGES[rawId]];
+  }
 
   const rawImages = Array.isArray(record.images) && record.images.length > 0
     ? record.images
@@ -64,7 +77,7 @@ export function getProductImages(record: Record<string, unknown> | null | undefi
     const name = String(record.name || record.title || "").toLowerCase();
     const id = record.id;
     if (code === "AXL-BLDR-01" || id === 12 || name.includes("axle builder")) {
-      return ["/assets/products/trailer_axle_composite.png"];
+      return ["/assets/products/trailer_axle_composite.jpg"];
     }
   }
 

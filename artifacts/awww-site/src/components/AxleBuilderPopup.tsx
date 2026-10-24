@@ -57,7 +57,7 @@ interface QuoteFormState {
 }
 
 const GST_RATE = 0.15;
-const DEFAULT_IMAGE = "/assets/products/trailer_axle_composite.png";
+const DEFAULT_IMAGE = "/assets/products/trailer_axle_composite.jpg";
 
 const KNOWN_OPTION_LABELS: Record<string, string> = {
   // Wheel size

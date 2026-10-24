@@ -27,7 +27,10 @@ export function ParticleBackground({ isPaused = false }: ParticleBackgroundProps
     const init = () => {
       resize();
       particles = [];
-      const particleCount = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+      const isMobile = window.innerWidth < 640;
+      const divisor = isMobile ? 30000 : 18000;
+      const maxCount = isMobile ? 18 : 45;
+      const particleCount = Math.min(maxCount, Math.floor((window.innerWidth * window.innerHeight) / divisor));
       
       for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -43,26 +46,8 @@ export function ParticleBackground({ isPaused = false }: ParticleBackgroundProps
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw grid
-      ctx.strokeStyle = "rgba(26, 157, 224, 0.03)";
-      ctx.lineWidth = 1;
-      const gridSize = 50;
-      
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
 
-      // Draw particles
+      // Draw particles (grid is handled efficiently via CSS background)
       particles.forEach((p) => {
         ctx.fillStyle = `rgba(26, 157, 224, ${p.opacity})`;
         ctx.beginPath();
@@ -126,6 +111,10 @@ export function ParticleBackground({ isPaused = false }: ParticleBackgroundProps
       className={`fixed inset-0 pointer-events-none z-0 transition-opacity duration-500 ${
         isPaused ? "opacity-10" : "opacity-80"
       }`}
+      style={{
+        backgroundImage: "linear-gradient(to right, rgba(26, 157, 224, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(26, 157, 224, 0.03) 1px, transparent 1px)",
+        backgroundSize: "50px 50px",
+      }}
     />
   );
 }

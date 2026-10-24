@@ -88,6 +88,30 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  // Preload offerings images during idle so opening offerings is instantaneous
+  useEffect(() => {
+    const preload = () => {
+      const urls = [
+        "/assets/products/product_1_lawnmower_trailer.jpg",
+        "/assets/products/product_9_drawbar_boxes.jpg",
+        "/assets/products/product_10_coffee_tables.jpg",
+        "/assets/products/product_11_planter_boxes.jpg",
+        "/assets/products/trailer_axle_composite.jpg",
+      ];
+      urls.forEach((u) => {
+        const img = new Image();
+        img.src = u;
+      });
+    };
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(preload);
+      } else {
+        setTimeout(preload, 1200);
+      }
+    }
+  }, []);
+
   // Detect Stripe redirect back with ?payment=success or ?payment=cancel
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -158,32 +182,35 @@ export default function Home() {
       <SmokeEffect isPaused={isAnyModalOpen} />
       <FloatingSocials isPaused={isAnyModalOpen} />
 
-      {/* Center logo — uninverted original colors, enlarged for desktop */}
+      {/* Center logo — uninverted original colors, hardware-accelerated breathing */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={
             isAnyModalOpen
-              ? { scale: 1, filter: "drop-shadow(0 0 16px rgba(26, 157, 224, 0.40))" }
-              : {
-                  scale: [1, 1.02, 1],
-                  filter: [
-                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-                    "drop-shadow(0 0 35px rgba(26, 157, 224, 0.75)) drop-shadow(0 0 50px rgba(96, 200, 255, 0.45))",
-                    "drop-shadow(0 0 12px rgba(26, 157, 224, 0.40)) drop-shadow(0 0 24px rgba(26, 157, 224, 0.20))",
-                  ],
-                }
+              ? { scale: 1 }
+              : { scale: [1, 1.025, 1] }
           }
           transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
-          className="pointer-events-auto cursor-pointer"
+          className="pointer-events-auto cursor-pointer relative flex items-center justify-center"
           onClick={handleOpenProducts}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           data-testid="button-center-logo"
         >
+          {/* Hardware-accelerated compositor glow layer behind logo */}
+          <motion.div
+            animate={
+              isAnyModalOpen
+                ? { opacity: 0.3 }
+                : { opacity: [0.3, 0.75, 0.3] }
+            }
+            transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full bg-primary/25 blur-2xl pointer-events-none scale-110"
+          />
           <img
             src={mainLogo}
             alt="A Woman With a Welder"
-            className="w-[190px] sm:w-[300px] md:w-[370px] h-auto max-w-[85vw] block"
+            className="w-[190px] sm:w-[300px] md:w-[370px] h-auto max-w-[85vw] block relative z-10 drop-shadow-[0_0_18px_rgba(26,157,224,0.45)]"
             data-testid="img-main-logo"
           />
         </motion.div>

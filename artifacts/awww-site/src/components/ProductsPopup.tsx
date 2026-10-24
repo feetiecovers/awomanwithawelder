@@ -65,6 +65,9 @@ function formatBookingDate(value: string) {
 type ProductCard = {
   id: number;
   name: string;
+  code?: string;
+  sku?: string;
+  buildId?: string;
   description: string | null;
   price: number;
   type: "product" | "service" | "configurable" | "parametric" | "build";
@@ -203,6 +206,9 @@ function normalizeProducts(value: unknown): ProductCard[] {
         ...(record as any),
         id: Number(record.id ?? record.productId ?? index),
         name: String(record.name ?? record.title ?? record.label ?? "Untitled Item"),
+        code: typeof record.code === "string" ? record.code : undefined,
+        sku: typeof record.sku === "string" ? record.sku : undefined,
+        buildId: typeof record.buildId === "string" ? record.buildId : undefined,
         description: typeof record.description === "string" ? record.description : null,
         price: Number.isFinite(price) ? price : 0,
         type,
@@ -365,6 +371,20 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
   const totalPages = Math.ceil(shopItems.length / ITEMS_PER_PAGE);
   const safeShopPage = Math.min(Math.max(0, shopPage), Math.max(0, totalPages - 1));
   const currentShopItems = shopItems.slice(safeShopPage * ITEMS_PER_PAGE, (safeShopPage + 1) * ITEMS_PER_PAGE);
+
+  // Preload all product images into memory so navigating left and right is instantaneous
+  useEffect(() => {
+    if (!isOpen || shopItems.length === 0) return;
+    shopItems.forEach((item) => {
+      const src = (item.code === "AXL-BLDR-01" || item.id === 12) && (!item.image || failedImages[item.id])
+        ? "/assets/products/trailer_axle_composite.jpg"
+        : item.image;
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    });
+  }, [isOpen, shopItems, failedImages]);
   const activePrice = (() => {
     if (!selectedService) return 0;
     if (selectedService.hasVariants && selectedService.variants) {
@@ -985,14 +1005,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           key={safeShopPage}
                           custom={slideDir}
                           variants={{
-                            enter: (dir: number) => ({ x: dir * 60, opacity: 0 }),
+                            enter: (dir: number) => ({ x: dir * 50, opacity: 0 }),
                             center: { x: 0, opacity: 1 },
-                            exit: (dir: number) => ({ x: dir * -60, opacity: 0 }),
+                            exit: (dir: number) => ({ x: dir * -50, opacity: 0 }),
                           }}
                           initial="enter"
                           animate="center"
                           exit="exit"
-                          transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                          transition={{ duration: 0.22, ease: "easeOut" }}
                           className="flex flex-col gap-3 h-full"
                         >
                           {currentShopItems.map((item, idx) => (
@@ -1015,7 +1035,7 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                                   {((item.image && !failedImages[item.id]) || item.code === "AXL-BLDR-01" || item.id === 12) ? (
                                   <>
                                     <img
-                                        src={(item.code === "AXL-BLDR-01" || item.id === 12) && (!item.image || failedImages[item.id]) ? "/assets/products/trailer_axle_composite.png" : item.image}
+                                        src={(item.code === "AXL-BLDR-01" || item.id === 12) && (!item.image || failedImages[item.id]) ? "/assets/products/trailer_axle_composite.jpg" : (item.image || undefined)}
                                       alt={item.name}
                                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                                       loading="eager"

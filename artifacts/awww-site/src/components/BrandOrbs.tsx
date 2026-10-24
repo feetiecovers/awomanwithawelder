@@ -4,18 +4,18 @@ import { useToast } from "@/hooks/use-toast";
 import tradieGagsLogo from "@assets/Tradie_Gags_Logo_1782377451413.png";
 import feetieCoversLogo from "@assets/Feetie_Covers_Logo_Black.png";
 import trailerBrainLogo from "@assets/Logo_-_The_Trailer_Brain_(Long)_1782370414661.png";
-import ladyLuggerLogo from "@assets/Lady_Lugger_Logo.png";
-import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
+import ladyLuggerLogo from "@assets/Lady_Lugger_Logo_clean.png";
+import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo_clean.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo.png";
-import bizCalcLogo from "@assets/BizCalc_Icon.png";
-import bizDumpLogo from "@assets/BizDump_Logo.png";
+import bizCalcLogo from "@assets/BizCalc_Icon_clean.png";
+import bizDumpLogo from "@assets/BizDump_Logo_clean.png";
 
 const BRANDS = [
   { id: 1, name: "Tradie Gags",     angle: 0,   radius: 395, delay: 0,   logo: tradieGagsLogo,     live: false, dark: false, sizeMultiplier: 1.35, lightningOffset: 40, mobileLineLength: 50 },
   { id: 2, name: "Feetie Covers",   angle: 60,  radius: 280, delay: 0.5, logo: feetieCoversLogo,   live: true,  url: "https://www.feetiecovers.co.nz", dark: false, widthMultiplier: 1.45, sizeMultiplier: 1.35, mobileSizeMultiplier: 1.28, lightningOffset: 10 },
   { id: 3, name: "Trailer Brain",   angle: 120, radius: 275, delay: 1.2, logo: trailerBrainLogo,   live: true,  url: "https://www.thetrailerbrain.co.nz", dark: false, widthMultiplier: 1.25, sizeMultiplier: 1.62, mobileSizeMultiplier: 1.69, glowOpacity: 0.2, blueGlowOpacity: 0.25, brightness: 0.85, lightningOffset: 10 },
-  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, stripWhiteBg: true, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46, mobileLineLength: 28 },
-  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, stripWhiteBg: true, invertTextToGrey: true, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: -12 },
+  { id: 4, name: "The Lady Lugger", angle: 180, radius: 350, delay: 0.8, logo: ladyLuggerLogo,     live: false, dark: false, sizeMultiplier: 1.485, glowOpacity: 0.1, blueGlowOpacity: 0.1, brightness: 0.8, lightningOffset: 46, mobileLineLength: 28 },
+  { id: 5, name: "Denver's Desk",   angle: 240, radius: 215, delay: 1.5, logo: denversDeskLogo,    live: true,  url: "https://denversdesk.awomanwithawelder.co.nz", dark: false, widthMultiplier: 2.1, sizeMultiplier: 1.9, brightness: 0.95, glowOpacity: 0.65, blueGlowOpacity: 0.75, lightningOffset: -12, mobileLightningOffset: -12 },
   { id: 6, name: "CableCAD",        angle: 300, radius: 285, delay: 1.8, logo: cableCadLogo,        live: true,  url: "https://cablecad.awomanwithawelder.co.nz", dark: false, sizeMultiplier: 1.35, glowOpacity: 0.35, blueGlowOpacity: 0.45, brightness: 0.95, lightningOffset: 12, mobileLightningOffset: -10 },
 ];
 
@@ -27,7 +27,6 @@ const DENVER_SUB_BRANDS = [
     url: "https://bizcalc.awomanwithawelder.co.nz",
     live: true,
     blurred: false,
-    stripWhiteBg: true,
     sizeMultiplier: 0.90,
     mobileSizeMultiplier: 0.90,
     dx: 48,
@@ -42,7 +41,6 @@ const DENVER_SUB_BRANDS = [
     logo: bizDumpLogo,
     live: false,
     blurred: true,
-    stripWhiteBg: true,
     sizeMultiplier: 1.0,
     mobileSizeMultiplier: 1.0,
     dx: -48,
@@ -52,99 +50,6 @@ const DENVER_SUB_BRANDS = [
     delay: 1.6,
   },
 ];
-
-/** Strip near-white backgrounds & optional text color adjustments using off-screen canvas */
-function removeWhiteBg(src: string, options?: { invertBlackText?: boolean; invertTextToBlack?: boolean; invertTextToGrey?: boolean } | boolean): Promise<string> {
-  const opts = typeof options === "boolean" ? { invertBlackText: options } : (options || {});
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const d = imageData.data;
-      const threshold = 230;
-      for (let i = 0; i < d.length; i += 4) {
-        const a = d[i + 3];
-        if (a === 0) continue;
-        const r = d[i], g = d[i + 1], b = d[i + 2];
-        const pixelIndex = i / 4;
-        const x = pixelIndex % canvas.width;
-
-        if (opts.invertTextToGrey || opts.invertTextToBlack) {
-          // Convert text on Denver's Desk logo (x >= 38% width) to grey (or black)
-          if (x >= canvas.width * 0.38) {
-            const maxDiff = Math.max(Math.abs(r - g), Math.abs(r - b), Math.abs(g - b));
-            if (maxDiff < 45) {
-              if (opts.invertTextToGrey) {
-                // Sleek metallic silver/slate grey (matches CableCAD silver text palette)
-                d[i] = 168;
-                d[i + 1] = 174;
-                d[i + 2] = 182;
-              } else {
-                d[i] = 12;
-                d[i + 1] = 12;
-                d[i + 2] = 12;
-              }
-              d[i + 3] = Math.max(a, 240);
-              continue;
-            }
-          }
-        }
-
-        if (r >= threshold && g >= threshold && b >= threshold) {
-          d[i + 3] = 0;
-        } else if (opts.invertBlackText) {
-          const maxDiff = Math.max(Math.abs(r - g), Math.abs(r - b), Math.abs(g - b));
-          if (maxDiff < 30 && (r < 185 || g < 185 || b < 185)) {
-            d[i] = 255;
-            d[i + 1] = 255;
-            d[i + 2] = 255;
-          }
-        }
-      }
-      ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = () => resolve(src);
-    img.src = src;
-  });
-}
-
-/** Process logos requiring background transparency or text inversion */
-function useProcessedLogos() {
-  const [processed, setProcessed] = useState<Record<number, string>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    const itemsToProcess = [
-      ...BRANDS.filter((b) => (b as any).stripWhiteBg || (b as any).invertTextToBlack || (b as any).invertTextToGrey),
-      ...DENVER_SUB_BRANDS.filter((b) => (b as any).stripWhiteBg),
-    ];
-    Promise.all(
-      itemsToProcess.map(async (item) => {
-        const cleaned = await removeWhiteBg(item.logo, {
-          invertBlackText: (item as any).invertBlackText,
-          invertTextToBlack: (item as any).invertTextToBlack,
-          invertTextToGrey: (item as any).invertTextToGrey,
-        });
-        return { id: item.id, src: cleaned };
-      })
-    ).then((results) => {
-      if (cancelled) return;
-      const map: Record<number, string> = {};
-      for (const r of results) map[r.id] = r.src;
-      setProcessed(map);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  return processed;
-}
 
 const BASE_LOGO_RX = 138;
 const BASE_LOGO_RY = 90;
@@ -179,7 +84,6 @@ interface BrandOrbsProps {
 
 export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsProps = {}) {
   const { toast } = useToast();
-  const processedLogos = useProcessedLogos();
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [tick, setTick] = useState(0);
 
@@ -327,7 +231,7 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
           return (
             <g key={brand.id}>
               <path d={b1} fill="none" stroke="#1a9de0" strokeWidth="8"
-                    strokeLinecap="round" opacity={flk * 0.1} filter="url(#elec-glow)" />
+                    strokeLinecap="round" opacity={flk * 0.1} filter={isMobile ? undefined : "url(#elec-glow)"} />
               <path d={b2} fill="none" stroke="#60c8ff" strokeWidth="2"
                     strokeLinecap="round" opacity={flk * 0.4} />
               <path d={b1} fill="none" stroke="#b8e4ff" strokeWidth="1.2"
@@ -374,7 +278,7 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
           return (
             <g key={`sub-elec-${sub.id}`}>
               <path d={subB1} fill="none" stroke="#1a9de0" strokeWidth="5"
-                    strokeLinecap="round" opacity={subFlk * 0.12} filter="url(#elec-glow)" />
+                    strokeLinecap="round" opacity={subFlk * 0.12} filter={isMobile ? undefined : "url(#elec-glow)"} />
               <path d={subB2} fill="none" stroke="#60c8ff" strokeWidth="2"
                     strokeLinecap="round" opacity={subFlk * 0.45} />
               <path d={subB1} fill="none" stroke="#b8e4ff" strokeWidth="1"
@@ -415,9 +319,7 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
           else if (brand.id === 6) { x = 82; y = -160; }
         }
 
-        const logoSrc = ((brand as any).stripWhiteBg || (brand as any).invertTextToBlack || (brand as any).invertTextToGrey)
-          ? (processedLogos[brand.id] || brand.logo)
-          : brand.logo;
+        const logoSrc = brand.logo;
 
         return (
           <motion.div
@@ -525,7 +427,7 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
         const subDy = isMobile ? sub.mobileDy : Math.round(sub.dy * scale * 1.2);
         const subCenterX = ddCenterX + subDx;
         const subCenterY = ddCenterY + subDy;
-        const logoSrc = sub.stripWhiteBg ? (processedLogos[sub.id] || sub.logo) : sub.logo;
+        const logoSrc = sub.logo;
 
         return (
           <motion.div
