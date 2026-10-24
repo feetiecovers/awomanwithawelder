@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SocialItem {
   id: string;
@@ -77,6 +78,8 @@ interface FloatingSocialsProps {
 }
 
 export function FloatingSocials({ isPaused = false }: FloatingSocialsProps = {}) {
+  const isMobile = useIsMobile();
+
   return (
     <div
       className={`absolute inset-0 pointer-events-none z-20 overflow-hidden transition-opacity duration-500 ${
@@ -92,15 +95,15 @@ export function FloatingSocials({ isPaused = false }: FloatingSocialsProps = {})
           aria-label={`Visit ${social.name}`}
           data-testid={`social-${social.id}`}
           className={`absolute pointer-events-auto block ${social.positionClasses}`}
-          initial={{ opacity: 0, scale: 0 }}
+          initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: social.delay, type: "spring" }}
+          transition={isMobile ? { duration: 0 } : { duration: 0.8, delay: social.delay, type: "spring" }}
         >
           <motion.div
-            animate={isPaused ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
+            animate={isPaused || isMobile ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
             transition={{
-              y: { duration: social.duration, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: social.delay },
-              x: { duration: social.duration * 1.2, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: social.delay * 1.4 },
+              y: { duration: social.duration, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: social.delay },
+              x: { duration: social.duration * 1.2, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: social.delay * 1.4 },
             }}
           >
             <motion.div
@@ -110,9 +113,9 @@ export function FloatingSocials({ isPaused = false }: FloatingSocialsProps = {})
               }}
               whileTap={{ scale: 0.92 }}
               transition={{ type: "spring", stiffness: 280, damping: 18 }}
-              className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-40 sm:opacity-100 hover:opacity-100"
+              className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center cursor-pointer transition-all duration-300 opacity-60 sm:opacity-100 hover:opacity-100"
               style={{
-                filter: `drop-shadow(0 0 14px ${social.glowColor})`,
+                filter: isMobile ? undefined : `drop-shadow(0 0 14px ${social.glowColor})`,
               }}
             >
               {social.icon}

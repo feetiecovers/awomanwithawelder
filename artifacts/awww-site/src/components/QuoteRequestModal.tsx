@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCurrentMember } from "@workspace/api-client-react";
 import { buildApiUrl } from "@/lib/api-base";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface QuoteRequestProduct {
   id: number;
@@ -39,6 +40,7 @@ function formatCurrency(value: number) {
 }
 
 export function QuoteRequestModal({ isOpen, onClose, product, configuration }: QuoteRequestModalProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const { data: member } = useGetCurrentMember();
 
@@ -151,16 +153,17 @@ export function QuoteRequestModal({ isOpen, onClose, product, configuration }: Q
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-md"
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[70] bg-black/75 sm:backdrop-blur-md"
             onClick={onClose}
           />
           <div className="fixed inset-0 z-[71] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 18 }}
+              initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.92, y: 18 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 18 }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial mobile-no-scrollbar max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
+              exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.92, y: 18 }}
+              transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 320, damping: 34 }}
+              className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial mobile-no-scrollbar max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14] sm:bg-[#080d14]/95 shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18)] transform-gpu will-change-transform"
             >
               <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0 relative gap-3 sm:gap-0">
                 <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto text-center sm:text-left">

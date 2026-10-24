@@ -97,16 +97,14 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
     };
     window.addEventListener("resize", onResize);
     
-    if (isPaused) {
+    if (isPaused || window.innerWidth < 768) {
       return () => {
         window.removeEventListener("resize", onResize);
         clearTimeout(resizeTimer);
       };
     }
 
-    const isMobile = window.innerWidth < 640;
-    const intervalTime = isMobile ? 400 : 250;
-    const iv = setInterval(() => setTick(t => t + 1), intervalTime);
+    const iv = setInterval(() => setTick(t => t + 1), 250);
     
     return () => { 
       window.removeEventListener("resize", onResize); 
@@ -324,9 +322,9 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
         return (
           <motion.div
             key={brand.id}
-            initial={{ opacity: 0, scale: 0 }}
+            initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: brand.delay, type: "spring" }}
+            transition={isMobile ? { duration: 0 } : { duration: 0.8, delay: brand.delay, type: "spring" }}
             className="absolute pointer-events-auto cursor-pointer"
             style={{
               left: `calc(50% + ${x}px)`,
@@ -349,10 +347,10 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
             data-testid={`orb-brand-${brand.id}`}
           >
             <motion.div
-              animate={isPaused ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
+              animate={isPaused || isMobile ? { y: 0, x: 0 } : { y: [-6, 6, -6], x: [-3, 3, -3] }}
               transition={{
-                y: { duration: 4 + brand.id * 0.3, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: brand.delay },
-                x: { duration: 5 + brand.id * 0.4, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },
+                y: { duration: 4 + brand.id * 0.3, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: brand.delay },
+                x: { duration: 5 + brand.id * 0.4, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: brand.delay * 1.5 },
               }}
             >
               <motion.div
@@ -432,9 +430,9 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
         return (
           <motion.div
             key={`sub-orb-${sub.id}`}
-            initial={{ opacity: 0, scale: 0 }}
+            initial={isMobile ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: sub.delay, type: "spring" }}
+            transition={isMobile ? { duration: 0 } : { duration: 0.8, delay: sub.delay, type: "spring" }}
             className="absolute pointer-events-auto cursor-pointer"
             style={{
               left: `${subCenterX}px`,
@@ -454,16 +452,16 @@ export function BrandOrbs({ onOpenConfigurator, isPaused = false }: BrandOrbsPro
           >
             <motion.div
               animate={
-                isPaused
+                isPaused || isMobile
                   ? { y: 0, x: 0 }
                   : {
-                      y: isMobile ? [-6, 2, -6] : [-6, 6, -6],
-                      x: isMobile ? [-2, 2, -2] : [-3, 3, -3],
+                      y: [-6, 6, -6],
+                      x: [-3, 3, -3],
                     }
               }
               transition={{
-                y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: sub.delay },
-                x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: isPaused ? 0 : Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
+                y: { duration: 4 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.3, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: sub.delay },
+                x: { duration: 5 + (5 + (sub.id === 101 ? 0.4 : 0.8)) * 0.4, repeat: isPaused || isMobile ? 0 : Infinity, ease: "easeInOut", delay: sub.delay * 1.5 },
               }}
             >
               <motion.div

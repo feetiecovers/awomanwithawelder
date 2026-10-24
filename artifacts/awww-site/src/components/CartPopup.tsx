@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import denversDeskLogo from "@assets/Denvers_Desk_New_Chevron_Logo.png";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CartPopupProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ const PRODUCT_GRADIENTS = [
 ];
 
 export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess }: CartPopupProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -90,18 +92,19 @@ export function CartPopup({ isOpen, onClose, onContinueShopping, onOrderSuccess 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-40 bg-black/75 sm:backdrop-blur-sm"
         onClick={onClose}
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <motion.div
           key="cart-panel"
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 12 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="w-full max-w-md flex flex-col bg-[#080d14]/95 backdrop-blur-xl border border-primary/25 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)] overflow-hidden"
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 12 }}
+          transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 500, damping: 30 }}
+          className="w-full max-w-md flex flex-col bg-[#080d14] sm:bg-[#080d14]/95 sm:backdrop-blur-xl border border-primary/25 rounded-[28px] shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18)] pointer-events-auto h-[560px] max-h-[calc(100dvh-32px)] overflow-hidden transform-gpu will-change-transform"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-primary/15 bg-[#05080e]/80 shrink-0">

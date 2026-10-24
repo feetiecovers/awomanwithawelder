@@ -30,6 +30,7 @@ import { useListProducts, useAddToCart, getGetCartQueryKey, getListProductsQuery
 import denversDeskIcon from "@assets/Denvers_Desk_Icon_Cropped.png";
 import cableCadLogo from "@assets/Cable_CAD_Logo_EqualSize.png";
 import trailerBrainLogo from "@assets/Trailer_Brain_Logo_EqualSize.png";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ConfigurableProductPopupProps {
   productId: number | null;
@@ -41,6 +42,7 @@ interface ConfigurableProductPopupProps {
 const GST_RATE = 0.15;
 
 export function ConfigurableProductPopup({ isOpen, onClose, productId }: ConfigurableProductPopupProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: rawProducts } = useListProducts({
@@ -229,13 +231,16 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0e0412]/85 backdrop-blur-xl transition-all"
+          className="absolute inset-0 bg-[#0e0412]/85 sm:backdrop-blur-xl transition-all"
         />
 
         {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }}
+          animate={isMobile ? {
+            opacity: 1, scale: 1, y: 0,
+            borderColor: "rgba(255, 42, 141, 0.6)",
+          } : {
             opacity: 1, scale: 1, y: 0,
             boxShadow: [
               "0 0 25px rgba(255, 42, 141, 0.4), inset 0 0 15px rgba(255, 42, 141, 0.2)",
@@ -248,13 +253,16 @@ export function ConfigurableProductPopup({ isOpen, onClose, productId }: Configu
               "rgba(255, 42, 141, 0.5)",
             ],
           }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }}
+          transition={isMobile ? {
+            duration: 0.15,
+            ease: "easeOut",
+          } : {
             boxShadow: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
             borderColor: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
             duration: 0.3,
           }}
-          className="relative w-full max-w-5xl h-[92dvh] bg-[#0e0412]/95 border-2 rounded-[24px] overflow-hidden flex flex-col z-10 text-white shadow-2xl backdrop-blur-2xl no-scrollbar"
+          className="relative w-full max-w-5xl h-[92dvh] bg-[#0e0412] sm:bg-[#0e0412]/95 border-2 rounded-[24px] overflow-hidden flex flex-col z-10 text-white shadow-none sm:shadow-2xl sm:backdrop-blur-2xl no-scrollbar transform-gpu will-change-transform"
         >
           {/* Header Bar */}
           <div className="relative flex items-center justify-between px-5 py-3 border-b border-[#ff2a8d]/20 bg-[#16061c]/80 backdrop-blur-md shrink-0">

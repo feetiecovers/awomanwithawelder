@@ -22,6 +22,7 @@ import { buildApiUrl } from "@/lib/api-base";
 import { useGetCart, useListProducts, getGetCartQueryKey, getListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { saveProductsToCache, getCachedProducts } from "@/lib/productsCache";
 
 export default function Home() {
@@ -175,38 +176,48 @@ export default function Home() {
     isOrderSuccessOpen ||
     isMenuOpen;
 
+  const isMobile = useIsMobile();
+
   return (
-    <div className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30">
-      <ParticleBackground isPaused={isAnyModalOpen} />
+    <div
+      className="relative w-full h-[100dvh] bg-[#0a0a0f] overflow-hidden text-foreground selection:bg-primary/30"
+      style={{
+        backgroundImage: "linear-gradient(to right, rgba(26, 157, 224, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(26, 157, 224, 0.03) 1px, transparent 1px)",
+        backgroundSize: "50px 50px",
+      }}
+    >
+      {!isMobile && <ParticleBackground isPaused={isAnyModalOpen} />}
       <BrandOrbs onOpenConfigurator={handleOpenConfigurator} isPaused={isAnyModalOpen} />
-      <SmokeEffect isPaused={isAnyModalOpen} />
+      {!isMobile && <SmokeEffect isPaused={isAnyModalOpen} />}
       <FloatingSocials isPaused={isAnyModalOpen} />
 
-      {/* Center logo — uninverted original colors, hardware-accelerated breathing */}
+      {/* Center logo — static on mobile for instant zero-lag response, hardware-accelerated breathing on desktop */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
         <motion.div
           animate={
-            isAnyModalOpen
+            isAnyModalOpen || isMobile
               ? { scale: 1 }
               : { scale: [1, 1.025, 1] }
           }
-          transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
+          transition={{ duration: 4, repeat: isAnyModalOpen || isMobile ? 0 : Infinity, ease: "easeInOut" }}
           className="pointer-events-auto cursor-pointer relative flex items-center justify-center"
           onClick={handleOpenProducts}
-          whileHover={{ scale: 1.05 }}
+          whileHover={isMobile ? undefined : { scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           data-testid="button-center-logo"
         >
-          {/* Hardware-accelerated compositor glow layer behind logo */}
-          <motion.div
-            animate={
-              isAnyModalOpen
-                ? { opacity: 0.3 }
-                : { opacity: [0.3, 0.75, 0.3] }
-            }
-            transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 rounded-full bg-primary/25 blur-2xl pointer-events-none scale-110"
-          />
+          {/* Hardware-accelerated compositor glow layer behind logo (desktop only) */}
+          {!isMobile && (
+            <motion.div
+              animate={
+                isAnyModalOpen
+                  ? { opacity: 0.3 }
+                  : { opacity: [0.3, 0.75, 0.3] }
+              }
+              transition={{ duration: 4, repeat: isAnyModalOpen ? 0 : Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 rounded-full bg-primary/25 blur-2xl pointer-events-none scale-110"
+            />
+          )}
           <img
             src={mainLogo}
             alt="A Woman With a Welder"

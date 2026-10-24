@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   TRAILER_CATEGORIES,
   type TrailerBuild,
@@ -258,6 +259,7 @@ function mapSyncedBuildCatalog(value: unknown): {
 }
 
 export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfiguratorPopupProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   
   // Slide Paginated Navigation & Accordion state (Step 1: Base Model, Step 2: Options, Step 3: Mobile Breakdown)
@@ -567,13 +569,18 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#0e0412]/85 backdrop-blur-xl transition-all"
+          className="absolute inset-0 bg-[#0e0412]/85 sm:backdrop-blur-xl transition-all"
         />
 
         {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }}
+          animate={isMobile ? {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            borderColor: "rgba(255, 42, 141, 0.6)",
+          } : {
             opacity: 1,
             scale: 1,
             y: 0,
@@ -588,13 +595,16 @@ export function TrailerConfiguratorPopup({ isOpen, onClose }: TrailerConfigurato
               "rgba(255, 42, 141, 0.5)",
             ],
           }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95, y: 10 }}
+          transition={isMobile ? {
+            duration: 0.15,
+            ease: "easeOut",
+          } : {
             boxShadow: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
             borderColor: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
             duration: 0.3,
           }}
-          className="relative w-full max-w-6xl h-[92dvh] bg-[#0e0412]/95 border-2 rounded-[24px] overflow-hidden flex flex-col z-10 text-white shadow-2xl backdrop-blur-2xl no-scrollbar"
+          className="relative w-full max-w-6xl h-[92dvh] bg-[#0e0412] sm:bg-[#0e0412]/95 border-2 rounded-[24px] overflow-hidden flex flex-col z-10 text-white shadow-none sm:shadow-2xl sm:backdrop-blur-2xl no-scrollbar transform-gpu will-change-transform"
           style={{
             backgroundImage: "radial-gradient(ellipse at top right, rgba(255,42,141,0.15), transparent 60%), radial-gradient(ellipse at bottom left, rgba(147,51,234,0.12), transparent 70%)"
           }}

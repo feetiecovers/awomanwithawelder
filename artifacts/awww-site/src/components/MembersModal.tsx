@@ -16,6 +16,7 @@ import {
   getGetCurrentMemberQueryKey,
   getGetMemberBookingsQueryKey,
 } from "@workspace/api-client-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MembersModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface MembersModalProps {
 }
 
 export function MembersModal({ isOpen, onClose }: MembersModalProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -78,12 +80,13 @@ export function MembersModal({ isOpen, onClose }: MembersModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 sm:backdrop-blur-sm">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-md flex flex-col bg-[#080d14]/95 border border-primary/25 rounded-[24px] shadow-[0_0_60px_rgba(26,157,224,0.18)] overflow-hidden max-h-[calc(100dvh-32px)]"
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.9, y: 20 }}
+          transition={isMobile ? { duration: 0.15, ease: "easeOut" } : undefined}
+          className="w-full max-w-md flex flex-col bg-[#080d14] sm:bg-[#080d14]/95 border border-primary/25 rounded-[24px] shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18)] overflow-hidden max-h-[calc(100dvh-32px)] transform-gpu will-change-transform"
         >
           <div className="flex items-center justify-between p-4 px-5 border-b border-primary/15 bg-[#05080e]/80">
             <h2 className="text-base font-mono font-bold text-primary tracking-[0.2em] uppercase">Members Area</h2>

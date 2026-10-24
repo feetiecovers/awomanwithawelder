@@ -10,6 +10,7 @@ import { Send, Menu, MessageSquare, MousePointer2, FileText } from "lucide-react
 import { motion, AnimatePresence } from "framer-motion";
 import StreamChatWidget from "./StreamChatWidget";
 import { getConfiguredApiBaseUrl } from "@/lib/api-base";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const CHAT_POLL_INTERVAL_MS = 15000;
 
@@ -21,6 +22,7 @@ interface BottomRightMenuProps {
 }
 
 export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigurator, onOpenChange }: BottomRightMenuProps) {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [activeMenuTab, setActiveMenuTab] = useState("pages");
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
@@ -173,11 +175,11 @@ export function BottomRightMenu({ onOpenMembers, onOpenProducts, onOpenConfigura
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="mb-3 w-[calc(100vw-32px)] sm:w-80 md:w-96 rounded-[24px] border border-primary/30 bg-[#080d14] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
+            exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, y: 20, scale: 0.95 }}
+            transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 300, damping: 30 }}
+            className="mb-3 w-[calc(100vw-32px)] sm:w-80 md:w-96 rounded-[24px] border border-primary/30 bg-[#080d14] shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col transform-gpu will-change-transform"
             style={{ maxHeight: "calc(100dvh - 110px)" }}
           >
             <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab} className="w-full h-full flex flex-col">

@@ -12,6 +12,7 @@ import { evaluateParametricValidation } from "@/lib/parametric-validation";
 import { formatCustomerPromise } from "@/lib/promiseFormatting";
 import { ParametricHelperBubble } from "./ParametricHelperBubble";
 import { getOptionHelper } from "@/content/parametricHelpers";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ParametricProductPopupProps {
   productId: number | null;
@@ -310,6 +311,7 @@ function ParametricPricingCard({
 }
 
 export function ParametricProductPopup({ isOpen, onClose, productId }: ParametricProductPopupProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const { data: rawProducts } = useListProducts({
     query: {
@@ -564,16 +566,17 @@ export function ParametricProductPopup({ isOpen, onClose, productId }: Parametri
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           onClick={onClose}
-          className="absolute inset-0 bg-[#04131a]/90 backdrop-blur-xl"
+          className="absolute inset-0 bg-[#04131a]/90 sm:backdrop-blur-xl"
         />
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 10 }}
-          transition={{ duration: 0.25 }}
-          className="relative w-full max-w-6xl h-[92dvh] rounded-[24px] border border-cyan-400/25 bg-[#07161d]/95 shadow-2xl overflow-hidden z-10 text-white flex flex-col"
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 10 }}
+          transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { duration: 0.25 }}
+          className="relative w-full max-w-6xl h-[92dvh] rounded-[24px] border border-cyan-400/25 bg-[#07161d] sm:bg-[#07161d]/95 shadow-none sm:shadow-2xl overflow-hidden z-10 text-white flex flex-col transform-gpu will-change-transform"
         >
           <div className="relative flex items-center justify-between px-5 py-3 border-b border-cyan-400/15 bg-[#0b1d26]/85 shrink-0">
             <div className="flex items-center gap-3">

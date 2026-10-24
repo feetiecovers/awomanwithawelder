@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface OrderSuccessModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface OrderSuccessModalProps {
 }
 
 export function OrderSuccessModal({ isOpen, onClose }: OrderSuccessModalProps) {
+  const isMobile = useIsMobile();
   if (!isOpen) return null;
 
   return (
@@ -17,18 +19,19 @@ export function OrderSuccessModal({ isOpen, onClose }: OrderSuccessModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-60 bg-black/75 backdrop-blur-md"
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-60 bg-black/75 sm:backdrop-blur-md"
         onClick={onClose}
       />
 
       <div className="fixed inset-0 z-[61] flex items-center justify-center p-4 pointer-events-none">
         <motion.div
           key="order-panel"
-          initial={{ opacity: 0, scale: 0.85, y: 24 }}
+          initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.85, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.85, y: 24 }}
-          transition={{ type: "spring", stiffness: 300, damping: 28 }}
-          className="w-full max-w-sm bg-[#080d14] border border-primary/35 rounded-2xl shadow-[0_0_90px_rgba(26,157,224,0.3),0_8px_50px_rgba(0,0,0,0.95)] pointer-events-auto overflow-hidden"
+          exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.85, y: 24 }}
+          transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 300, damping: 28 }}
+          className="w-full max-w-sm bg-[#080d14] border border-primary/35 rounded-2xl shadow-none sm:shadow-[0_0_90px_rgba(26,157,224,0.3),0_8px_50px_rgba(0,0,0,0.95)] pointer-events-auto overflow-hidden transform-gpu will-change-transform"
         >
           {/* Close button row */}
           <div className="flex justify-end px-4 pt-4">

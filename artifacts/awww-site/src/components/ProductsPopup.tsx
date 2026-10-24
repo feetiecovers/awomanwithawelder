@@ -27,6 +27,7 @@ import { recordLocalBooking, getDateAvailability, getMinimumBookingDateNZString,
 import { getProductImages, normalizeImageUrl } from "@/lib/product-images";
 import { getCachedProducts, saveProductsToCache } from "@/lib/productsCache";
 import { formatCustomerPromise } from "@/lib/promiseFormatting";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProductsPopupProps {
   isOpen: boolean;
@@ -303,6 +304,7 @@ function getPricingBreakdown(price: number) {
 }
 
 export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, onBookingSuccess, onOpenConfigurator, onOpenConfigurableProduct, onOpenParametricProduct, onOpenBuildProduct }: ProductsPopupProps) {
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -509,21 +511,27 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
 
   // Mobile / touchscreen swipe gesture handlers
   const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
   };
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null) return;
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
     const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartXRef.current - touchEndX;
-    if (Math.abs(diff) > 40) {
-      if (diff > 40 && safeShopPage < totalPages - 1) {
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartXRef.current - touchEndX;
+    const diffY = touchStartYRef.current - touchEndY;
+    // Only trigger if horizontal swipe is clearly dominant over vertical scroll
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.3) {
+      if (diffX > 35 && safeShopPage < totalPages - 1) {
         goToPage(safeShopPage + 1);
-      } else if (diff < -40 && safeShopPage > 0) {
+      } else if (diffX < -35 && safeShopPage > 0) {
         goToPage(safeShopPage - 1);
       }
     }
     touchStartXRef.current = null;
+    touchStartYRef.current = null;
   };
 
   const handleAddToCartWithShipping = (productId: number, shippingLabel?: string, shippingPrice?: number, configuration?: any) => {
@@ -717,13 +725,14 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm sm:backdrop-blur-md"
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-40 bg-black/80 sm:backdrop-blur-md"
         onClick={onClose}
       />
 
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-2.5 sm:p-4 pointer-events-none">
         
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {selectedWorkspaceProduct ? (
             <ProductDetailWorkspace
               key="workspace"
@@ -796,11 +805,11 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
 
               <motion.div
                 key="offerings"
-                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-full flex flex-col bg-[#080d14]/95 backdrop-blur-md border border-primary/20 rounded-[28px] shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] transform-gpu will-change-transform ${
+                exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.96, y: 12 }}
+                transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 450, damping: 30 }}
+                className={`w-full flex flex-col bg-[#080d14] sm:bg-[#080d14]/95 sm:backdrop-blur-md border border-primary/20 rounded-[24px] sm:rounded-[28px] shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18),0_8px_40px_rgba(0,0,0,0.8)] pointer-events-auto h-[680px] transform-gpu will-change-transform ${
                   showCustomCallPrompt
                     ? "max-h-[calc(100dvh-120px)] sm:max-h-[calc(100dvh-130px)]"
                     : "max-h-[calc(100dvh-32px)]"
@@ -1000,19 +1009,19 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
                           <ChevronRight className="h-5 w-5" />
                         </button>
                       )}
-                      <AnimatePresence mode="wait" custom={slideDir}>
+                      <AnimatePresence mode={isMobile ? "sync" : "wait"} custom={slideDir}>
                         <motion.div
                           key={safeShopPage}
                           custom={slideDir}
                           variants={{
-                            enter: (dir: number) => ({ x: dir * 50, opacity: 0 }),
+                            enter: (dir: number) => ({ x: isMobile ? dir * 18 : dir * 50, opacity: isMobile ? 0.3 : 0 }),
                             center: { x: 0, opacity: 1 },
-                            exit: (dir: number) => ({ x: dir * -50, opacity: 0 }),
+                            exit: (dir: number) => ({ x: isMobile ? dir * -18 : dir * -50, opacity: isMobile ? 0.3 : 0 }),
                           }}
                           initial="enter"
                           animate="center"
                           exit="exit"
-                          transition={{ duration: 0.22, ease: "easeOut" }}
+                          transition={isMobile ? { duration: 0.12, ease: "easeOut" } : { duration: 0.22, ease: "easeOut" }}
                           className="flex flex-col gap-3 h-full"
                         >
                           {currentShopItems.map((item, idx) => (
@@ -1300,16 +1309,17 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-md"
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-[70] bg-black/80 sm:backdrop-blur-md"
               onClick={closeBookingModal}
             />
-            <div className="fixed inset-0 z-[71] flex items-center justify-center p-4 pointer-events-none">
+            <div className="fixed inset-0 z-[71] flex items-center justify-center p-2.5 sm:p-4 pointer-events-none">
               <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 18 }}
+                initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.92, y: 18 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: 18 }}
-                transition={{ type: "spring", stiffness: 320, damping: 34 }}
-                className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial mobile-no-scrollbar max-h-[calc(100dvh-32px)] rounded-[28px] border border-primary/20 bg-[#080d14]/95 shadow-[0_0_60px_rgba(26,157,224,0.18)]"
+                exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.92, y: 18 }}
+                transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 350, damping: 32 }}
+                className="pointer-events-auto w-full max-w-4xl overflow-y-auto scroll-industrial mobile-no-scrollbar max-h-[calc(100dvh-20px)] sm:max-h-[calc(100dvh-32px)] rounded-[24px] sm:rounded-[28px] border border-primary/20 bg-[#080d14] sm:bg-[#080d14]/95 shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.18)]"
               >
                 <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-between border-b border-primary/15 bg-[#05080e]/80 px-6 py-4 sm:px-8 shrink-0 relative gap-3 sm:gap-0">
                   <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto text-center sm:text-left">
@@ -1661,16 +1671,17 @@ export function ProductsPopup({ isOpen, onClose, onOpenCart, onRequireSignIn, on
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md cursor-pointer"
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-[100] bg-black/85 sm:backdrop-blur-md cursor-pointer"
               onClick={() => setPreviewImage(null)}
             />
             <div className="fixed inset-0 z-[101] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.9, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                className="pointer-events-auto relative max-w-4xl max-h-[90dvh] w-full rounded-2xl border border-primary/40 bg-[#080d14]/95 backdrop-blur-2xl p-3 sm:p-5 flex flex-col items-center justify-between shadow-[0_0_60px_rgba(26,157,224,0.35)] overflow-hidden"
+                exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.9, y: 10 }}
+                transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 350, damping: 30 }}
+                className="pointer-events-auto relative max-w-4xl max-h-[90dvh] w-full rounded-2xl border border-primary/40 bg-[#080d14] sm:bg-[#080d14]/95 sm:backdrop-blur-2xl p-3 sm:p-5 flex flex-col items-center justify-between shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.35)] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="w-full flex items-center justify-between pb-3 border-b border-primary/20 shrink-0">

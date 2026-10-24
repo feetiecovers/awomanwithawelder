@@ -16,6 +16,7 @@ import { evaluateParametricValidation, type ParametricValidationMessage } from '
 import { getProductImages, normalizeImageUrl } from '@/lib/product-images';
 import { formatCustomerPromise } from '@/lib/promiseFormatting';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 DOMPurify.addHook('afterSanitizeAttributes', function (node) {
   if ('target' in node && node.getAttribute('target') === '_blank') {
@@ -122,6 +123,7 @@ interface ProductDetailWorkspaceProps {
 
 export function ProductDetailWorkspace({ product, onClose, onAddToCart, onRequestQuote }: ProductDetailWorkspaceProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Raw product for nested payload access
   const rawProduct = product as any;
@@ -526,11 +528,11 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
   return (
     <>
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative w-full h-[95dvh] sm:h-[90dvh] max-h-[850px] max-w-[95vw] sm:max-w-xl md:max-w-2xl bg-[#080d14]/95 border-2 border-primary/40 rounded-3xl shadow-[0_0_60px_rgba(26,157,224,0.35)] flex flex-col backdrop-blur-md overflow-hidden pointer-events-auto transform-gpu will-change-transform"
+      initial={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={isMobile ? { opacity: 0, y: 8 } : { opacity: 0, scale: 0.95 }}
+      transition={isMobile ? { duration: 0.15, ease: "easeOut" } : { type: "spring", stiffness: 300, damping: 30 }}
+      className="relative w-full h-[95dvh] sm:h-[90dvh] max-h-[850px] max-w-[95vw] sm:max-w-xl md:max-w-2xl bg-[#080d14] sm:bg-[#080d14]/95 border-2 border-primary/40 rounded-3xl shadow-none sm:shadow-[0_0_60px_rgba(26,157,224,0.35)] flex flex-col sm:backdrop-blur-md overflow-hidden pointer-events-auto transform-gpu will-change-transform"
     >
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-primary/20 bg-[#0d1520]/80">
@@ -548,7 +550,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
         {/* Top: Boxed Image Gallery */}
         <div className="relative w-full h-[260px] sm:h-[340px] md:h-[380px] bg-[#05090f] flex items-center justify-center group overflow-hidden shrink-0 border-b border-primary/15">
           {galleryImages.length > 0 ? (
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode={isMobile ? "sync" : "wait"}>
               <motion.img
                 key={activeImage}
                 src={activeImage}
@@ -556,7 +558,7 @@ export function ProductDetailWorkspace({ product, onClose, onAddToCart, onReques
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: isMobile ? 0.1 : 0.2 }}
                 className="w-full h-full object-cover object-center"
               />
             </AnimatePresence>
